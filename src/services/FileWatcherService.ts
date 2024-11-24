@@ -1,8 +1,10 @@
 import { readFile } from 'fs/promises';
 import * as path from 'path';
 import { glob } from 'glob';
-import { EventEmitter } from 'events';
 import * as vscode from 'vscode';
+import { EventEmitter } from 'events';
+import { IService, ServiceDependencies, ServiceState } from './types';
+import { ILogger } from '../logger/Logger';
 
 export interface FileInfo {
   fileName: string;   
@@ -19,20 +21,44 @@ export interface FileChange {
   file: FileInfo;
 }
 
-export class FileWatcher extends EventEmitter {
-  private files: Map<string, FileInfo> = new Map();
-  private watchers: vscode.FileSystemWatcher[] = [];
-  private readonly workspacePath: string;
-  private debug: (message: string) => void;
+interface FileWatcherDeps extends ServiceDependencies {
+  workspacePath: string;
+}
 
-  constructor(workspacePath: string, debug: (message: string) => void) {
+export class FileWatcherService extends EventEmitter implements IService {
+  public readonly state: ServiceState = {
+    isInitialized: false,
+    isDisposed: false,
+  };
+
+  public readonly files: Map<string, FileInfo>;
+  private watchers: vscode.FileSystemWatcher[] = [];
+  
+  private readonly logger: ILogger;
+  private readonly workspacePath: string;
+
+  constructor(deps: FileWatcherDeps) {
     super();
-    this.workspacePath = workspacePath;
-    this.debug = debug;
+    this.logger = deps.logger;
+    this.workspacePath = deps.workspacePath;
+    this.files = new Map();
   }
 
-  async initialize(): Promise<Map<string, FileInfo>> {
-    this.debug('FileWatcher: Initializing...');
+  private assertState(action: string): void {
+    if (this.state.isDisposed) {
+      throw new Error(`Cannot ${action}: service is disposed`);
+    }
+    if (action === 'initialize' && this.state.isInitialized) {
+      throw new Error('Service is already initialized');
+    }
+    if (action !== 'initialize' && !this.state.isInitialized) {
+      throw new Error(`Cannot ${action}: service is not initialized`);
+    }
+  }
+
+  async initialize(): Promise<void> {
+    this.assertState('initialize');
+    this.logger.debug('FileWatcherService: Initializing...');
 
     // Initial file load
     const pattern = path.join(this.workspacePath, '**/*.{js,jsx,ts,tsx}');
@@ -41,7 +67,7 @@ export class FileWatcher extends EventEmitter {
       absolute: true,
     });
 
-    this.debug(`FileWatcher: Found ${files.length} files to load`);
+    this.logger.debug(`FileWatcherService: Found ${files.length} files to load`);
 
     for (const filePath of files) {
       await this.loadFile(filePath);
@@ -52,14 +78,11 @@ export class FileWatcher extends EventEmitter {
     
     for (const pattern of patterns) {
       const watcher = vscode.workspace.createFileSystemWatcher(
-        new vscode.RelativePattern(this.workspacePath, pattern),
-        false, // Don't ignore creates
-        false, // Don't ignore changes
-        false  // Don't ignore deletes
+        new vscode.RelativePattern(this.workspacePath, pattern)
       );
 
       watcher.onDidCreate(async (uri) => {
-        this.debug(`FileWatcher: File created: ${uri.fsPath}`);
+        this.logger.debug(`FileWatcherService: File created: ${uri.fsPath}`);
         await this.loadFile(uri.fsPath);
         const fileInfo = this.files.get(uri.fsPath);
         if (fileInfo) {
@@ -68,7 +91,7 @@ export class FileWatcher extends EventEmitter {
       });
 
       watcher.onDidChange(async (uri) => {
-        this.debug(`FileWatcher: File changed: ${uri.fsPath}`);
+        this.logger.debug(`FileWatcherService: File changed: ${uri.fsPath}`);
         await this.loadFile(uri.fsPath);
         const fileInfo = this.files.get(uri.fsPath);
         if (fileInfo) {
@@ -77,7 +100,7 @@ export class FileWatcher extends EventEmitter {
       });
 
       watcher.onDidDelete((uri) => {
-        this.debug(`FileWatcher: File deleted: ${uri.fsPath}`);
+        this.logger.debug(`FileWatcherService: File deleted: ${uri.fsPath}`);
         const fileInfo = this.files.get(uri.fsPath);
         if (fileInfo) {
           this.files.delete(uri.fsPath);
@@ -88,8 +111,8 @@ export class FileWatcher extends EventEmitter {
       this.watchers.push(watcher);
     }
 
-    this.debug('FileWatcher: Initialization complete');
-    return this.files;
+    this.state.isInitialized = true;
+    this.logger.debug('FileWatcherService: Initialization complete');
   }
 
   private async loadFile(filePath: string): Promise<void> {
@@ -106,28 +129,35 @@ export class FileWatcher extends EventEmitter {
       };
 
       this.files.set(filePath, fileInfo);
-      this.debug(`FileWatcher: Loaded file ${fileInfo.fullName}`);
+      this.logger.debug(`FileWatcherService: Loaded file ${fileInfo.fullName}`);
     } catch (error) {
-      this.debug(`FileWatcher: Error loading file ${filePath}: ${error}`);
+      this.logger.error(`FileWatcherService: Error loading file ${filePath}: ${error}`);
+    }
+  }
+
+  async updateFile(filePath: string, content: string): Promise<void> {
+    this.assertState('updateFile');
+    await this.loadFile(filePath);
+    const fileInfo = this.files.get(filePath);
+    if (fileInfo) {
+      fileInfo.content = content;
+      this.emit('change', { type: 'change', file: fileInfo });
     }
   }
 
   async dispose(): Promise<void> {
-    this.debug('FileWatcher: Disposing...');
+    this.assertState('dispose');
+    this.logger.debug('FileWatcherService: Disposing...');
+    
     for (const watcher of this.watchers) {
       watcher.dispose();
     }
+    
     this.watchers = [];
     this.files.clear();
     this.removeAllListeners();
-    this.debug('FileWatcher: Disposed');
-  }
-
-  getAllFiles(): FileInfo[] {
-    return Array.from(this.files.values());
-  }
-
-  getFile(filePath: string): FileInfo | undefined {
-    return this.files.get(filePath);
+    
+    this.state.isDisposed = true;
+    this.logger.debug('FileWatcherService: Disposed');
   }
 }
