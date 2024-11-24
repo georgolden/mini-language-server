@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    // Module Settings
+    "module": "CommonJS", // or "NodeNext" for latest Node.js features
+    "moduleResolution": "Node", // or "NodeNext"
+    "target": "ES2022",
+    "lib": ["ES2022"],
+
+    // ESM Support
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    // Strict Type Checking
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Output Settings
+    "outDir": "./dist",
+    "rootDir": "./",
+
+    // Path Aliases
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    },
+
+    // Additional Modern Settings
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false // Since we're using tsx for running/building
+  },
+  "include": ["server/src/**/*", "client/src/**/*"],
+  "exclude": ["node_modules", "dist", ".vscode-test"]
+}

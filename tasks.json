@@ -1,0 +1,36 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "type": "npm",
+        "script": "compile",
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "presentation": {
+          "reveal": "silent",
+          "panel": "shared"
+        },
+        "problemMatcher": "$tsc"
+      },
+      {
+        "type": "npm",
+        "script": "watch",
+        "isBackground": true,
+        "problemMatcher": {
+          "base": "$tsc-watch",
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "Starting compilation in watch mode...",
+            "endsPattern": "Found 0 errors. Watching for file changes."
+          }
+        },
+        "presentation": {
+          "reveal": "never"
+        },
+        "dependsOn": ["npm: compile"]
+      }
+    ]
+  }
+  

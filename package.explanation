@@ -1,0 +1,46 @@
+// package.json
+  "name": "my-cool-extension",                // Unique identifier (no spaces)
+  "displayName": "My Cool Extension",         // VSCode marketplace name
+
+  "contributes": {
+    "configuration": {
+      "title": "My Cool Extension",          // Settings UI title
+      "properties": {
+        "my-cool-extension.someConfig": {    // Settings must use the same namespace. Namespace is my-cool-extension
+          "type": "string",
+          "default": "value"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "my-cool-extension.someCommand",  // Command ID uses same namespace
+        "title": "Do Something Cool"                 // Command palette display name
+      }
+    ]
+  }
+
+// launch.json
+  "configurations": [
+    {
+      "name": "My Cool Extension: Client",    // Debug config name
+      "type": "extensionHost",
+      "request": "launch",
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}"]
+    },
+    {
+      "name": "My Cool Extension: Server",    // Debug config name
+      "type": "node",
+      "request": "attach",
+      "port": 6009
+    }
+  ],
+  "compounds": [
+    {
+      "name": "My Cool Extension: Debug All", // Debug menu item name
+      "configurations": [
+        "My Cool Extension: Client",          // Must match configuration names above
+        "My Cool Extension: Server"
+      ]
+    }
+  ]

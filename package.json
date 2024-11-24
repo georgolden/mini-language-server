@@ -1,0 +1,72 @@
+{
+  "name": "mini-language-server",
+  "displayName": "Mini Language Server",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": ">=1.75.0"
+  },
+  "main": "./dist/client/src/extension.js",
+  "type": "commonjs",
+  "contributes": {
+    "configuration": {
+      "title": "Mini Language Server",
+      "properties": {
+        "miniLanguageServer.logLevel": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warn",
+            "info",
+            "debug"
+          ],
+          "default": "info",
+          "description": "Log level for the language server"
+        },
+        "miniLanguageServer.maxNumberOfProblems": {
+          "type": "number",
+          "default": 100,
+          "description": "Maximum number of problems to report"
+        },
+        "miniLanguageServer.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable the language server"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "start": "node client/src/extension.js",
+    "dev": "tsx watch client/src/extension.ts",
+    "test": "tsx --test client/**/*.test.ts server/**/*.test.ts",
+    "clean": "rimraf dist",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w --preserveWatchOutput",
+    "build": "npm run clean && npm run compile",
+    "lint": "biome lint .",
+    "format": "biome format . --write",
+    "check": "biome check --apply ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "dotenv": "^16.4.5",
+    "openai": "^4.73.0",
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.9.0",
+    "@types/sinon": "^17.0.3",
+    "@types/vscode": "^1.95.0",
+    "rimraf": "^6.0.1",
+    "sinon": "^19.0.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
