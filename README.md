@@ -1,14 +1,15 @@
 # VSCode Mini Language Server
 
-A minimalistic VSCode extension implementing a Language Server Protocol (LSP) client with advanced file watching capabilities for TypeScript/JavaScript projects.
+A minimalistic VSCode extension implementing a Language Server Protocol (LSP) client with advanced file watching capabilities and command palette integration for TypeScript/JavaScript projects.
 
 ## Architecture Overview
 
-The project follows a service-oriented architecture with dependency injection and clear separation of concerns. It's built around three main concepts:
+The project follows a service-oriented architecture with dependency injection and clear separation of concerns. It's built around these main concepts:
 
 1. **Services**: Independent units with clear lifecycle management
 2. **Composition Root**: Central point for dependency injection and service orchestration
 3. **Event-Based Communication**: Using EventEmitter for file system changes
+4. **Command System**: Extensible command palette integration
 
 ### Core Design Principles
 
@@ -16,6 +17,7 @@ The project follows a service-oriented architecture with dependency injection an
 - Clear service lifecycle (initialize/dispose)
 - Dependency injection for better testability
 - Event-driven architecture for file watching
+- Command pattern for user interactions
 - Explicit state management
 - Strong typing throughout the codebase
 
@@ -28,10 +30,14 @@ src/
 ├── services/
 │   ├── types.ts             # Core service interfaces and types
 │   ├── FileWatcherService.ts # File system watching and caching
-│   └── LanguageClientService.ts # LSP client implementation
+│   ├── LanguageClientService.ts # LSP client implementation
+│   └── CommandService.ts    # Command palette integration
+├── commands/
+│   ├── types.ts            # Command interfaces and types
+│   └── implementations.ts  # Concrete command implementations
 ├── logger/
-│   └── Logger.ts            # Logging infrastructure
-└── extension.ts             # VSCode extension entry point
+│   └── Logger.ts           # Logging infrastructure
+└── extension.ts            # VSCode extension entry point
 ```
 
 ### Key Components
@@ -60,11 +66,36 @@ Handles LSP client implementation:
 - Connects to the language server
 - Handles client lifecycle
 
-#### 4. CompositionRoot
+#### 4. CommandService
+Manages VSCode command palette integration:
+- Registers commands with VSCode
+- Handles command execution
+- Manages command lifecycle
+- Provides type-safe command registration
+
+Example command registration:
+```typescript
+interface Command {
+  id: string;
+  title: string;
+  handler: (...args: any[]) => Promise<void>;
+}
+
+commandService.registerCommand({
+  id: 'myExtension.commandId',
+  title: 'My Command',
+  handler: async () => {
+    // Command implementation
+  }
+});
+```
+
+#### 5. CompositionRoot
 Manages service lifecycle and dependencies:
 - Initializes all services in correct order
 - Handles proper cleanup
 - Centralizes error handling
+- Orchestrates command registration
 
 ## Service Lifecycle
 
@@ -104,17 +135,25 @@ fileWatcherService.on('unlink', ({ file }) => {
 });
 ```
 
-## Error Handling
+## Command System
 
-Services use state assertions to prevent invalid operations:
+Commands are defined as separate units:
 
 ```typescript
-private assertState(action: string): void {
-  if (this.state.isDisposed) {
-    throw new Error(`Cannot ${action}: service is disposed`);
-  }
-  // ... other assertions
+interface Command {
+  id: string;
+  title: string;
+  handler: (...args: any[]) => Promise<void>;
 }
+
+// Command implementation
+const command: Command = {
+  id: 'miniLanguageServer.showFileCount',
+  title: 'Show File Count',
+  handler: async () => {
+    // Implementation
+  }
+};
 ```
 
 ## Contributing
@@ -143,38 +182,23 @@ npm run compile
    - Implement the `IService` interface
    - Add to CompositionRoot
 
-Example:
+2. **Adding New Commands**
+   - Define command in `commands/implementations.ts`
+   - Add command contribution to `package.json`
+   - Command will be automatically registered by CommandService
+
+Example new command:
 ```typescript
-export class NewService implements IService {
-  public readonly state: ServiceState = {
-    isInitialized: false,
-    isDisposed: false,
+export function createCustomCommand(service: SomeService): Command {
+  return {
+    id: 'miniLanguageServer.customCommand',
+    title: 'Custom Command',
+    handler: async () => {
+      // Implementation
+    }
   };
-
-  constructor(deps: ServiceDependencies) {
-    // ...
-  }
-
-  async initialize(): Promise<void> {
-    // ...
-  }
-
-  async dispose(): Promise<void> {
-    // ...
-  }
 }
 ```
-
-2. **Modifying Existing Services**
-   - Ensure state assertions are maintained
-   - Update CompositionRoot if needed
-   - Add appropriate logging
-
-### Testing
-
-- Write tests for new services
-- Ensure proper cleanup in tests
-- Mock dependencies for unit tests
 
 ### Best Practices
 
@@ -192,6 +216,12 @@ export class NewService implements IService {
    - Define clear interfaces for dependencies
    - Use dependency injection in constructors
    - Avoid service locator pattern
+
+4. **Command Implementation**
+   - Keep commands focused and single-purpose
+   - Provide clear command titles
+   - Handle errors gracefully
+   - Log command execution
 
 ## License
 

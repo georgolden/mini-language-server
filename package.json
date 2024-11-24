@@ -56,6 +56,16 @@
           ".jsx"
         ]
       }
+    ],
+    "commands": [
+      {
+        "command": "miniLanguageServer.showFileCount",
+        "title": "Mini Language Server: Show File Count"
+      },
+      {
+        "command": "miniLanguageServer.listFiles",
+        "title": "Mini Language Server: List All Files"
+      }
     ]
   },
   "scripts": {
