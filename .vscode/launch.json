@@ -1,34 +1,31 @@
 {
-  "version": "2.0.0",
+  "version": "0.2.0",
   "configurations": [
     {
-      "name": "Mini LSP Client",
+      "name": "Run Extension",
       "type": "extensionHost",
       "request": "launch",
-      "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}"
       ],
-      "outFiles": ["${workspaceFolder}/dist/client/src/**/*.js"],
-      "preLaunchTask": "npm: compile",  // Changed to "npm: compile"
+      "outFiles": [
+        "${workspaceFolder}/out/**/*.js"
+      ],
+      "preLaunchTask": "npm: compile",
       "sourceMaps": true
     },
     {
-      "name": "Mini LSP Server",
-      "type": "node",
-      "request": "attach",
-      "port": 6009,
-      "restart": true,
-      "outFiles": ["${workspaceFolder}/dist/server/src/**/*.js"],
-      "sourceMaps": true,
-      "skipFiles": ["<node_internals>/**"]
-    }
-  ],
-  "compounds": [
-    {
-      "name": "Mini LSP: Client + Server",
-      "configurations": ["Mini LSP Client", "Mini LSP Server"],
-      "preLaunchTask": "npm: compile"  // Changed to "npm: compile"
+      "name": "Language Server E2E Test",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/out/test/**/*.js"
+      ],
+      "preLaunchTask": "npm: compile"
     }
   ]
 }

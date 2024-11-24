@@ -9,28 +9,28 @@
           "isDefault": true
         },
         "presentation": {
-          "reveal": "silent",
-          "panel": "shared"
+          "panel": "dedicated",
+          "reveal": "silent"
         },
-        "problemMatcher": "$tsc"
+        "problemMatcher": [
+          "$tsc"
+        ]
       },
       {
         "type": "npm",
         "script": "watch",
         "isBackground": true,
-        "problemMatcher": {
-          "base": "$tsc-watch",
-          "background": {
-            "activeOnStart": true,
-            "beginsPattern": "Starting compilation in watch mode...",
-            "endsPattern": "Found 0 errors. Watching for file changes."
-          }
+        "group": {
+          "kind": "build",
+          "isDefault": false
         },
         "presentation": {
+          "panel": "dedicated",
           "reveal": "never"
         },
-        "dependsOn": ["npm: compile"]
+        "problemMatcher": [
+          "$tsc-watch"
+        ]
       }
     ]
   }
-  
