@@ -65,6 +65,18 @@
       {
         "command": "miniLanguageServer.listFiles",
         "title": "Mini Language Server: List All Files"
+      },
+      {
+        "command": "miniLanguageServer.showInputBox",
+        "title": "Mini Language Server: Show Input Box",
+        "category": "Mini Language Server"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "miniLanguageServer.showInputBox",
+        "key": "ctrl+shift+i",
+        "mac": "cmd+shift+i"
       }
     ]
   },
