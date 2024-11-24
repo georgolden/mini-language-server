@@ -6,36 +6,65 @@ import {
   ServerOptions,
   TransportKind,
 } from 'vscode-languageclient/node';
+import { FileWatcher } from './watchers/FileWatcher';
 
 let client: LanguageClient | undefined;
+let fileWatcher: FileWatcher | undefined;
 
 export async function activate(context: ExtensionContext) {
   const outputChannel = window.createOutputChannel('Mini Language Server');
   context.subscriptions.push(outputChannel);
 
-  outputChannel.show(true);
-  outputChannel.appendLine('Extension activation started');
+  const debug = (message: string) => {
+    outputChannel.appendLine(message);
+  };
 
+  if (!workspace.workspaceFolders?.[0]) {
+    debug('No workspace folder found');
+    return;
+  }
+
+  const workspacePath = workspace.workspaceFolders[0].uri.fsPath;
+  debug(`Workspace path: ${workspacePath}`);
+  
   try {
-    const serverModule = context.asAbsolutePath(path.join('out', 'server.js'));
-    outputChannel.appendLine(`Server module path: ${serverModule}`);
+    // Initialize file watcher with debug logging
+    fileWatcher = new FileWatcher(workspacePath, debug);
+    
+    debug('Starting file watcher initialization...');
+    const files = await fileWatcher.initialize();
+    debug(`Initialized with ${files.size} files`);
 
+    // File watcher events
+    fileWatcher
+      .on('add', ({ file }) => {
+        debug(`[FileWatcher Event] File added: ${file.fullName}`);
+      })
+      .on('change', ({ file }) => {
+        debug(`[FileWatcher Event] File changed: ${file.fullName}`);
+      })
+      .on('unlink', ({ file }) => {
+        debug(`[FileWatcher Event] File removed: ${file.fullName}`);
+      });
+
+    // Set up language server
+    const serverModule = context.asAbsolutePath(path.join('out', 'server.js'));
+    debug(`Server module path: ${serverModule}`);
+    
     const serverOptions: ServerOptions = {
       run: {
         module: serverModule,
         transport: TransportKind.ipc,
-        options: {
-          cwd: process.cwd(),
-        }
+        options: { cwd: workspacePath }
       },
       debug: {
         module: serverModule,
         transport: TransportKind.ipc,
         options: { 
           execArgv: ['--nolazy', '--inspect=6009'],
-          cwd: process.cwd(),
+          cwd: workspacePath,
         }
-      },
+      }
     };
 
     const clientOptions: LanguageClientOptions = {
@@ -46,9 +75,6 @@ export async function activate(context: ExtensionContext) {
         { scheme: 'file', language: 'javascriptreact' }
       ],
       outputChannel,
-      synchronize: {
-        fileEvents: workspace.createFileSystemWatcher('**/{tsconfig.json,jsconfig.json}'),
-      },
     };
 
     client = new LanguageClient(
@@ -58,19 +84,26 @@ export async function activate(context: ExtensionContext) {
       clientOptions
     );
 
-    outputChannel.appendLine('Starting client...');
     await client.start();
-    outputChannel.appendLine('Client started successfully');
+    debug('Language client started successfully');
+
+    // Add to subscriptions for cleanup
+    context.subscriptions.push({
+      dispose: () => fileWatcher?.dispose(),
+    });
+
   } catch (error) {
-    outputChannel.appendLine(`ERROR: ${error}`);
+    debug(`ERROR: ${error}`);
     console.error(error);
     throw error;
   }
 }
 
-export function deactivate(): Thenable<void> | undefined {
-  if (!client) {
-    return undefined;
+export async function deactivate(): Promise<void> {
+  if (fileWatcher) {
+    await fileWatcher.dispose();
   }
-  return client.stop();
+  if (client) {
+    await client.stop();
+  }
 }
