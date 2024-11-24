@@ -2,9 +2,11 @@ import { ExtensionContext, workspace } from 'vscode';
 import { ILogger } from '../logger/Logger';
 import { FileWatcherService } from '../services/FileWatcherService';
 import { LanguageClientService } from '../services/LanguageClientService';
-import { IService } from '../services/types';
 import { CommandService } from '../services/CommandService';
-import { createFileCommands } from '../commands/implementations';
+import { InputBoxService } from '../services/InputBoxService';
+import { createFileCommands } from '../commands/fileCommands';
+import { createInputBoxCommands } from '../commands/inputBoxCommands';
+import { IService } from '../services/types';
 
 interface CompositionRootDeps {
   logger: ILogger;
@@ -29,37 +31,49 @@ export class CompositionRoot {
     }
 
     try {
+      // Initialize command service first as other services depend on it
+      const commandService = new CommandService({
+        logger: this.logger,
+        context: this.context
+      });
+      await commandService.initialize();
+
+      // Initialize other services
       const fileWatcherService = new FileWatcherService({ 
         logger: this.logger,
         workspacePath 
       });
-      
+
       const languageClientService = new LanguageClientService({
         logger: this.logger,
         context: this.context,
         workspacePath
       });
 
-      // Initialize CommandService
-      const commandService = new CommandService({
-          logger: this.logger,
-          context: this.context
-        });
+      const inputBoxService = new InputBoxService({
+        logger: this.logger,
+        commandService
+      });
 
+      // Initialize remaining services
       await fileWatcherService.initialize();
       await languageClientService.initialize();
-      await commandService.initialize();
+      await inputBoxService.initialize();
 
-      // Register commands after services are initialized
-      const commands = createFileCommands(fileWatcherService);
-      for (const command of commands) {
-        commandService.registerCommand(command);
-      }
+      // Register all commands after services are initialized
+      const fileCommands = createFileCommands(fileWatcherService);
+      const inputBoxCommands = createInputBoxCommands(inputBoxService);
       
+      [...fileCommands, ...inputBoxCommands].forEach(command => {
+        commandService.registerCommand(command);
+      });
+
+      // Store services for disposal
       this.services.push(
+        commandService,
         fileWatcherService,
         languageClientService,
-        commandService
+        inputBoxService
       );
       
     } catch (error) {
