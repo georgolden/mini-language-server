@@ -10,18 +10,16 @@ import {
 let client: LanguageClient | undefined;
 
 export async function activate(context: ExtensionContext) {
-  // Create output channel first thing
   const outputChannel = window.createOutputChannel('Mini Language Server');
   context.subscriptions.push(outputChannel);
-  
-  // Immediate logging to verify channel creation
-  outputChannel.show(true); // Force show the channel
+
+  outputChannel.show(true);
   outputChannel.appendLine('Extension activation started');
-  
+
   try {
     const serverModule = context.asAbsolutePath(path.join('out', 'server.js'));
     outputChannel.appendLine(`Server module path: ${serverModule}`);
-    
+
     const serverOptions: ServerOptions = {
       run: {
         module: serverModule,
@@ -41,14 +39,18 @@ export async function activate(context: ExtensionContext) {
     };
 
     const clientOptions: LanguageClientOptions = {
-      documentSelector: [{ scheme: 'file', language: 'plaintext' }],
+      documentSelector: [
+        { scheme: 'file', language: 'typescript' },
+        { scheme: 'file', language: 'javascript' },
+        { scheme: 'file', language: 'typescriptreact' },
+        { scheme: 'file', language: 'javascriptreact' }
+      ],
       outputChannel,
       synchronize: {
-        fileEvents: workspace.createFileSystemWatcher('**/.clientrc'),
+        fileEvents: workspace.createFileSystemWatcher('**/{tsconfig.json,jsconfig.json}'),
       },
     };
 
-    // Create the language client
     client = new LanguageClient(
       'miniLanguageServer',
       'Mini Language Server',
@@ -57,11 +59,8 @@ export async function activate(context: ExtensionContext) {
     );
 
     outputChannel.appendLine('Starting client...');
-    
-    // Start the client
     await client.start();
     outputChannel.appendLine('Client started successfully');
-    
   } catch (error) {
     outputChannel.appendLine(`ERROR: ${error}`);
     console.error(error);
@@ -70,12 +69,8 @@ export async function activate(context: ExtensionContext) {
 }
 
 export function deactivate(): Thenable<void> | undefined {
-  const outputChannel = window.createOutputChannel('Mini Language Server');
-  outputChannel.appendLine('Extension deactivating...');
-  
   if (!client) {
     return undefined;
   }
-  
   return client.stop();
 }

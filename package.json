@@ -5,15 +5,38 @@
   "engines": {
     "vscode": ">=1.75.0"
   },
-  "activationEvents": ["onLanguage:plaintext", "onStartupFinished"],
+  "activationEvents": [
+    "workspaceContains:**/*.{js,jsx,ts,tsx}",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact"
+  ],
   "main": "./out/extension.js",
   "type": "commonjs",
   "contributes": {
-    "languages": [{
-      "id": "plaintext",
-      "aliases": ["Plain Text"],
-      "extensions": [".js", ".ts", ".tsx", ".jsx"]
-    }]
+    "languages": [
+      {
+        "id": "typescript",
+        "aliases": ["TypeScript", "ts"],
+        "extensions": [".ts"]
+      },
+      {
+        "id": "typescriptreact",
+        "aliases": ["TypeScript React", "tsx"],
+        "extensions": [".tsx"]
+      },
+      {
+        "id": "javascript",
+        "aliases": ["JavaScript", "js"],
+        "extensions": [".js"]
+      },
+      {
+        "id": "javascriptreact",
+        "aliases": ["JavaScript React", "jsx"],
+        "extensions": [".jsx"]
+      }
+    ]
   },
   "scripts": {
     "compile": "tsc -b",
