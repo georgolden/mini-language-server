@@ -81,6 +81,7 @@
     ]
   },
   "scripts": {
+    "clean": "rimraf out",
     "compile": "tsc -b",
     "watch": "tsc -b -w",
     "build": "npm run clean && npm run compile",
@@ -98,7 +99,8 @@
     "openai": "^4.73.0",
     "vscode-languageclient": "^9.0.1",
     "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-textdocument": "^1.0.12"
+    "vscode-languageserver-textdocument": "^1.0.12",
+    "vscode-uri": "^3.0.8"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
