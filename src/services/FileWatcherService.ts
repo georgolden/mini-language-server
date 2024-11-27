@@ -7,11 +7,11 @@ import { IService, ServiceDependencies, ServiceState } from './types';
 import { ILogger } from '../logger/Logger';
 
 export interface FileInfo {
-  fileName: string;   
-  ext: string;       
-  fullName: string;  
-  content: string;   
-  path: string;      
+  fileName: string;
+  ext: string;
+  fullName: string;
+  content: string;
+  path: string;
 }
 
 export type FileEvent = 'add' | 'change' | 'unlink';
@@ -33,7 +33,7 @@ export class FileWatcherService extends EventEmitter implements IService {
 
   public readonly files: Map<string, FileInfo>;
   private watchers: vscode.FileSystemWatcher[] = [];
-  
+
   private readonly logger: ILogger;
   private readonly workspacePath: string;
 
@@ -75,10 +75,10 @@ export class FileWatcherService extends EventEmitter implements IService {
 
     // Set up file system watchers for different extensions
     const patterns = ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'];
-    
+
     for (const pattern of patterns) {
       const watcher = vscode.workspace.createFileSystemWatcher(
-        new vscode.RelativePattern(this.workspacePath, pattern)
+        new vscode.RelativePattern(this.workspacePath, pattern),
       );
 
       watcher.onDidCreate(async (uri) => {
@@ -119,7 +119,7 @@ export class FileWatcherService extends EventEmitter implements IService {
     try {
       const content = await readFile(filePath, 'utf-8');
       const parsedPath = path.parse(filePath);
-      
+
       const fileInfo: FileInfo = {
         fileName: parsedPath.name,
         ext: parsedPath.ext,
@@ -148,15 +148,15 @@ export class FileWatcherService extends EventEmitter implements IService {
   async dispose(): Promise<void> {
     this.assertState('dispose');
     this.logger.debug('FileWatcherService: Disposing...');
-    
+
     for (const watcher of this.watchers) {
       watcher.dispose();
     }
-    
+
     this.watchers = [];
     this.files.clear();
     this.removeAllListeners();
-    
+
     this.state.isDisposed = true;
     this.logger.debug('FileWatcherService: Disposed');
   }

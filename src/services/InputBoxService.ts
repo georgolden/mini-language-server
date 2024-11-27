@@ -43,7 +43,7 @@ export class InputBoxService implements IService {
 
     this.inputBox = window.createInputBox();
     this.inputBox.placeholder = 'Type a command...';
-    
+
     this.disposables.push(
       this.inputBox.onDidAccept(async () => {
         const value = this.inputBox?.value;
@@ -58,7 +58,7 @@ export class InputBoxService implements IService {
       }),
       this.inputBox.onDidHide(() => {
         this.logger.debug('InputBoxService: Input box hidden');
-      })
+      }),
     );
   }
 
@@ -77,11 +77,11 @@ export class InputBoxService implements IService {
 
   showInputBox(): void {
     this.assertState('showInputBox');
-    
+
     if (!this.inputBox) {
       this.createInputBox();
     }
-    
+
     this.inputBox?.show();
     this.logger.debug('InputBoxService: Input box shown');
   }
@@ -89,15 +89,15 @@ export class InputBoxService implements IService {
   async dispose(): Promise<void> {
     this.assertState('dispose');
     this.logger.debug('InputBoxService: Disposing...');
-    
-    this.disposables.forEach(d => d.dispose());
+
+    this.disposables.forEach((d) => d.dispose());
     this.disposables.length = 0;
-    
+
     if (this.inputBox) {
       this.inputBox.dispose();
       this.inputBox = undefined;
     }
-    
+
     this.state.isDisposed = true;
     this.logger.debug('InputBoxService: Disposed');
   }

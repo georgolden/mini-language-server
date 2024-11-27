@@ -1,11 +1,11 @@
 import { Connection, WorkspaceFolder } from 'vscode-languageserver/node';
 
 export interface FileInfo {
-  fileName: string;   
-  ext: string;       
-  fullName: string;  
-  content: string;   
-  path: string;      
+  fileName: string;
+  ext: string;
+  fullName: string;
+  content: string;
+  path: string;
 }
 
 export interface WorkspaceManagerDeps {

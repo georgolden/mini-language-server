@@ -52,9 +52,9 @@ export class CommandService implements ICommandService {
     }
 
     this.logger.debug(`CommandService: Registering command ${command.id}`);
-    
+
     this.commands.set(command.id, command);
-    
+
     const disposable = vscode.commands.registerCommand(command.id, async (...args) => {
       try {
         this.logger.debug(`CommandService: Executing command ${command.id}`);
@@ -83,14 +83,14 @@ export class CommandService implements ICommandService {
   async dispose(): Promise<void> {
     this.assertState('dispose');
     this.logger.debug('CommandService: Disposing...');
-    
+
     for (const disposable of this.disposables) {
       disposable.dispose();
     }
-    
+
     this.disposables.length = 0;
     this.commands.clear();
-    
+
     this.state.isDisposed = true;
     this.logger.debug('CommandService: Disposed');
   }

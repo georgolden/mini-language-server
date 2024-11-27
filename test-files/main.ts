@@ -1,6 +1,5 @@
 import { Command } from './types';
-import { InputBoxService } from '../services/InputBoxService';
-
+import { InputBoxService } from './services/InputBoxService';
 export function createInputBoxCommands(inputBoxService: InputBoxService): Command[] {
   return [
     {

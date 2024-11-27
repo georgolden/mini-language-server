@@ -1,36 +1,32 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-      {
-        "type": "npm",
-        "script": "build",
-        "group": {
-          "kind": "build",
-          "isDefault": true
-        },
-        "presentation": {
-          "panel": "dedicated",
-          "reveal": "silent"
-        },
-        "problemMatcher": [
-          "$tsc"
-        ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
       },
-      {
-        "type": "npm",
-        "script": "watch",
-        "isBackground": true,
-        "group": {
-          "kind": "build",
-          "isDefault": false
-        },
-        "presentation": {
-          "panel": "dedicated",
-          "reveal": "never"
-        },
-        "problemMatcher": [
-          "$tsc-watch"
-        ]
-      }
-    ]
-  }
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "silent"
+      },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "type": "npm",
+      "script": "watch",
+      "isBackground": true,
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "never"
+      },
+      "problemMatcher": ["$tsc-watch"]
+    }
+  ]
+}

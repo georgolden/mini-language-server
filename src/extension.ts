@@ -6,12 +6,12 @@ let root: CompositionRoot;
 
 export async function activate(context: ExtensionContext): Promise<void> {
   const logger = new Logger('Mini Language Server');
-  
-  root = new CompositionRoot({ 
-    logger, 
-    context 
+
+  root = new CompositionRoot({
+    logger,
+    context,
   });
-  
+
   await root.initialize();
 }
 

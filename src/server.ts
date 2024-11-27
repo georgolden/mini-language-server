@@ -23,7 +23,7 @@ class AnalysisServer {
       if (params.workspaceFolders) {
         this.workspaceManager = new WorkspaceManager({
           connection: this.connection,
-          workspaceFolders: params.workspaceFolders
+          workspaceFolders: params.workspaceFolders,
         });
 
         await this.workspaceManager.initialize();
@@ -33,15 +33,15 @@ class AnalysisServer {
         capabilities: {
           textDocumentSync: {
             openClose: true,
-            change: TextDocumentSyncKind.Incremental
+            change: TextDocumentSyncKind.Incremental,
           },
           workspace: {
             workspaceFolders: {
               supported: true,
-              changeNotifications: true
-            }
-          }
-        }
+              changeNotifications: true,
+            },
+          },
+        },
       };
     });
 
@@ -50,15 +50,15 @@ class AnalysisServer {
       this.connection.client.register(DidChangeWatchedFilesNotification.type, {
         watchers: [
           {
-            globPattern: "**/*.{ts,tsx,js,jsx}",
-            kind: WatchKind.Create | WatchKind.Change | WatchKind.Delete
-          }
-        ]
+            globPattern: '**/*.{ts,tsx,js,jsx}',
+            kind: WatchKind.Create | WatchKind.Change | WatchKind.Delete,
+          },
+        ],
       });
       this.connection.console.info('Registered file watchers');
     });
 
-    this.connection.onDidChangeWatchedFiles(params => {
+    this.connection.onDidChangeWatchedFiles((params) => {
       this.connection.console.info('File change event received in server');
       if (this.workspaceManager) {
         this.workspaceManager.handleWatchedFilesChange(params);

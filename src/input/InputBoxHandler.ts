@@ -20,7 +20,6 @@ export class InputBoxHandler {
 
       // Default behavior: show received command
       await window.showInformationMessage(`Command received: ${input}`);
-      
     } catch (error) {
       this.logger.error(`InputBoxHandler: Error processing command: ${error}`);
       throw error;

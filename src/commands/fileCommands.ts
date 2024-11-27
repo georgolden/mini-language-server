@@ -10,20 +10,20 @@ export function createFileCommands(fileWatcher: FileWatcherService): Command[] {
       handler: async () => {
         const count = fileWatcher.files.size;
         await window.showInformationMessage(`Current file count: ${count}`);
-      }
+      },
     },
     {
       id: 'miniLanguageServer.listFiles',
       title: 'List All Files',
       handler: async () => {
         const files = Array.from(fileWatcher.files.values());
-        const items = files.map(file => ({
+        const items = files.map((file) => ({
           label: file.fullName,
-          description: file.path
+          description: file.path,
         }));
 
         const selected = await window.showQuickPick(items, {
-          placeHolder: 'Select a file to view details'
+          placeHolder: 'Select a file to view details',
         });
 
         if (selected) {
@@ -31,11 +31,11 @@ export function createFileCommands(fileWatcher: FileWatcherService): Command[] {
           if (file) {
             // Example action: show file info
             await window.showInformationMessage(
-              `File: ${file.fullName}\nSize: ${file.content.length} bytes`
+              `File: ${file.fullName}\nSize: ${file.content.length} bytes`,
             );
           }
         }
-      }
-    }
+      },
+    },
   ];
 }

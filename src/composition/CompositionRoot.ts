@@ -34,25 +34,25 @@ export class CompositionRoot {
       // Initialize command service first as other services depend on it
       const commandService = new CommandService({
         logger: this.logger,
-        context: this.context
+        context: this.context,
       });
       await commandService.initialize();
 
       // Initialize other services
-      const fileWatcherService = new FileWatcherService({ 
+      const fileWatcherService = new FileWatcherService({
         logger: this.logger,
-        workspacePath 
+        workspacePath,
       });
 
       const languageClientService = new LanguageClientService({
         logger: this.logger,
         context: this.context,
-        workspacePath
+        workspacePath,
       });
 
       const inputBoxService = new InputBoxService({
         logger: this.logger,
-        commandService
+        commandService,
       });
 
       // Initialize remaining services
@@ -63,8 +63,8 @@ export class CompositionRoot {
       // Register all commands after services are initialized
       const fileCommands = createFileCommands(fileWatcherService);
       const inputBoxCommands = createInputBoxCommands(inputBoxService);
-      
-      [...fileCommands, ...inputBoxCommands].forEach(command => {
+
+      [...fileCommands, ...inputBoxCommands].forEach((command) => {
         commandService.registerCommand(command);
       });
 
@@ -73,11 +73,12 @@ export class CompositionRoot {
         commandService,
         fileWatcherService,
         languageClientService,
-        inputBoxService
+        inputBoxService,
       );
-      
     } catch (error) {
-      this.logger.error(`Initialization error: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Initialization error: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }

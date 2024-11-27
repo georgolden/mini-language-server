@@ -1,9 +1,9 @@
 import { ExtensionContext } from 'vscode';
-import { 
-  LanguageClient, 
-  LanguageClientOptions, 
-  ServerOptions, 
-  TransportKind 
+import {
+  LanguageClient,
+  LanguageClientOptions,
+  ServerOptions,
+  TransportKind,
 } from 'vscode-languageclient/node';
 import { IService, ServiceDependencies, ServiceState } from './types';
 import { ILogger } from '../logger/Logger';
@@ -53,16 +53,16 @@ export class LanguageClientService implements IService {
       run: {
         module: serverModule,
         transport: TransportKind.ipc,
-        options: { cwd: this.workspacePath }
+        options: { cwd: this.workspacePath },
       },
       debug: {
         module: serverModule,
         transport: TransportKind.ipc,
-        options: { 
+        options: {
           execArgv: ['--nolazy', '--inspect=6009'],
           cwd: this.workspacePath,
-        }
-      }
+        },
+      },
     };
 
     const clientOptions: LanguageClientOptions = {
@@ -70,15 +70,15 @@ export class LanguageClientService implements IService {
         { scheme: 'file', language: 'typescript' },
         { scheme: 'file', language: 'javascript' },
         { scheme: 'file', language: 'typescriptreact' },
-        { scheme: 'file', language: 'javascriptreact' }
-      ]
+        { scheme: 'file', language: 'javascriptreact' },
+      ],
     };
 
     this.client = new LanguageClient(
       'miniLanguageServer',
       'Mini Language Server',
       serverOptions,
-      clientOptions
+      clientOptions,
     );
 
     await this.client.start();
@@ -88,12 +88,12 @@ export class LanguageClientService implements IService {
 
   async dispose(): Promise<void> {
     this.assertState('dispose');
-    
+
     if (this.client) {
       await this.client.stop();
       this.client = undefined;
     }
-    
+
     this.state.isDisposed = true;
   }
 }
