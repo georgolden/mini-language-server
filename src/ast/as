@@ -1,0 +1,22 @@
+private async extractCodeChunk(
+    tree: Tree, 
+    identifier: string,
+    filePath: string
+  ): Promise<{ sourceCode: string; position: SourcePosition } | null> {
+    // Implementation to find and extract the minimal code chunk
+    // This needs to:
+    // 1. Find the node defining this identifier
+    // 2. Include all relevant context (like entire class/function)
+    // 3. Extract the source code for just this chunk
+  }
+
+  private findChunkDependencies(
+    tree: Tree, 
+    position: SourcePosition
+  ): Set<string> {
+    // Implementation to find all external identifiers used in this chunk
+    // This needs to:
+    // 1. Find all identifiers in the chunk
+    // 2. Filter out locally defined ones
+    // 3. Return set of external dependencies
+  }
