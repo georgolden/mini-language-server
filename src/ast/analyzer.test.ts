@@ -95,16 +95,10 @@ describe('ASTDependencyAnalyzer', async () => {
 
     try {
       const result = await analyzer.findIdentifierDefinition(
-        {
-          name: 'InputBoxService',
-          position: {
-            start: { line: 1, column: 9, offset: 42 },
-            end: { line: 1, column: 24, offset: 57 },
-          },
-        },
+        'InputBoxService',
         paths.mainPath,
       );
-
+      console.dir({ result });
       assert.ok(result, 'Should find class definition');
       assert.ok(result.filePath.endsWith('InputBoxService.ts'), 'Should resolve to correct file');
 
@@ -138,13 +132,7 @@ describe('ASTDependencyAnalyzer', async () => {
 
     try {
       const result = await analyzer.findIdentifierDefinition(
-        {
-          name: 'Command',
-          position: {
-            start: { line: 0, column: 10, offset: 10 },
-            end: { line: 0, column: 17, offset: 17 },
-          },
-        },
+        'Command',
         paths.mainPath,
       );
 
@@ -171,13 +159,7 @@ describe('ASTDependencyAnalyzer', async () => {
 
     try {
       const result = await analyzer.findIdentifierDefinition(
-        {
-          name: 'asyncHelper',
-          position: {
-            start: { line: 2, column: 10, offset: 75 },
-            end: { line: 2, column: 20, offset: 85 },
-          },
-        },
+        'asyncHelper',
         paths.mainPath,
       );
 
@@ -204,13 +186,7 @@ describe('ASTDependencyAnalyzer', async () => {
 
     try {
       const result = await analyzer.findIdentifierDefinition(
-        {
-          name: 'CommandHandler',
-          position: {
-            start: { line: 0, column: 10, offset: 10 },
-            end: { line: 0, column: 24, offset: 24 },
-          },
-        },
+       'CommandHandler',
         paths.mainPath,
       );
 
@@ -227,13 +203,7 @@ describe('ASTDependencyAnalyzer', async () => {
 
     try {
       const result = await analyzer.findIdentifierDefinition(
-        {
-          name: 'Logger',
-          position: {
-            start: { line: 1, column: 10, offset: 28 },
-            end: { line: 1, column: 16, offset: 34 },
-          },
-        },
+        'Logger',
         paths.servicePath,
       );
 
@@ -258,13 +228,7 @@ describe('ASTDependencyAnalyzer', async () => {
 
     try {
       const result = await analyzer.findIdentifierDefinition(
-        {
-          name: 'InputBoxService',
-          position: {
-            start: { line: 1, column: 9, offset: 42 },
-            end: { line: 1, column: 24, offset: 57 },
-          },
-        },
+        'InputBoxService',
         path.resolve(TEST_DIR, 'with-extension.ts'),
       );
 
@@ -281,13 +245,7 @@ describe('ASTDependencyAnalyzer', async () => {
 
     try {
       const result = await analyzer.findIdentifierDefinition(
-        {
-          name: 'NonExistentService',
-          position: {
-            start: { line: 0, column: 0, offset: 0 },
-            end: { line: 0, column: 10, offset: 10 },
-          },
-        },
+        'NonExistentService',
         paths.mainPath,
       );
 

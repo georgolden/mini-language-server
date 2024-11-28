@@ -7,12 +7,6 @@ interface SourcePosition {
   end: { line: number; column: number; offset: number };
 }
 
-interface IdentifierUsage {
-  name: string;
-  position: SourcePosition;
-  context?: string[];
-}
-
 interface DependencyNode {
   identifier: string;
   sourceCode: string;
@@ -25,6 +19,12 @@ class ASTDependencyAnalyzer {
   parser: Parser;
   private cache: Map<string, DependencyNode> = new Map();
   private processing: Set<string> = new Set();
+  private builtInIdentifiers = new Set([
+    'string', 'number', 'boolean', 'void', 'null', 'undefined',
+    'object', 'symbol', 'bigint', 'any', 'unknown', 'never',
+    'Promise', 'Array', 'Map', 'Set', 'this', 'super', 'console',
+    'Error', 'Date', 'JSON', 'Math', 'event', 'message'
+  ]);
 
   constructor() {
     this.parser = new Parser();
@@ -33,10 +33,10 @@ class ASTDependencyAnalyzer {
   }
 
   async analyzeIdentifierDependencies(
-    identifier: IdentifierUsage,
+    identifierName: string,
     fromFilePath: string,
   ): Promise<DependencyNode | null> {
-    const cacheKey = `${fromFilePath}:${identifier.name}`;
+    const cacheKey = `${fromFilePath}:${identifierName}`;
 
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
@@ -46,46 +46,43 @@ class ASTDependencyAnalyzer {
       return null;
     }
 
+    if (this.builtInIdentifiers.has(identifierName)) {
+      return null;
+    }
+
     this.processing.add(cacheKey);
 
     try {
-      const location = await this.findIdentifierDefinition(identifier, fromFilePath);
-      if (!location) return null;
+      const definition = await this.findIdentifierDefinition(identifierName, fromFilePath);
+      if (!definition) return null;
 
-      const sourceCode = await readFile(location.filePath, 'utf-8');
+      const sourceCode = await readFile(definition.filePath, 'utf-8');
       const tree = this.parser.parse(sourceCode);
 
-      const chunk = await this.extractCodeChunk(tree, identifier.name, location.filePath);
+      const chunk = await this.extractCodeChunk(tree, identifierName, definition.filePath);
       if (!chunk) return null;
 
-      // Get direct dependencies
       const directDependencies = this.findChunkDependencies(tree, chunk.position);
-
-      // Recursively resolve each dependency
       const resolvedDependencies = new Map<string, DependencyNode>();
 
       for (const depName of directDependencies) {
-        // Skip if it's the current identifier to avoid cycles
-        if (depName === identifier.name) continue;
+        if (
+          depName === identifierName ||
+          this.builtInIdentifiers.has(depName) ||
+          this.isLocalIdentifier(depName, chunk)
+        ) continue;
 
-        const depNode = await this.analyzeIdentifierDependencies(
-          {
-            name: depName,
-            position: chunk.position, // We'll use this as a starting point
-          },
-          location.filePath,
-        );
-
+        const depNode = await this.analyzeIdentifierDependencies(depName, definition.filePath);
         if (depNode) {
           resolvedDependencies.set(depName, depNode);
         }
       }
 
       const result: DependencyNode = {
-        identifier: identifier.name,
+        identifier: identifierName,
         sourceCode: chunk.sourceCode,
         position: chunk.position,
-        filePath: location.filePath,
+        filePath: definition.filePath,
         dependencies: resolvedDependencies,
       };
 
@@ -96,55 +93,92 @@ class ASTDependencyAnalyzer {
     }
   }
 
+  private findDefinitionInFile(tree: Parser.Tree, identifierName: string): SourcePosition | null {
+    console.log('Finding definition for:', identifierName);
+
+    const declarationTypes = new Set([
+      'class_declaration',
+      'abstract_class_declaration', 
+      'interface_declaration',
+      'type_alias_declaration',
+      'function_declaration',
+      'variable_declaration',
+      'enum_declaration'
+    ]);
+
+    const isDeclaration = (type: string) => declarationTypes.has(type);
+
+    for (const node of tree.rootNode.children) {
+      if (node.type === 'export_statement') {
+        const declaration = node.childForFieldName('declaration');
+        if (declaration && isDeclaration(declaration.type)) {
+          const nameNode = declaration.childForFieldName('name');
+          if (nameNode?.text === identifierName) {
+            return {
+              start: { 
+                line: node.startPosition.row,
+                column: node.startPosition.column,
+                offset: node.startIndex 
+              },
+              end: { 
+                line: node.endPosition.row,
+                column: node.endPosition.column,
+                offset: node.endIndex 
+              }
+            };
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private isLocalIdentifier(name: string, chunk: { sourceCode: string }): boolean {
+    // Check if the identifier is a local variable, parameter, or property
+    const localPatterns = [
+      `function ${name}`,
+      `const ${name}`,
+      `let ${name}`,
+      `var ${name}`,
+      `(${name}:`,
+      `${name}:`,
+      `private ${name}`,
+      `protected ${name}`,
+      `public ${name}`
+    ];
+    return localPatterns.some(pattern => chunk.sourceCode.includes(pattern));
+  }
+
   async findIdentifierDefinition(
-    identifier: IdentifierUsage,
+    identifierName: string,
     fromFilePath: string,
   ): Promise<{ filePath: string; position: SourcePosition } | null> {
-    console.log('\nStarting findIdentifierDefinition:');
-    console.log('Looking for identifier:', identifier.name);
-    console.log('In file:', fromFilePath);
-
     try {
-      // Read and parse the source file
       const sourceCode = await readFile(fromFilePath, 'utf-8');
-      console.log('Successfully read source file');
-
       const tree = this.parser.parse(sourceCode);
-      console.log('Successfully parsed source file');
 
-      // Find relevant import statement for this identifier
-      const imports = this.findImportForIdentifier(tree, identifier.name);
-      console.log('Import search result:', imports);
-
-      if (!imports) {
-        console.log('No import statement found for', identifier.name);
-        return null;
+      // First check if identifier is defined in current file
+      const localDefinition = this.findDefinitionInFile(tree, identifierName);
+      if (localDefinition) {
+        return {
+          filePath: fromFilePath,
+          position: localDefinition,
+        };
       }
 
-      // Resolve the import path
-      const resolvedPath = await this.resolveImportPath(imports.source, fromFilePath);
-      console.log('Resolved import path:', resolvedPath);
+      // If not found locally, look for imports
+      const importInfo = this.findImportForIdentifier(tree, identifierName);
+      if (!importInfo) return null;
 
-      if (!resolvedPath) {
-        console.log('Could not resolve import path for', imports.source);
-        return null;
-      }
+      const resolvedPath = await this.resolveImportPath(importInfo.source, fromFilePath);
+      if (!resolvedPath) return null;
 
-      // Parse the imported file
       const importedCode = await readFile(resolvedPath, 'utf-8');
-      console.log('Successfully read imported file');
-
       const importedTree = this.parser.parse(importedCode);
-      console.log('Successfully parsed imported file');
 
-      // Find the actual definition
-      const position = this.findDefinitionInFile(importedTree, identifier.name);
-      console.log('Definition position result:', position);
-
-      if (!position) {
-        console.log('Could not find definition in file');
-        return null;
-      }
+      const position = this.findDefinitionInFile(importedTree, identifierName);
+      if (!position) return null;
 
       return {
         filePath: resolvedPath,
@@ -158,59 +192,42 @@ class ASTDependencyAnalyzer {
 
   private findImportForIdentifier(
     tree: Parser.Tree,
-    identifierName: string,
+    targetIdentifier: string,
   ): { source: string } | null {
-    console.log('\nStarting findImportForIdentifier for:', identifierName);
-    let result: { source: string } | null = null;
+    // This function finds the import statement that brings in the target identifier
+    // Returns the source path if found, null otherwise
+    
+    const importStatements = tree.rootNode.descendantsOfType('import_statement');
+    
+    for (const importStmt of importStatements) {
+      // Handle named imports: import { X } from 'path'
+      const namedImports = importStmt.descendantsOfType('import_specifier');
+      const matchingImport = namedImports.find(specifier => {
+        const importedName = specifier.descendantsOfType('identifier')[0]?.text;
+        return importedName === targetIdentifier;
+      });
 
-    const visitNode = (node: Parser.SyntaxNode): void => {
-      if (node.type === 'import_statement') {
-        console.log('\nAnalyzing import statement:', node.text);
-
-        console.log(
-          'Node children types:',
-          node.children.map((c) => c.type),
-        );
-
-        const namedImports = node.descendantsOfType('import_specifier');
-        console.log('Found import specifiers:', namedImports.length);
-
-        for (const importSpec of namedImports) {
-          console.log('\nAnalyzing import specifier:', importSpec.text);
-
-          const identifiers = importSpec.descendantsOfType('identifier');
-          console.log(
-            'Identifiers in specifier:',
-            identifiers.map((id) => id.text),
-          );
-
-          if (identifiers.some((id) => id.text === identifierName)) {
-            console.log('Found matching identifier:', identifierName);
-
-            const sources = node.descendantsOfType('string');
-            const firstSource = sources[0];
-            if (firstSource) {
-              const sourceText = firstSource.text;
-              console.log('Found source:', sourceText);
-              result = {
-                source: sourceText.slice(1, -1),
-              };
-              return;
-            }
-          }
-        }
+      if (matchingImport) {
+        const sourcePath = importStmt.descendantsOfType('string')[0]?.text;
+        return sourcePath ? { source: sourcePath.slice(1, -1) } : null;
       }
 
-      if (!result) {
-        for (const child of node.children) {
-          visitNode(child);
-        }
+      // Handle namespace imports: import * as X from 'path'
+      const namespaceImport = importStmt.descendantsOfType('namespace_import')[0];
+      if (namespaceImport?.childForFieldName('name')?.text === targetIdentifier) {
+        const sourcePath = importStmt.descendantsOfType('string')[0]?.text;
+        return sourcePath ? { source: sourcePath.slice(1, -1) } : null;
       }
-    };
 
-    visitNode(tree.rootNode);
-    console.log('findImportForIdentifier final result:', result);
-    return result;
+      // Handle default imports: import X from 'path'
+      const defaultImport = importStmt.childForFieldName('clause')?.childForFieldName('default');
+      if (defaultImport?.text === targetIdentifier) {
+        const sourcePath = importStmt.descendantsOfType('string')[0]?.text;
+        return sourcePath ? { source: sourcePath.slice(1, -1) } : null;
+      }
+    }
+
+    return null;
   }
 
   private async resolveImportPath(
@@ -276,93 +293,6 @@ class ASTDependencyAnalyzer {
     }
   }
 
-  private findDefinitionInFile(tree: Parser.Tree, identifierName: string): SourcePosition | null {
-    console.log('\nFinding definition for:', identifierName);
-    console.log('Tree root type:', tree.rootNode.type);
-    let result = null;
-
-    const visitNode = (node: Parser.SyntaxNode): void => {
-      console.log('Visiting node:', node.type);
-
-      if (
-        node.type === 'export_statement' ||
-        node.type === 'export_named_declaration' ||
-        node.type === 'interface_declaration' ||
-        node.type === 'type_alias_declaration' // Add type alias handling
-      ) {
-        console.log('Found export or type declaration:', node.text);
-        let identifierNode: Parser.SyntaxNode | null = null;
-
-        if (node.type === 'type_alias_declaration') {
-          console.log('Processing type alias');
-          identifierNode = node.childForFieldName('name');
-          console.log('Type alias name:', identifierNode?.text);
-        } else if (node.type === 'interface_declaration') {
-          identifierNode = node.childForFieldName('name');
-          console.log('Interface name:', identifierNode?.text);
-        } else if (node.type === 'export_statement') {
-          const declaration = node.childForFieldName('declaration');
-          console.log('Export declaration type:', declaration?.type);
-
-          if (declaration) {
-            if (declaration.type === 'type_alias_declaration') {
-              identifierNode = declaration.childForFieldName('name');
-              console.log('Exported type name:', identifierNode?.text);
-            } else if (declaration.type === 'interface_declaration') {
-              identifierNode = declaration.childForFieldName('name');
-            } else if (
-              declaration.type === 'function_declaration' ||
-              declaration.type === 'class_declaration'
-            ) {
-              identifierNode = declaration.childForFieldName('name');
-            } else if (declaration.type === 'variable_declaration') {
-              const declarators = declaration.descendantsOfType('variable_declarator');
-              const firstDeclarator = declarators[0];
-              if (firstDeclarator) {
-                identifierNode = firstDeclarator.childForFieldName('name');
-              }
-            }
-          }
-        } else {
-          // export_named_declaration
-          const identifiers = node.descendantsOfType('identifier');
-          const firstIdentifier = identifiers[0];
-          if (firstIdentifier) {
-            identifierNode = firstIdentifier;
-          }
-        }
-
-        if (identifierNode && identifierNode.text === identifierName) {
-          console.log('Found matching identifier:', identifierNode.text);
-          const targetNode = node.type === 'export_statement' ? node : identifierNode.parent;
-          if (targetNode) {
-            result = {
-              start: {
-                line: targetNode.startPosition.row,
-                column: targetNode.startPosition.column,
-                offset: targetNode.startIndex,
-              },
-              end: {
-                line: targetNode.endPosition.row,
-                column: targetNode.endPosition.column,
-                offset: targetNode.endIndex,
-              },
-            };
-            return;
-          }
-        }
-      }
-
-      for (const child of node.children) {
-        visitNode(child);
-      }
-    };
-
-    visitNode(tree.rootNode);
-    console.log('Definition search result:', result);
-    return result;
-  }
-
   private async findInNodeModules(
     importPath: string,
     fromFilePath: string,
@@ -402,205 +332,82 @@ class ASTDependencyAnalyzer {
     identifier: string,
     filePath: string,
   ): Promise<{ sourceCode: string; position: SourcePosition } | null> {
-    console.log('\nExtracting code chunk for:', identifier);
-    console.log('From file:', filePath);
+    const fileContent = await readFile(filePath, 'utf-8');
 
-    const findIdentifierNode = (node: Parser.SyntaxNode): Parser.SyntaxNode | null => {
-      console.log('Visiting node:', node.type);
+    for (const node of tree.rootNode.children) {
+      if (node.type === 'export_statement') {
+        const declaration = node.childForFieldName('declaration');
+        if (!declaration) continue;
 
-      if (
-        node.type === 'class_declaration' ||
-        node.type === 'function_declaration' ||
-        node.type === 'interface_declaration' ||
-        node.type === 'type_alias_declaration' ||
-        node.type === 'enum_declaration'
-      ) {
-        const nameNode = node.childForFieldName('name');
-        console.log('Found declaration, checking name:', nameNode?.text);
+        const nameNode = declaration.childForFieldName('name');
         if (nameNode?.text === identifier) {
-          console.log('Found matching declaration:', node.type);
-          // If this node is part of an export statement, return the export statement
-          return node.parent?.type === 'export_statement' ? node.parent : node;
-        }
-      } else if (node.type === 'lexical_declaration') {
-        console.log('Checking lexical declaration');
-        const declarators = node.descendantsOfType('variable_declarator');
-        for (const declarator of declarators) {
-          const nameNode = declarator.childForFieldName('name');
-          if (nameNode?.text === identifier) {
-            console.log('Found matching variable declarator:', nameNode.text);
-            return node.parent?.type === 'export_statement' ? node.parent : node;
-          }
+          return {
+            sourceCode: fileContent.substring(node.startIndex, node.endIndex),
+            position: {
+              start: {
+                line: node.startPosition.row,
+                column: node.startPosition.column,
+                offset: node.startIndex,
+              },
+              end: {
+                line: node.endPosition.row,
+                column: node.endPosition.column,
+                offset: node.endIndex,
+              },
+            },
+          };
         }
       }
-
-      for (const child of node.children) {
-        const result = findIdentifierNode(child);
-        if (result) return result;
-      }
-
-      return null;
-    };
-
-    const declarationNode = findIdentifierNode(tree.rootNode);
-    if (!declarationNode) {
-      console.log('No declaration found for:', identifier);
-      return null;
     }
 
-    console.log('Found declaration node:', {
-      type: declarationNode.type,
-      startIndex: declarationNode.startIndex,
-      endIndex: declarationNode.endIndex,
-      text: declarationNode.text.slice(0, 50), // Truncate long text in logs
-    });
-
-    const fileContent = await readFile(filePath, 'utf-8');
-    const chunk = fileContent.substring(declarationNode.startIndex, declarationNode.endIndex);
-
-    return {
-      sourceCode: chunk,
-      position: {
-        start: {
-          line: declarationNode.startPosition.row,
-          column: declarationNode.startPosition.column,
-          offset: declarationNode.startIndex,
-        },
-        end: {
-          line: declarationNode.endPosition.row,
-          column: declarationNode.endPosition.column,
-          offset: declarationNode.endIndex,
-        },
-      },
-    };
+    return null;
   }
 
   findChunkDependencies(tree: Parser.Tree, position: SourcePosition): Set<string> {
-    console.log('\nFinding chunk dependencies in range:', position);
     const dependencies = new Set<string>();
-    const builtInTypes = new Set([
-      'string',
-      'number',
-      'boolean',
-      'void',
-      'null',
-      'undefined',
-      'object',
-      'symbol',
-      'bigint',
-      'any',
-      'unknown',
-      'never',
-      'Promise',
-      'Array',
-      'Map',
-      'Set',
-    ]);
-
+    const typeParameters = new Set<string>();
     let mainDeclarationName: string | null = null;
-    const typeParameters = new Set<string>(); // Track all type parameters
 
-    const isInRange = (node: Parser.SyntaxNode): boolean => {
-      const hasOverlap = !(
-        node.endIndex < position.start.offset || node.startIndex > position.end.offset
-      );
-      return hasOverlap;
-    };
-
-    // First pass: collect type parameters
-    const collectTypeParams = (node: Parser.SyntaxNode): void => {
+    const collectTypeParams = (node: Parser.SyntaxNode) => {
       if (node.type === 'type_parameters') {
         for (const param of node.children) {
           if (param.type === 'type_parameter') {
-            const paramName = param.childForFieldName('name');
-            if (paramName) {
-              typeParameters.add(paramName.text);
-            }
+            const name = param.childForFieldName('name');
+            if (name) typeParameters.add(name.text);
           }
         }
       }
       node.children.forEach(collectTypeParams);
     };
 
-    const processNode = (node: Parser.SyntaxNode): void => {
-      if (
-        node.type === 'class_declaration' ||
-        node.type === 'interface_declaration' ||
-        node.type === 'type_alias_declaration' ||
-        node.type === 'enum_declaration'
-      ) {
-        const nameNode = node.childForFieldName('name');
-        if (nameNode) {
-          mainDeclarationName = nameNode.text;
+    for (const node of tree.rootNode.children) {
+      collectTypeParams(node);
+
+      if (node.type === 'export_statement') {
+        const declaration = node.childForFieldName('declaration');
+        if (declaration) {
+          const nameNode = declaration.childForFieldName('name');
+          if (nameNode) mainDeclarationName = nameNode.text;
+
+          const traverseForDependencies = (n: Parser.SyntaxNode) => {
+            if (
+              (n.type === 'type_identifier' || n.type === 'identifier') &&
+              !this.builtInIdentifiers.has(n.text) &&
+              !typeParameters.has(n.text) &&
+              n.text !== mainDeclarationName
+            ) {
+              dependencies.add(n.text);
+            }
+            n.children.forEach(traverseForDependencies);
+          };
+
+          traverseForDependencies(declaration);
         }
       }
-
-      if (!isInRange(node)) {
-        return;
-      }
-
-      if (node.type === 'type_identifier') {
-        const identifierName = node.text;
-        if (
-          !builtInTypes.has(identifierName) &&
-          identifierName !== mainDeclarationName &&
-          !typeParameters.has(identifierName)
-        ) {
-          // Check against type parameters
-          dependencies.add(identifierName);
-        }
-      } else if (node.type === 'identifier') {
-        const identifierName = node.text;
-
-        if (
-          node.parent?.type === 'class_declaration' ||
-          node.parent?.type === 'method_definition' ||
-          node.parent?.type === 'property_identifier' ||
-          node.parent?.type === 'required_parameter' ||
-          node.parent?.type === 'type_parameter' ||
-          identifierName === mainDeclarationName ||
-          typeParameters.has(identifierName) || // Check against type parameters
-          [
-            'this',
-            'constructor',
-            'class',
-            'interface',
-            'type',
-            'export',
-            'import',
-            'return',
-            'async',
-            'await',
-          ].includes(identifierName) ||
-          builtInTypes.has(identifierName)
-        ) {
-          return;
-        }
-
-        dependencies.add(identifierName);
-      }
-
-      for (const child of node.children) {
-        processNode(child);
-      }
-    };
-
-    const exportStatement = tree.rootNode.descendantForPosition({
-      row: position.start.line,
-      column: position.start.column,
-    })?.parent;
-
-    if (exportStatement) {
-      // First collect type parameters
-      collectTypeParams(exportStatement);
-      // Then process for dependencies
-      processNode(exportStatement);
     }
-
-    console.log({ dependencies: dependencies });
 
     return dependencies;
   }
 }
 
-export { ASTDependencyAnalyzer, IdentifierUsage, DependencyNode, SourcePosition };
+export { ASTDependencyAnalyzer, DependencyNode, SourcePosition };
