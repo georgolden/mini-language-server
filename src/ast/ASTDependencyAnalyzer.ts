@@ -13,17 +13,17 @@ interface IdentifierUsage {
   context?: string[];
 }
 
-interface CodeChunk {
+interface DependencyNode {
   identifier: string;
   sourceCode: string;
   position: SourcePosition;
   filePath: string;
-  dependsOn: Set<string>;
+  dependencies: Map<string, DependencyNode>; // Changed from Set to Map of full nodes
 }
 
 class ASTDependencyAnalyzer {
-  private parser: Parser;
-  private cache: Map<string, CodeChunk> = new Map();
+  parser: Parser;
+  private cache: Map<string, DependencyNode> = new Map();
   private processing: Set<string> = new Set();
 
   constructor() {
@@ -35,15 +35,13 @@ class ASTDependencyAnalyzer {
   async analyzeIdentifierDependencies(
     identifier: IdentifierUsage,
     fromFilePath: string,
-  ): Promise<CodeChunk | null> {
+  ): Promise<DependencyNode | null> {
     const cacheKey = `${fromFilePath}:${identifier.name}`;
 
-    // Check cache first
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
     }
 
-    // Prevent circular dependencies
     if (this.processing.has(cacheKey)) {
       return null;
     }
@@ -51,28 +49,44 @@ class ASTDependencyAnalyzer {
     this.processing.add(cacheKey);
 
     try {
-      // First find where this identifier is defined
       const location = await this.findIdentifierDefinition(identifier, fromFilePath);
       if (!location) return null;
 
-      // Load and parse the file containing the definition
       const sourceCode = await readFile(location.filePath, 'utf-8');
       const tree = this.parser.parse(sourceCode);
 
-      // Extract the minimal code chunk that defines this identifier
       const chunk = await this.extractCodeChunk(tree, identifier.name, location.filePath);
       if (!chunk) return null;
 
-      // Find all identifiers this chunk depends on
-      const dependencies = this.findChunkDependencies(tree, chunk.position);
+      // Get direct dependencies
+      const directDependencies = this.findChunkDependencies(tree, chunk.position);
 
-      // Recursively analyze dependencies
-      const result: CodeChunk = {
+      // Recursively resolve each dependency
+      const resolvedDependencies = new Map<string, DependencyNode>();
+
+      for (const depName of directDependencies) {
+        // Skip if it's the current identifier to avoid cycles
+        if (depName === identifier.name) continue;
+
+        const depNode = await this.analyzeIdentifierDependencies(
+          {
+            name: depName,
+            position: chunk.position, // We'll use this as a starting point
+          },
+          location.filePath,
+        );
+
+        if (depNode) {
+          resolvedDependencies.set(depName, depNode);
+        }
+      }
+
+      const result: DependencyNode = {
         identifier: identifier.name,
         sourceCode: chunk.sourceCode,
         position: chunk.position,
         filePath: location.filePath,
-        dependsOn: dependencies,
+        dependencies: resolvedDependencies,
       };
 
       this.cache.set(cacheKey, result);
@@ -207,20 +221,19 @@ class ASTDependencyAnalyzer {
 
     try {
       if (importPath.startsWith('.')) {
-        // Try different extensions
         const extensions = ['.ts', '.tsx', '.js', '.jsx'];
         const basePath = path.resolve(path.dirname(fromFilePath), importPath);
 
         console.log('Base path:', basePath);
 
-        // First, try with the exact path if it has an extension
+        // First try with exact path if it has extension
         if (path.extname(importPath)) {
           if (await this.fileExists(basePath)) {
             return basePath;
           }
         }
 
-        // Try adding extensions
+        // Try adding extensions directly
         for (const ext of extensions) {
           const fullPath = basePath + ext;
           console.log('Trying path:', fullPath);
@@ -228,6 +241,17 @@ class ASTDependencyAnalyzer {
           if (await this.fileExists(fullPath)) {
             console.log('Found existing file:', fullPath);
             return fullPath;
+          }
+        }
+
+        // Try index files in directory
+        for (const ext of extensions) {
+          const indexPath = path.join(basePath, `index${ext}`);
+          console.log('Trying index path:', indexPath);
+
+          if (await this.fileExists(indexPath)) {
+            console.log('Found existing index file:', indexPath);
+            return indexPath;
           }
         }
 
@@ -253,31 +277,49 @@ class ASTDependencyAnalyzer {
   }
 
   private findDefinitionInFile(tree: Parser.Tree, identifierName: string): SourcePosition | null {
+    console.log('\nFinding definition for:', identifierName);
+    console.log('Tree root type:', tree.rootNode.type);
     let result = null;
-    const cursor = tree.walk();
 
     const visitNode = (node: Parser.SyntaxNode): void => {
-      if (node.type === 'export_statement' || node.type === 'export_named_declaration') {
-        // Handle different types of exports
+      console.log('Visiting node:', node.type);
+
+      if (
+        node.type === 'export_statement' ||
+        node.type === 'export_named_declaration' ||
+        node.type === 'interface_declaration' ||
+        node.type === 'type_alias_declaration' // Add type alias handling
+      ) {
+        console.log('Found export or type declaration:', node.text);
         let identifierNode: Parser.SyntaxNode | null = null;
 
-        if (node.type === 'export_statement') {
+        if (node.type === 'type_alias_declaration') {
+          console.log('Processing type alias');
+          identifierNode = node.childForFieldName('name');
+          console.log('Type alias name:', identifierNode?.text);
+        } else if (node.type === 'interface_declaration') {
+          identifierNode = node.childForFieldName('name');
+          console.log('Interface name:', identifierNode?.text);
+        } else if (node.type === 'export_statement') {
           const declaration = node.childForFieldName('declaration');
+          console.log('Export declaration type:', declaration?.type);
+
           if (declaration) {
-            // Check for function_declaration, class_declaration, variable_declaration
-            if (
+            if (declaration.type === 'type_alias_declaration') {
+              identifierNode = declaration.childForFieldName('name');
+              console.log('Exported type name:', identifierNode?.text);
+            } else if (declaration.type === 'interface_declaration') {
+              identifierNode = declaration.childForFieldName('name');
+            } else if (
               declaration.type === 'function_declaration' ||
               declaration.type === 'class_declaration'
             ) {
-              const nameNode = declaration.childForFieldName('name');
-              identifierNode = nameNode ?? null;
+              identifierNode = declaration.childForFieldName('name');
             } else if (declaration.type === 'variable_declaration') {
               const declarators = declaration.descendantsOfType('variable_declarator');
               const firstDeclarator = declarators[0];
               if (firstDeclarator) {
-                // Check if element exists
-                const nameNode = firstDeclarator.childForFieldName('name');
-                identifierNode = nameNode ?? null;
+                identifierNode = firstDeclarator.childForFieldName('name');
               }
             }
           }
@@ -286,35 +328,38 @@ class ASTDependencyAnalyzer {
           const identifiers = node.descendantsOfType('identifier');
           const firstIdentifier = identifiers[0];
           if (firstIdentifier) {
-            // Check if element exists
             identifierNode = firstIdentifier;
           }
         }
 
         if (identifierNode && identifierNode.text === identifierName) {
-          result = {
-            start: {
-              line: node.startPosition.row,
-              column: node.startPosition.column,
-              offset: node.startIndex,
-            },
-            end: {
-              line: node.endPosition.row,
-              column: node.endPosition.column,
-              offset: node.endIndex,
-            },
-          };
-          return;
+          console.log('Found matching identifier:', identifierNode.text);
+          const targetNode = node.type === 'export_statement' ? node : identifierNode.parent;
+          if (targetNode) {
+            result = {
+              start: {
+                line: targetNode.startPosition.row,
+                column: targetNode.startPosition.column,
+                offset: targetNode.startIndex,
+              },
+              end: {
+                line: targetNode.endPosition.row,
+                column: targetNode.endPosition.column,
+                offset: targetNode.endIndex,
+              },
+            };
+            return;
+          }
         }
       }
 
-      // Continue traversing
       for (const child of node.children) {
         visitNode(child);
       }
     };
 
     visitNode(tree.rootNode);
+    console.log('Definition search result:', result);
     return result;
   }
 
@@ -352,19 +397,210 @@ class ASTDependencyAnalyzer {
     return null;
   }
 
-  private async extractCodeChunk(
+  async extractCodeChunk(
     tree: Parser.Tree,
     identifier: string,
     filePath: string,
   ): Promise<{ sourceCode: string; position: SourcePosition } | null> {
-    // TODO: Implement minimal code chunk extraction
-    return null;
+    console.log('\nExtracting code chunk for:', identifier);
+    console.log('From file:', filePath);
+
+    const findIdentifierNode = (node: Parser.SyntaxNode): Parser.SyntaxNode | null => {
+      console.log('Visiting node:', node.type);
+
+      if (
+        node.type === 'class_declaration' ||
+        node.type === 'function_declaration' ||
+        node.type === 'interface_declaration' ||
+        node.type === 'type_alias_declaration' ||
+        node.type === 'enum_declaration'
+      ) {
+        const nameNode = node.childForFieldName('name');
+        console.log('Found declaration, checking name:', nameNode?.text);
+        if (nameNode?.text === identifier) {
+          console.log('Found matching declaration:', node.type);
+          // If this node is part of an export statement, return the export statement
+          return node.parent?.type === 'export_statement' ? node.parent : node;
+        }
+      } else if (node.type === 'lexical_declaration') {
+        console.log('Checking lexical declaration');
+        const declarators = node.descendantsOfType('variable_declarator');
+        for (const declarator of declarators) {
+          const nameNode = declarator.childForFieldName('name');
+          if (nameNode?.text === identifier) {
+            console.log('Found matching variable declarator:', nameNode.text);
+            return node.parent?.type === 'export_statement' ? node.parent : node;
+          }
+        }
+      }
+
+      for (const child of node.children) {
+        const result = findIdentifierNode(child);
+        if (result) return result;
+      }
+
+      return null;
+    };
+
+    const declarationNode = findIdentifierNode(tree.rootNode);
+    if (!declarationNode) {
+      console.log('No declaration found for:', identifier);
+      return null;
+    }
+
+    console.log('Found declaration node:', {
+      type: declarationNode.type,
+      startIndex: declarationNode.startIndex,
+      endIndex: declarationNode.endIndex,
+      text: declarationNode.text.slice(0, 50), // Truncate long text in logs
+    });
+
+    const fileContent = await readFile(filePath, 'utf-8');
+    const chunk = fileContent.substring(declarationNode.startIndex, declarationNode.endIndex);
+
+    return {
+      sourceCode: chunk,
+      position: {
+        start: {
+          line: declarationNode.startPosition.row,
+          column: declarationNode.startPosition.column,
+          offset: declarationNode.startIndex,
+        },
+        end: {
+          line: declarationNode.endPosition.row,
+          column: declarationNode.endPosition.column,
+          offset: declarationNode.endIndex,
+        },
+      },
+    };
   }
 
-  private findChunkDependencies(tree: Parser.Tree, position: SourcePosition): Set<string> {
-    // TODO: Implement dependency finding
-    return new Set();
+  findChunkDependencies(tree: Parser.Tree, position: SourcePosition): Set<string> {
+    console.log('\nFinding chunk dependencies in range:', position);
+    const dependencies = new Set<string>();
+    const builtInTypes = new Set([
+      'string',
+      'number',
+      'boolean',
+      'void',
+      'null',
+      'undefined',
+      'object',
+      'symbol',
+      'bigint',
+      'any',
+      'unknown',
+      'never',
+      'Promise',
+      'Array',
+      'Map',
+      'Set',
+    ]);
+
+    let mainDeclarationName: string | null = null;
+    const typeParameters = new Set<string>(); // Track all type parameters
+
+    const isInRange = (node: Parser.SyntaxNode): boolean => {
+      const hasOverlap = !(
+        node.endIndex < position.start.offset || node.startIndex > position.end.offset
+      );
+      return hasOverlap;
+    };
+
+    // First pass: collect type parameters
+    const collectTypeParams = (node: Parser.SyntaxNode): void => {
+      if (node.type === 'type_parameters') {
+        for (const param of node.children) {
+          if (param.type === 'type_parameter') {
+            const paramName = param.childForFieldName('name');
+            if (paramName) {
+              typeParameters.add(paramName.text);
+            }
+          }
+        }
+      }
+      node.children.forEach(collectTypeParams);
+    };
+
+    const processNode = (node: Parser.SyntaxNode): void => {
+      if (
+        node.type === 'class_declaration' ||
+        node.type === 'interface_declaration' ||
+        node.type === 'type_alias_declaration' ||
+        node.type === 'enum_declaration'
+      ) {
+        const nameNode = node.childForFieldName('name');
+        if (nameNode) {
+          mainDeclarationName = nameNode.text;
+        }
+      }
+
+      if (!isInRange(node)) {
+        return;
+      }
+
+      if (node.type === 'type_identifier') {
+        const identifierName = node.text;
+        if (
+          !builtInTypes.has(identifierName) &&
+          identifierName !== mainDeclarationName &&
+          !typeParameters.has(identifierName)
+        ) {
+          // Check against type parameters
+          dependencies.add(identifierName);
+        }
+      } else if (node.type === 'identifier') {
+        const identifierName = node.text;
+
+        if (
+          node.parent?.type === 'class_declaration' ||
+          node.parent?.type === 'method_definition' ||
+          node.parent?.type === 'property_identifier' ||
+          node.parent?.type === 'required_parameter' ||
+          node.parent?.type === 'type_parameter' ||
+          identifierName === mainDeclarationName ||
+          typeParameters.has(identifierName) || // Check against type parameters
+          [
+            'this',
+            'constructor',
+            'class',
+            'interface',
+            'type',
+            'export',
+            'import',
+            'return',
+            'async',
+            'await',
+          ].includes(identifierName) ||
+          builtInTypes.has(identifierName)
+        ) {
+          return;
+        }
+
+        dependencies.add(identifierName);
+      }
+
+      for (const child of node.children) {
+        processNode(child);
+      }
+    };
+
+    const exportStatement = tree.rootNode.descendantForPosition({
+      row: position.start.line,
+      column: position.start.column,
+    })?.parent;
+
+    if (exportStatement) {
+      // First collect type parameters
+      collectTypeParams(exportStatement);
+      // Then process for dependencies
+      processNode(exportStatement);
+    }
+
+    console.log({ dependencies: dependencies });
+
+    return dependencies;
   }
 }
 
-export { ASTDependencyAnalyzer, IdentifierUsage, CodeChunk, SourcePosition };
+export { ASTDependencyAnalyzer, IdentifierUsage, DependencyNode, SourcePosition };

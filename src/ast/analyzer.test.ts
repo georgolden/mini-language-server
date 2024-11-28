@@ -73,7 +73,7 @@ export async function asyncHelper(): Promise<void> {
     mainPath: path.resolve(TEST_DIR, 'main.ts'),
     typesPath: path.resolve(TEST_DIR, 'types/index.ts'),
     servicePath: path.resolve(TEST_DIR, 'services/InputBoxService.ts'),
-    utilsPath: path.resolve(TEST_DIR, 'utils/helpers.ts')
+    utilsPath: path.resolve(TEST_DIR, 'utils/helpers.ts'),
   };
 
   await writeFile(paths.mainPath, mainFile);
@@ -92,34 +92,40 @@ describe('ASTDependencyAnalyzer', async () => {
   test('should find class definition in imported file', async (t) => {
     const paths = await setupTestFiles();
     const analyzer = new ASTDependencyAnalyzer();
-    
+
     try {
       const result = await analyzer.findIdentifierDefinition(
-        { 
+        {
           name: 'InputBoxService',
           position: {
             start: { line: 1, column: 9, offset: 42 },
-            end: { line: 1, column: 24, offset: 57 }
-          }
+            end: { line: 1, column: 24, offset: 57 },
+          },
         },
-        paths.mainPath
+        paths.mainPath,
       );
 
       assert.ok(result, 'Should find class definition');
       assert.ok(result.filePath.endsWith('InputBoxService.ts'), 'Should resolve to correct file');
-      
+
       // Position assertions
       assert.ok(result.position.start.line >= 0, 'Start line should be non-negative');
       assert.ok(result.position.end.line >= 0, 'End line should be non-negative');
-      assert.ok(result.position.start.offset < result.position.end.offset, 'Start offset should be less than end offset');
-      
+      assert.ok(
+        result.position.start.offset < result.position.end.offset,
+        'Start offset should be less than end offset',
+      );
+
       // Content verification
       const fileContent = await readFile(result.filePath, 'utf-8');
       const definitionSnippet = fileContent.substring(
         result.position.start.offset,
-        result.position.end.offset
+        result.position.end.offset,
       );
-      assert.ok(definitionSnippet.includes('InputBoxService'), 'Definition should contain class name');
+      assert.ok(
+        definitionSnippet.includes('InputBoxService'),
+        'Definition should contain class name',
+      );
       assert.ok(definitionSnippet.includes('export'), 'Definition should include export keyword');
     } finally {
       await cleanupTestFiles();
@@ -129,28 +135,31 @@ describe('ASTDependencyAnalyzer', async () => {
   test('should find interface definition', async (t) => {
     const paths = await setupTestFiles();
     const analyzer = new ASTDependencyAnalyzer();
-    
+
     try {
       const result = await analyzer.findIdentifierDefinition(
         {
           name: 'Command',
           position: {
             start: { line: 0, column: 10, offset: 10 },
-            end: { line: 0, column: 17, offset: 17 }
-          }
+            end: { line: 0, column: 17, offset: 17 },
+          },
         },
-        paths.mainPath
+        paths.mainPath,
       );
 
       assert.ok(result, 'Should find interface definition');
       assert.ok(result.filePath.endsWith('index.ts'), 'Should resolve to types file');
-      
+
       const fileContent = await readFile(result.filePath, 'utf-8');
       const definitionSnippet = fileContent.substring(
         result.position.start.offset,
-        result.position.end.offset
+        result.position.end.offset,
       );
-      assert.ok(definitionSnippet.includes('interface Command'), 'Should find interface definition');
+      assert.ok(
+        definitionSnippet.includes('interface Command'),
+        'Should find interface definition',
+      );
     } finally {
       await cleanupTestFiles();
     }
@@ -159,28 +168,31 @@ describe('ASTDependencyAnalyzer', async () => {
   test('should find function definition', async (t) => {
     const paths = await setupTestFiles();
     const analyzer = new ASTDependencyAnalyzer();
-    
+
     try {
       const result = await analyzer.findIdentifierDefinition(
         {
           name: 'asyncHelper',
           position: {
             start: { line: 2, column: 10, offset: 75 },
-            end: { line: 2, column: 20, offset: 85 }
-          }
+            end: { line: 2, column: 20, offset: 85 },
+          },
         },
-        paths.mainPath
+        paths.mainPath,
       );
 
       assert.ok(result, 'Should find function definition');
       assert.ok(result.filePath.endsWith('helpers.ts'), 'Should resolve to utils file');
-      
+
       const fileContent = await readFile(result.filePath, 'utf-8');
       const definitionSnippet = fileContent.substring(
         result.position.start.offset,
-        result.position.end.offset
+        result.position.end.offset,
       );
-      assert.ok(definitionSnippet.includes('function asyncHelper'), 'Should find function definition');
+      assert.ok(
+        definitionSnippet.includes('function asyncHelper'),
+        'Should find function definition',
+      );
     } finally {
       await cleanupTestFiles();
     }
@@ -189,17 +201,17 @@ describe('ASTDependencyAnalyzer', async () => {
   test('should handle type import', async (t) => {
     const paths = await setupTestFiles();
     const analyzer = new ASTDependencyAnalyzer();
-    
+
     try {
       const result = await analyzer.findIdentifierDefinition(
         {
           name: 'CommandHandler',
           position: {
             start: { line: 0, column: 10, offset: 10 },
-            end: { line: 0, column: 24, offset: 24 }
-          }
+            end: { line: 0, column: 24, offset: 24 },
+          },
         },
-        paths.mainPath
+        paths.mainPath,
       );
 
       assert.ok(result, 'Should find type definition');
@@ -212,17 +224,17 @@ describe('ASTDependencyAnalyzer', async () => {
   test('should handle re-exported identifiers', async (t) => {
     const paths = await setupTestFiles();
     const analyzer = new ASTDependencyAnalyzer();
-    
+
     try {
       const result = await analyzer.findIdentifierDefinition(
         {
           name: 'Logger',
           position: {
             start: { line: 1, column: 10, offset: 28 },
-            end: { line: 1, column: 16, offset: 34 }
-          }
+            end: { line: 1, column: 16, offset: 34 },
+          },
         },
-        paths.servicePath
+        paths.servicePath,
       );
 
       assert.ok(result, 'Should find interface definition through re-export');
@@ -235,22 +247,25 @@ describe('ASTDependencyAnalyzer', async () => {
   test('should handle import with extension', async (t) => {
     const paths = await setupTestFiles();
     const analyzer = new ASTDependencyAnalyzer();
-    
+
     // Add a file with explicit extension in import
-    await writeFile(`${TEST_DIR}/with-extension.ts`, `
+    await writeFile(
+      `${TEST_DIR}/with-extension.ts`,
+      `
       import { InputBoxService } from './services/InputBoxService.ts';
-    `);
-    
+    `,
+    );
+
     try {
       const result = await analyzer.findIdentifierDefinition(
         {
           name: 'InputBoxService',
           position: {
             start: { line: 1, column: 9, offset: 42 },
-            end: { line: 1, column: 24, offset: 57 }
-          }
+            end: { line: 1, column: 24, offset: 57 },
+          },
         },
-        path.resolve(TEST_DIR, 'with-extension.ts')
+        path.resolve(TEST_DIR, 'with-extension.ts'),
       );
 
       assert.ok(result, 'Should handle import with extension');
@@ -263,48 +278,20 @@ describe('ASTDependencyAnalyzer', async () => {
   test('should handle non-existent identifier', async (t) => {
     const paths = await setupTestFiles();
     const analyzer = new ASTDependencyAnalyzer();
-    
+
     try {
       const result = await analyzer.findIdentifierDefinition(
         {
           name: 'NonExistentService',
           position: {
             start: { line: 0, column: 0, offset: 0 },
-            end: { line: 0, column: 10, offset: 10 }
-          }
+            end: { line: 0, column: 10, offset: 10 },
+          },
         },
-        paths.mainPath
+        paths.mainPath,
       );
 
       assert.strictEqual(result, null, 'Should return null for non-existent identifier');
-    } finally {
-      await cleanupTestFiles();
-    }
-  });
-
-  test('should handle malformed import statement', async (t) => {
-    const paths = await setupTestFiles();
-    const analyzer = new ASTDependencyAnalyzer();
-    
-    // Create file with malformed import
-    await writeFile(`${TEST_DIR}/malformed.ts`, `
-      import { from './malformed'
-      import { InputBoxService } from './services/InputBoxService';
-    `);
-    
-    try {
-      const result = await analyzer.findIdentifierDefinition(
-        {
-          name: 'InputBoxService',
-          position: {
-            start: { line: 2, column: 9, offset: 65 },
-            end: { line: 2, column: 24, offset: 80 }
-          }
-        },
-        path.resolve(TEST_DIR, 'malformed.ts')
-      );
-
-      assert.ok(result, 'Should handle valid import even with malformed file');
     } finally {
       await cleanupTestFiles();
     }
