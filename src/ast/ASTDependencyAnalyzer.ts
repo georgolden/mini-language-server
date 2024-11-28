@@ -154,79 +154,125 @@ class ASTDependencyAnalyzer {
     identifierName: string,
     fromFilePath: string,
   ): Promise<{ filePath: string; position: SourcePosition } | null> {
+    console.log('\nFinding definition for:', identifierName, 'in file:', fromFilePath);
+  
     try {
       const sourceCode = await readFile(fromFilePath, 'utf-8');
+      console.log('Source file content:', sourceCode);
+  
+      // Check for imports first
       const tree = this.parser.parse(sourceCode);
-
-      // First check if identifier is defined in current file
-      const localDefinition = this.findDefinitionInFile(tree, identifierName);
-      if (localDefinition) {
+      const imports = this.findImportForIdentifier(tree, identifierName);
+      console.log('Found imports:', imports);
+  
+      if (imports) {
+        const resolvedPath = await this.resolveImportPath(imports.source, fromFilePath);
+        console.log('Resolved import path:', resolvedPath);
+  
+        if (!resolvedPath) {
+          console.log('Could not resolve import path');
+          return null;
+        }
+  
+        const importedCode = await readFile(resolvedPath, 'utf-8');
+        console.log('Imported file content:', importedCode);
+  
+        const importedTree = this.parser.parse(importedCode);
+        const position = this.findDefinitionInFile(importedTree, identifierName);
+        console.log('Found position in imported file:', position);
+  
+        if (!position) {
+          console.log('No definition found in imported file');
+          return null;
+        }
+  
         return {
-          filePath: fromFilePath,
-          position: localDefinition,
+          filePath: resolvedPath,
+          position,
         };
+      } else {
+        console.log('No imports found, searching in current file');
+        // If no import found, check current file
+        const position = this.findDefinitionInFile(tree, identifierName);
+        if (position) {
+          console.log('Found definition in current file:', position);
+          return {
+            filePath: fromFilePath,
+            position,
+          };
+        }
       }
-
-      // If not found locally, look for imports
-      const importInfo = this.findImportForIdentifier(tree, identifierName);
-      if (!importInfo) return null;
-
-      const resolvedPath = await this.resolveImportPath(importInfo.source, fromFilePath);
-      if (!resolvedPath) return null;
-
-      const importedCode = await readFile(resolvedPath, 'utf-8');
-      const importedTree = this.parser.parse(importedCode);
-
-      const position = this.findDefinitionInFile(importedTree, identifierName);
-      if (!position) return null;
-
-      return {
-        filePath: resolvedPath,
-        position,
-      };
+  
+      console.log('No definition found');
+      return null;
     } catch (error) {
       console.error('Error in findIdentifierDefinition:', error);
       return null;
     }
   }
-
+  
   private findImportForIdentifier(
     tree: Parser.Tree,
     targetIdentifier: string,
   ): { source: string } | null {
-    // This function finds the import statement that brings in the target identifier
-    // Returns the source path if found, null otherwise
-    
-    const importStatements = tree.rootNode.descendantsOfType('import_statement');
-    
-    for (const importStmt of importStatements) {
-      // Handle named imports: import { X } from 'path'
+    console.log('\nLooking for imports of:', targetIdentifier);
+  
+    for (const importStmt of tree.rootNode.descendantsOfType('import_statement')) {
+      console.log('Checking import statement:', importStmt.text);
+  
+      // Check named imports
       const namedImports = importStmt.descendantsOfType('import_specifier');
-      const matchingImport = namedImports.find(specifier => {
+      console.log('Named imports:', namedImports.map(spec => spec.text));
+  
+      for (const specifier of namedImports) {
         const importedName = specifier.descendantsOfType('identifier')[0]?.text;
-        return importedName === targetIdentifier;
-      });
-
-      if (matchingImport) {
-        const sourcePath = importStmt.descendantsOfType('string')[0]?.text;
-        return sourcePath ? { source: sourcePath.slice(1, -1) } : null;
+        console.log('Checking import specifier:', importedName);
+        if (importedName === targetIdentifier) {
+          const sourceNode = importStmt.descendantsOfType('string')[0];
+          if (sourceNode) {
+            // Remove quotes from string
+            const source = sourceNode.text.slice(1, -1);
+            console.log('Found source for import:', source);
+            return { source };
+          }
+        }
       }
-
-      // Handle namespace imports: import * as X from 'path'
+  
+      // Check type imports
+      if (importStmt.text.includes('type')) {
+        console.log('Found type import');
+        const typeImports = importStmt.descendantsOfType('import_specifier');
+        for (const specifier of typeImports) {
+          const importedName = specifier.descendantsOfType('identifier')[0]?.text;
+          console.log('Checking type import:', importedName);
+          if (importedName === targetIdentifier) {
+            const sourceNode = importStmt.descendantsOfType('string')[0];
+            if (sourceNode) {
+              const source = sourceNode.text.slice(1, -1);
+              console.log('Found source for type import:', source);
+              return { source };
+            }
+          }
+        }
+      }
+  
+      // Check namespace imports
       const namespaceImport = importStmt.descendantsOfType('namespace_import')[0];
-      if (namespaceImport?.childForFieldName('name')?.text === targetIdentifier) {
-        const sourcePath = importStmt.descendantsOfType('string')[0]?.text;
-        return sourcePath ? { source: sourcePath.slice(1, -1) } : null;
-      }
-
-      // Handle default imports: import X from 'path'
-      const defaultImport = importStmt.childForFieldName('clause')?.childForFieldName('default');
-      if (defaultImport?.text === targetIdentifier) {
-        const sourcePath = importStmt.descendantsOfType('string')[0]?.text;
-        return sourcePath ? { source: sourcePath.slice(1, -1) } : null;
+      if (namespaceImport) {
+        const name = namespaceImport.childForFieldName('name')?.text;
+        console.log('Checking namespace import:', name);
+        if (name === targetIdentifier) {
+          const sourceNode = importStmt.descendantsOfType('string')[0];
+          if (sourceNode) {
+            const source = sourceNode.text.slice(1, -1);
+            console.log('Found source for namespace import:', source);
+            return { source };
+          }
+        }
       }
     }
-
+  
+    console.log('No matching import found');
     return null;
   }
 
@@ -332,80 +378,228 @@ class ASTDependencyAnalyzer {
     identifier: string,
     filePath: string,
   ): Promise<{ sourceCode: string; position: SourcePosition } | null> {
+    console.log('\nExtracting code chunk for:', identifier);
+    console.log('From file:', filePath);
+  
     const fileContent = await readFile(filePath, 'utf-8');
-
-    for (const node of tree.rootNode.children) {
+    console.log('File content:', fileContent);
+  
+    const findNode = (node: Parser.SyntaxNode): Parser.SyntaxNode | null => {
+      console.log('Visiting node:', node.type, node.text.slice(0, 50) + '...');
+  
       if (node.type === 'export_statement') {
         const declaration = node.childForFieldName('declaration');
-        if (!declaration) continue;
-
-        const nameNode = declaration.childForFieldName('name');
-        if (nameNode?.text === identifier) {
-          return {
-            sourceCode: fileContent.substring(node.startIndex, node.endIndex),
-            position: {
-              start: {
-                line: node.startPosition.row,
-                column: node.startPosition.column,
-                offset: node.startIndex,
-              },
-              end: {
-                line: node.endPosition.row,
-                column: node.endPosition.column,
-                offset: node.endIndex,
-              },
-            },
-          };
+        console.log('Export declaration type:', declaration?.type);
+  
+        const nameNode = declaration?.childForFieldName('name');
+        const declaratorNode = declaration?.descendantsOfType('variable_declarator')[0];
+        
+        const foundName = nameNode?.text || declaratorNode?.childForFieldName('name')?.text;
+        console.log('Found name:', foundName);
+  
+        if (foundName === identifier) {
+          console.log('Found matching declaration:', node.text);
+          return node;
         }
       }
+  
+      for (const child of node.children) {
+        const result = findNode(child);
+        if (result) return result;
+      }
+  
+      return null;
+    };
+  
+    const foundNode = findNode(tree.rootNode);
+    if (!foundNode) {
+      console.log('No declaration found for:', identifier);
+      return null;
     }
-
-    return null;
+  
+    console.log('Found declaration node:', {
+      type: foundNode.type,
+      startIndex: foundNode.startIndex,
+      endIndex: foundNode.endIndex,
+      text: foundNode.text.slice(0, 50)
+    });
+  
+    return {
+      sourceCode: fileContent.substring(foundNode.startIndex, foundNode.endIndex),
+      position: {
+        start: {
+          line: foundNode.startPosition.row,
+          column: foundNode.startPosition.column,
+          offset: foundNode.startIndex,
+        },
+        end: {
+          line: foundNode.endPosition.row,
+          column: foundNode.endPosition.column,
+          offset: foundNode.endIndex,
+        },
+      },
+    };
   }
 
   findChunkDependencies(tree: Parser.Tree, position: SourcePosition): Set<string> {
+    console.log('\nStarting findChunkDependencies for position:', position);
     const dependencies = new Set<string>();
     const typeParameters = new Set<string>();
-    let mainDeclarationName: string | null = null;
-
-    const collectTypeParams = (node: Parser.SyntaxNode) => {
-      if (node.type === 'type_parameters') {
-        for (const param of node.children) {
-          if (param.type === 'type_parameter') {
-            const name = param.childForFieldName('name');
-            if (name) typeParameters.add(name.text);
-          }
+    const localIdentifiers = new Set<string>();
+    const localTypes = new Set<string>();
+  
+    // Collect all imports
+    console.log('\nCollecting imports:');
+    const importedNames = new Map<string, 'named' | 'namespace'>();
+    
+    for (const importStmt of tree.rootNode.descendantsOfType('import_statement')) {
+      const namespaceImports = importStmt.descendantsOfType('namespace_import');
+      for (const nsImport of namespaceImports) {
+        const name = nsImport.descendantsOfType('identifier')[0]?.text;
+        if (name) {
+          importedNames.set(name, 'namespace');
+          console.log('Found namespace import:', name);
         }
       }
-      node.children.forEach(collectTypeParams);
-    };
-
-    for (const node of tree.rootNode.children) {
-      collectTypeParams(node);
-
-      if (node.type === 'export_statement') {
-        const declaration = node.childForFieldName('declaration');
-        if (declaration) {
-          const nameNode = declaration.childForFieldName('name');
-          if (nameNode) mainDeclarationName = nameNode.text;
-
-          const traverseForDependencies = (n: Parser.SyntaxNode) => {
-            if (
-              (n.type === 'type_identifier' || n.type === 'identifier') &&
-              !this.builtInIdentifiers.has(n.text) &&
-              !typeParameters.has(n.text) &&
-              n.text !== mainDeclarationName
-            ) {
-              dependencies.add(n.text);
-            }
-            n.children.forEach(traverseForDependencies);
-          };
-
-          traverseForDependencies(declaration);
+  
+      const namedImports = importStmt.descendantsOfType('import_specifier');
+      for (const namedImport of namedImports) {
+        const name = namedImport.descendantsOfType('identifier')[0]?.text;
+        if (name) {
+          importedNames.set(name, 'named');
+          console.log('Found named import:', name);
         }
       }
     }
-
+  
+    // Collect all type definitions in the file
+    console.log('\nCollecting type definitions:');
+    for (const node of tree.rootNode.children) {
+      if (
+        node.type === 'class_declaration' ||
+        node.type === 'interface_declaration' ||
+        node.type === 'type_alias_declaration'
+      ) {
+        const name = node.childForFieldName('name')?.text;
+        if (name) {
+          localTypes.add(name);
+          console.log('Found type definition:', name);
+        }
+      }
+      if (node.type === 'export_statement') {
+        const declaration = node.childForFieldName('declaration');
+        if (declaration) {
+          const name = declaration.childForFieldName('name')?.text;
+          if (name) {
+            localTypes.add(name);
+            console.log('Found exported type definition:', name);
+          }
+        }
+      }
+    }
+  
+    // Find the target node based on position
+    console.log('\nFinding target node...');
+    const findTargetNode = (node: Parser.SyntaxNode): Parser.SyntaxNode | null => {
+      if (node.startIndex === position.start.offset && node.endIndex === position.end.offset) {
+        console.log('Found target node:', node.type);
+        return node;
+      }
+      for (const child of node.children) {
+        const result = findTargetNode(child);
+        if (result) return result;
+      }
+      return null;
+    };
+  
+    const targetNode = findTargetNode(tree.rootNode);
+    if (!targetNode) return dependencies;
+  
+    // Get the declaration node
+    const declarationNode = targetNode.type === 'export_statement' 
+      ? targetNode.childForFieldName('declaration')
+      : targetNode;
+  
+    // Get main declaration name
+    console.log('\nExtracting main declaration name:');
+    const mainDeclarationName = declarationNode?.childForFieldName('name')?.text;
+    console.log('Main declaration name:', mainDeclarationName);
+  
+    // Collect class members
+    console.log('\nCollecting class members:');
+    declarationNode?.descendantsOfType('property_identifier').forEach(node => {
+      if (node.parent?.type === 'method_definition' || 
+          node.parent?.type === 'public_field_definition') {
+        localIdentifiers.add(node.text);
+        console.log('Found class member:', node.text);
+      }
+    });
+  
+    console.log('\nCollecting type parameters:');
+    declarationNode?.descendantsOfType('type_parameter').forEach(param => {
+      const name = param.childForFieldName('name');
+      if (name) {
+        typeParameters.add(name.text);
+        console.log('Found type parameter:', name.text);
+      }
+    });
+  
+    // Collect dependencies
+    console.log('\nCollecting dependencies:');
+    const processNode = (node: Parser.SyntaxNode) => {
+      if (node.type === 'type_identifier' || node.type === 'identifier') {
+        const name = node.text;
+        const importType = importedNames.get(name);
+        const isLocalType = localTypes.has(name);
+  
+        console.log('Checking identifier:', name, 
+          '\n  parent type:', node.parent?.type,
+          '\n  import type:', importType,
+          '\n  isLocalType:', isLocalType);
+  
+        // Skip built-ins, locals, etc.
+        if (
+          this.builtInIdentifiers.has(name) ||
+          typeParameters.has(name) ||
+          localIdentifiers.has(name) ||
+          name === mainDeclarationName ||
+          node.parent?.type === 'property_identifier' ||
+          node.parent?.type === 'method_definition'
+        ) {
+          console.log('Skipping:', name, '(local/built-in)');
+          return;
+        }
+  
+        // Include if:
+        // 1. It's a namespace import or used in namespace context
+        const isNamespaceUsage = 
+          importType === 'namespace' || 
+          (node.parent?.type === 'member_expression' && importedNames.has(name));
+  
+        // 2. It's a type reference (imported or local)
+        const isTypeUsage = 
+          importType === 'named' ||
+          isLocalType ||
+          node.type === 'type_identifier' ||
+          node.parent?.type === 'type_annotation' ||
+          node.parent?.type === 'extends_clause' ||
+          node.parent?.type === 'implements_clause' ||
+          node.parent?.type === 'constraint' ||
+          node.parent?.type === 'new_expression';  // Include types used in new expressions
+  
+        if (isNamespaceUsage || isTypeUsage) {
+          console.log('Adding dependency:', name, 
+            isNamespaceUsage ? '(namespace)' : '(type)');
+          dependencies.add(name);
+        }
+      }
+  
+      node.children.forEach(processNode);
+    };
+  
+    processNode(declarationNode || targetNode);
+  
+    console.log('\nFinal dependencies:', [...dependencies]);
     return dependencies;
   }
 }

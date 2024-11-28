@@ -19,28 +19,28 @@ async function setupTestFiles(): Promise<TestFiles> {
   await mkdir(`${TEST_DIR}/utils`, { recursive: true });
 
   const mainFile = `
-import { Command } from './types';
+import { Command, CommandHandler } from './types';
 import { InputBoxService } from './services/InputBoxService';
 import { asyncHelper } from './utils/helpers';
 
 export function createInputBoxCommands(inputBoxService: InputBoxService): Command[] {
-  return [
-    {
-      id: 'miniLanguageServer.showInputBox',
-      title: 'Show Input Box',
-      handler: async () => {
-        await asyncHelper();
-        inputBoxService.showInputBox();
-      }
-    }
-  ];
+  const handler: CommandHandler = async () => {
+    await asyncHelper();
+    inputBoxService.showInputBox();
+  };
+
+  return [{
+    id: 'miniLanguageServer.showInputBox',
+    title: 'Show Input Box',
+    handler
+  }];
 }`;
 
   const typesFile = `
 export interface Command {
   id: string;
   title: string;
-  handler: () => Promise<void>;
+  handler: CommandHandler;
 }
 
 export type CommandHandler = () => Promise<void>;`;
@@ -66,7 +66,7 @@ export interface Logger {
 }
 
 export async function asyncHelper(): Promise<void> {
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise<void>(resolve => setTimeout(resolve, 100));
 }`;
 
   const paths = {

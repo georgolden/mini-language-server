@@ -37,8 +37,8 @@ export function processData(input: string): string[] {
 // Type alias
 export type Handler = (data: unknown) => void;
 
-// Constant
-export const DEFAULT_TIMEOUT = 1000;
+// Constant with type
+export const DEFAULT_TIMEOUT: number = 1000;
 
 // Enum
 export enum LogLevel {
@@ -156,15 +156,14 @@ describe('extractCodeChunk', async () => {
   test('should extract constant with type', async (t) => {
     const filePath = await setupTestFiles();
     const analyzer = new ASTDependencyAnalyzer();
-
+  
     try {
       const tree = analyzer.parser.parse(await readFile(filePath, 'utf-8'));
       const result = await analyzer.extractCodeChunk(tree, 'DEFAULT_TIMEOUT', filePath);
-
+  
       assert.ok(result, 'Should extract constant chunk');
-
-      const expectedCode = 'export const DEFAULT_TIMEOUT = 1000;';
-
+      const expectedCode = 'export const DEFAULT_TIMEOUT: number = 1000;';
+  
       assert.strictEqual(
         result.sourceCode.trim(),
         expectedCode.trim(),
