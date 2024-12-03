@@ -2,9 +2,8 @@
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema, ReadResourceRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import EventEmitter from "node:events";
-import { WebSocketServer } from 'ws';
+import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { Logger } from "../logger/SocketLogger.js";
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
@@ -15,45 +14,6 @@ const GetProjectFiles = z.object({ test: z.string() })
 if (args.length === 0 || !args[1]) {
   console.error("Usage: mcp-ast <repo-folder>");
   process.exit(1);
-}
-
-class Logger extends EventEmitter {
-  private wss: WebSocketServer;
-
-  constructor(port: number = 8080) {
-    super();
-    this.wss = new WebSocketServer({ port });
-  }
-
-  private broadcast(level: string, message: any) {
-    const logEntry = {
-      timestamp: new Date().toISOString(),
-      level,
-      message: typeof message === 'object' ? JSON.stringify(message) : message
-    };
-
-    this.wss.clients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(logEntry));
-      }
-    });
-  }
-
-  info(msg: any) {
-    this.broadcast('info', msg);
-  }
-
-  error(msg: any) {
-    this.broadcast('error', msg);
-  }
-
-  debug(msg: any) {
-    this.broadcast('debug', msg);
-  }
-
-  warn(msg: any) {
-    this.broadcast('warn', msg);
-  }
 }
 
 const logger = new Logger();
