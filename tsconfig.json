@@ -3,8 +3,7 @@
     // Modern JavaScript Features
     "target": "ES2022",
     "lib": ["ES2022"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "CommonJS",
 
     // Build Output
     "outDir": "./out",
