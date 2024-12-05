@@ -119,8 +119,9 @@ class ASTDependencyAnalyzer {
       const sourceCode = await readFile(fromFilePath, 'utf-8');
       console.log('Source file content:', sourceCode);
   
-      // Check for imports first
       const tree = this.parser.parse(sourceCode);
+      
+      // Check for imports first
       const imports = this.findImportForIdentifier(tree, identifierName);
       console.log('Found imports:', imports);
   
@@ -135,6 +136,29 @@ class ASTDependencyAnalyzer {
   
         const importedCode = await readFile(resolvedPath, 'utf-8');
         console.log('Imported file content:', importedCode);
+  
+        // For namespace imports, we want to return the module itself
+        const namespaceImport = tree.rootNode.descendantsOfType('namespace_import')
+          .find(ni => ni.descendantsOfType('identifier')[0]?.text === identifierName);
+
+        if (namespaceImport) {
+          console.log('Found namespace import, returning module path:', resolvedPath);
+          return {
+            filePath: resolvedPath,
+            position: {
+              start: { 
+                line: 0,
+                column: 0,
+                offset: 0 
+              },
+              end: { 
+                line: importedCode.split('\n').length - 1,
+                column: importedCode.split('\n').slice(-1)[0]?.length || 0,
+                offset: importedCode.length
+              }
+            }
+          };
+        }
   
         const importedTree = this.parser.parse(importedCode);
         const position = this.findDefinitionInFile(importedTree, identifierName);
@@ -151,7 +175,6 @@ class ASTDependencyAnalyzer {
         };
       } else {
         console.log('No imports found, searching in current file');
-        // If no import found, check current file
         const position = this.findDefinitionInFile(tree, identifierName);
         if (position) {
           console.log('Found definition in current file:', position);
@@ -239,6 +262,29 @@ class ASTDependencyAnalyzer {
   private findDefinitionInFile(tree: Parser.Tree, identifierName: string): SourcePosition | null {
     console.log('Finding definition for:', identifierName);
 
+    // First check for namespace imports
+    for (const importStmt of tree.rootNode.descendantsOfType('import_statement')) {
+      const namespaceImport = importStmt.descendantsOfType('namespace_import')[0];
+      if (namespaceImport) {
+        const identifier = namespaceImport.descendantsOfType('identifier')[0];
+        if (identifier?.text === identifierName) {
+          // Return the position of the entire import statement
+          return {
+            start: { 
+              line: importStmt.startPosition.row,
+              column: importStmt.startPosition.column,
+              offset: importStmt.startIndex 
+            },
+            end: { 
+              line: importStmt.endPosition.row,
+              column: importStmt.endPosition.column,
+              offset: importStmt.endIndex 
+            }
+          };
+        }
+      }
+    }
+
     const findInNode = (node: Parser.SyntaxNode): SourcePosition | null => {
       // Handle export statements
       if (node.type === 'export_statement') {
@@ -318,11 +364,9 @@ class ASTDependencyAnalyzer {
       // Check namespace imports
       const namespaceImport = importStmt.descendantsOfType('namespace_import')[0];
       if (namespaceImport) {
-        // Get the identifier after 'as'
-        const identifiers = namespaceImport.descendantsOfType('identifier');
-        const name = identifiers[0]?.text;
-        console.log('Checking namespace import name:', name);
-        if (name === targetIdentifier) {
+        console.log('Checking namespace import:', namespaceImport.text);
+        const identifier = namespaceImport.descendantsOfType('identifier')[0];
+        if (identifier?.text === targetIdentifier) {
           const sourceNode = importStmt.descendantsOfType('string')[0];
           if (sourceNode) {
             const source = sourceNode.text.slice(1, -1);
@@ -361,17 +405,18 @@ class ASTDependencyAnalyzer {
     const localIdentifiers = new Set<string>();
     const localTypes = new Set<string>();
   
-    // Collect imports and track namespace imports separately
+    // Collect imports
     console.log('\nCollecting imports:');
     const importedNames = new Map<string, 'named' | 'namespace'>();
     
     for (const importStmt of tree.rootNode.descendantsOfType('import_statement')) {
       const namespaceImport = importStmt.descendantsOfType('namespace_import')[0];
       if (namespaceImport) {
-        const identifiers = namespaceImport.descendantsOfType('identifier');
-        const name = identifiers[0]?.text;
+        const identifier = namespaceImport.descendantsOfType('identifier')[0];
+        const name = identifier?.text;
         if (name) {
           importedNames.set(name, 'namespace');
+          dependencies.add(name); // Add namespace imports by default
           console.log('Found namespace import:', name);
         }
       }
@@ -379,8 +424,9 @@ class ASTDependencyAnalyzer {
       const namedImports = importStmt.descendantsOfType('import_specifier');
       for (const namedImport of namedImports) {
         const name = namedImport.descendantsOfType('identifier')[0]?.text;
-        if (name) {
+        if (name && !name.startsWith('type ')) {
           importedNames.set(name, 'named');
+          dependencies.add(name); // Add named imports by default
           console.log('Found named import:', name);
         }
       }
@@ -502,6 +548,16 @@ class ASTDependencyAnalyzer {
           node.parent?.type === 'new_expression'
         ) {
           dependencies.add(name);
+        }
+
+        if (node.parent?.type === 'member_expression') {
+          const parentExpr = node.parent;
+          if (node === parentExpr.childForFieldName('property')) {
+            const object = parentExpr.childForFieldName('object');
+            if (object && importedNames.get(object.text) === 'namespace') {
+              dependencies.add(name);
+            }
+          }
         }
       }
 
