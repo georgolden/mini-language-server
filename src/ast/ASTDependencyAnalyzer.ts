@@ -93,47 +93,6 @@ class ASTDependencyAnalyzer {
     }
   }
 
-  private findDefinitionInFile(tree: Parser.Tree, identifierName: string): SourcePosition | null {
-    console.log('Finding definition for:', identifierName);
-
-    const declarationTypes = new Set([
-      'class_declaration',
-      'abstract_class_declaration', 
-      'interface_declaration',
-      'type_alias_declaration',
-      'function_declaration',
-      'variable_declaration',
-      'enum_declaration'
-    ]);
-
-    const isDeclaration = (type: string) => declarationTypes.has(type);
-
-    for (const node of tree.rootNode.children) {
-      if (node.type === 'export_statement') {
-        const declaration = node.childForFieldName('declaration');
-        if (declaration && isDeclaration(declaration.type)) {
-          const nameNode = declaration.childForFieldName('name');
-          if (nameNode?.text === identifierName) {
-            return {
-              start: { 
-                line: node.startPosition.row,
-                column: node.startPosition.column,
-                offset: node.startIndex 
-              },
-              end: { 
-                line: node.endPosition.row,
-                column: node.endPosition.column,
-                offset: node.endIndex 
-              }
-            };
-          }
-        }
-      }
-    }
-
-    return null;
-  }
-
   private isLocalIdentifier(name: string, chunk: { sourceCode: string }): boolean {
     // Check if the identifier is a local variable, parameter, or property
     const localPatterns = [
@@ -211,71 +170,6 @@ class ASTDependencyAnalyzer {
     }
   }
   
-  private findImportForIdentifier(
-    tree: Parser.Tree,
-    targetIdentifier: string,
-  ): { source: string } | null {
-    console.log('\nLooking for imports of:', targetIdentifier);
-  
-    for (const importStmt of tree.rootNode.descendantsOfType('import_statement')) {
-      console.log('Checking import statement:', importStmt.text);
-  
-      // Check named imports
-      const namedImports = importStmt.descendantsOfType('import_specifier');
-      console.log('Named imports:', namedImports.map(spec => spec.text));
-  
-      for (const specifier of namedImports) {
-        const importedName = specifier.descendantsOfType('identifier')[0]?.text;
-        console.log('Checking import specifier:', importedName);
-        if (importedName === targetIdentifier) {
-          const sourceNode = importStmt.descendantsOfType('string')[0];
-          if (sourceNode) {
-            // Remove quotes from string
-            const source = sourceNode.text.slice(1, -1);
-            console.log('Found source for import:', source);
-            return { source };
-          }
-        }
-      }
-  
-      // Check type imports
-      if (importStmt.text.includes('type')) {
-        console.log('Found type import');
-        const typeImports = importStmt.descendantsOfType('import_specifier');
-        for (const specifier of typeImports) {
-          const importedName = specifier.descendantsOfType('identifier')[0]?.text;
-          console.log('Checking type import:', importedName);
-          if (importedName === targetIdentifier) {
-            const sourceNode = importStmt.descendantsOfType('string')[0];
-            if (sourceNode) {
-              const source = sourceNode.text.slice(1, -1);
-              console.log('Found source for type import:', source);
-              return { source };
-            }
-          }
-        }
-      }
-  
-      // Check namespace imports
-      const namespaceImport = importStmt.descendantsOfType('namespace_import')[0];
-      if (namespaceImport) {
-        const name = namespaceImport.childForFieldName('name')?.text;
-        console.log('Checking namespace import:', name);
-        if (name === targetIdentifier) {
-          const sourceNode = importStmt.descendantsOfType('string')[0];
-          if (sourceNode) {
-            const source = sourceNode.text.slice(1, -1);
-            console.log('Found source for namespace import:', source);
-            return { source };
-          }
-        }
-      }
-    }
-  
-    console.log('No matching import found');
-    return null;
-  }
-
   private async resolveImportPath(
     importPath: string,
     fromFilePath: string,
@@ -285,18 +179,30 @@ class ASTDependencyAnalyzer {
     try {
       if (importPath.startsWith('.')) {
         const extensions = ['.ts', '.tsx', '.js', '.jsx'];
-        const basePath = path.resolve(path.dirname(fromFilePath), importPath);
+        let basePath: string;
+        
+        if (importPath.endsWith('.js')) {
+          // Handle ESM style imports (.js -> .ts/.tsx)
+          basePath = path.resolve(
+            path.dirname(fromFilePath), 
+            importPath.slice(0, -3) // Remove .js extension
+          );
+        } else if (importPath.endsWith('.ts') || importPath.endsWith('.tsx')) {
+          // Handle explicit typescript imports
+          basePath = path.resolve(path.dirname(fromFilePath), importPath);
+          // First try exact path for explicit extensions
+          if (await this.fileExists(basePath)) {
+            console.log('Found existing file with explicit extension:', basePath);
+            return basePath;
+          }
+        } else {
+          // No extension specified
+          basePath = path.resolve(path.dirname(fromFilePath), importPath);
+        }
 
         console.log('Base path:', basePath);
 
-        // First try with exact path if it has extension
-        if (path.extname(importPath)) {
-          if (await this.fileExists(basePath)) {
-            return basePath;
-          }
-        }
-
-        // Try adding extensions directly
+        // Try adding extensions
         for (const ext of extensions) {
           const fullPath = basePath + ext;
           console.log('Trying path:', fullPath);
@@ -321,7 +227,7 @@ class ASTDependencyAnalyzer {
         console.log('No valid file found with any extension');
         return null;
       } else {
-        // node_modules import
+        // For non-relative imports (e.g. 'react', node_modules)
         return await this.findInNodeModules(importPath, fromFilePath);
       }
     } catch (error) {
@@ -330,115 +236,122 @@ class ASTDependencyAnalyzer {
     }
   }
 
-  private async fileExists(filePath: string): Promise<boolean> {
-    try {
-      await import('fs').then((fs) => fs.promises.access(filePath));
-      return true;
-    } catch {
-      return false;
-    }
-  }
+  private findDefinitionInFile(tree: Parser.Tree, identifierName: string): SourcePosition | null {
+    console.log('Finding definition for:', identifierName);
 
-  private async findInNodeModules(
-    importPath: string,
-    fromFilePath: string,
-  ): Promise<string | null> {
-    // Start from the directory containing fromFilePath
-    let currentDir = path.dirname(fromFilePath);
-
-    while (currentDir !== path.parse(currentDir).root) {
-      const nodeModulesPath = path.join(currentDir, 'node_modules', importPath);
-
-      try {
-        const stats = await import('fs').then((fs) => fs.promises.stat(nodeModulesPath));
-        if (stats.isFile()) {
-          return nodeModulesPath;
-        }
-
-        // Check for package.json main field
-        const packageJsonPath = path.join(path.dirname(nodeModulesPath), 'package.json');
-        const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf-8'));
-
-        if (packageJson.main) {
-          const mainPath = path.join(path.dirname(nodeModulesPath), packageJson.main);
-          return mainPath;
-        }
-      } catch {
-        // Move up to parent directory
-        currentDir = path.dirname(currentDir);
-        continue;
-      }
-    }
-
-    return null;
-  }
-
-  async extractCodeChunk(
-    tree: Parser.Tree,
-    identifier: string,
-    filePath: string,
-  ): Promise<{ sourceCode: string; position: SourcePosition } | null> {
-    console.log('\nExtracting code chunk for:', identifier);
-    console.log('From file:', filePath);
-  
-    const fileContent = await readFile(filePath, 'utf-8');
-    console.log('File content:', fileContent);
-  
-    const findNode = (node: Parser.SyntaxNode): Parser.SyntaxNode | null => {
-      console.log('Visiting node:', node.type, node.text.slice(0, 50) + '...');
-  
+    const findInNode = (node: Parser.SyntaxNode): SourcePosition | null => {
+      // Handle export statements
       if (node.type === 'export_statement') {
         const declaration = node.childForFieldName('declaration');
-        console.log('Export declaration type:', declaration?.type);
-  
-        const nameNode = declaration?.childForFieldName('name');
-        const declaratorNode = declaration?.descendantsOfType('variable_declarator')[0];
         
-        const foundName = nameNode?.text || declaratorNode?.childForFieldName('name')?.text;
-        console.log('Found name:', foundName);
-  
-        if (foundName === identifier) {
-          console.log('Found matching declaration:', node.text);
-          return node;
+        // Handle exported const/var declarations
+        if (declaration?.type === 'lexical_declaration' || declaration?.type === 'variable_declaration') {
+          const declarator = declaration.descendantsOfType('variable_declarator')[0];
+          const name = declarator?.childForFieldName('name')?.text;
+          if (name === identifierName) {
+            return this.createPosition(node);
+          }
+        }
+        
+        // Handle other declarations (class, interface, etc.)
+        if (declaration) {
+          const nameNode = declaration.childForFieldName('name');
+          if (nameNode?.text === identifierName) {
+            return this.createPosition(node);
+          }
         }
       }
-  
+
+      // Handle non-exported interfaces, classes, etc.
+      if (['interface_declaration', 'class_declaration', 'type_alias_declaration'].includes(node.type)) {
+        const nameNode = node.childForFieldName('name');
+        if (nameNode?.text === identifierName) {
+          return this.createPosition(node);
+        }
+      }
+
+      // Handle const/let/var declarations
+      if (node.type === 'lexical_declaration' || node.type === 'variable_declaration') {
+        const declarator = node.descendantsOfType('variable_declarator')[0];
+        const name = declarator?.childForFieldName('name')?.text;
+        if (name === identifierName) {
+          return this.createPosition(node);
+        }
+      }
+
+      // Recursively check children
       for (const child of node.children) {
-        const result = findNode(child);
+        const result = findInNode(child);
         if (result) return result;
       }
-  
+
       return null;
     };
+
+    return findInNode(tree.rootNode);
+  }
+
+  private createPosition(node: Parser.SyntaxNode): SourcePosition {
+    return {
+      start: {
+        line: node.startPosition.row,
+        column: node.startPosition.column,
+        offset: node.startIndex
+      },
+      end: {
+        line: node.endPosition.row,
+        column: node.endPosition.column,
+        offset: node.endIndex
+      }
+    };
+  }
+
+  private findImportForIdentifier(
+    tree: Parser.Tree,
+    targetIdentifier: string,
+  ): { source: string } | null {
+    console.log('\nLooking for imports of:', targetIdentifier);
   
-    const foundNode = findNode(tree.rootNode);
-    if (!foundNode) {
-      console.log('No declaration found for:', identifier);
-      return null;
+    for (const importStmt of tree.rootNode.descendantsOfType('import_statement')) {
+      console.log('Checking import statement:', importStmt.text);
+  
+      // Check namespace imports
+      const namespaceImport = importStmt.descendantsOfType('namespace_import')[0];
+      if (namespaceImport) {
+        // Get the identifier after 'as'
+        const identifiers = namespaceImport.descendantsOfType('identifier');
+        const name = identifiers[0]?.text;
+        console.log('Checking namespace import name:', name);
+        if (name === targetIdentifier) {
+          const sourceNode = importStmt.descendantsOfType('string')[0];
+          if (sourceNode) {
+            const source = sourceNode.text.slice(1, -1);
+            console.log('Found source for namespace import:', source);
+            return { source };
+          }
+        }
+      }
+
+      // Check named imports
+      const namedImports = importStmt.descendantsOfType('import_specifier');
+      console.log('Named imports:', namedImports.map(spec => spec.text));
+  
+      for (const specifier of namedImports) {
+        const importedName = specifier.descendantsOfType('identifier')[0]?.text;
+        console.log('Checking import specifier:', importedName);
+        if (importedName === targetIdentifier) {
+          const sourceNode = importStmt.descendantsOfType('string')[0];
+          if (sourceNode) {
+            const source = sourceNode.text.slice(1, -1);
+            console.log('Found source for import:', source);
+            return { source };
+          }
+        }
+      }
     }
   
-    console.log('Found declaration node:', {
-      type: foundNode.type,
-      startIndex: foundNode.startIndex,
-      endIndex: foundNode.endIndex,
-      text: foundNode.text.slice(0, 50)
-    });
-  
-    return {
-      sourceCode: fileContent.substring(foundNode.startIndex, foundNode.endIndex),
-      position: {
-        start: {
-          line: foundNode.startPosition.row,
-          column: foundNode.startPosition.column,
-          offset: foundNode.startIndex,
-        },
-        end: {
-          line: foundNode.endPosition.row,
-          column: foundNode.endPosition.column,
-          offset: foundNode.endIndex,
-        },
-      },
-    };
+    console.log('No matching import found');
+    return null;
   }
 
   findChunkDependencies(tree: Parser.Tree, position: SourcePosition): Set<string> {
@@ -448,14 +361,15 @@ class ASTDependencyAnalyzer {
     const localIdentifiers = new Set<string>();
     const localTypes = new Set<string>();
   
-    // Collect all imports
+    // Collect imports and track namespace imports separately
     console.log('\nCollecting imports:');
     const importedNames = new Map<string, 'named' | 'namespace'>();
     
     for (const importStmt of tree.rootNode.descendantsOfType('import_statement')) {
-      const namespaceImports = importStmt.descendantsOfType('namespace_import');
-      for (const nsImport of namespaceImports) {
-        const name = nsImport.descendantsOfType('identifier')[0]?.text;
+      const namespaceImport = importStmt.descendantsOfType('namespace_import')[0];
+      if (namespaceImport) {
+        const identifiers = namespaceImport.descendantsOfType('identifier');
+        const name = identifiers[0]?.text;
         if (name) {
           importedNames.set(name, 'namespace');
           console.log('Found namespace import:', name);
@@ -472,7 +386,7 @@ class ASTDependencyAnalyzer {
       }
     }
   
-    // Collect all type definitions in the file
+    // Collect type definitions
     console.log('\nCollecting type definitions:');
     for (const node of tree.rootNode.children) {
       if (
@@ -537,71 +451,140 @@ class ASTDependencyAnalyzer {
   
     console.log('\nCollecting type parameters:');
     declarationNode?.descendantsOfType('type_parameter').forEach(param => {
-      const name = param.childForFieldName('name');
+      const name = param.childForFieldName('name')?.text;
       if (name) {
-        typeParameters.add(name.text);
-        console.log('Found type parameter:', name.text);
+        typeParameters.add(name);
+        console.log('Found type parameter:', name);
       }
     });
   
-    // Collect dependencies
-    console.log('\nCollecting dependencies:');
+    // Process node for dependencies, with special handling for namespace usage
     const processNode = (node: Parser.SyntaxNode) => {
+      // Check for namespace usage in member expressions
+      if (node.type === 'member_expression') {
+        const object = node.childForFieldName('object');
+        if (object && importedNames.get(object.text) === 'namespace') {
+          console.log('Found namespace usage:', object.text);
+          dependencies.add(object.text);
+          return;
+        }
+      }
+
       if (node.type === 'type_identifier' || node.type === 'identifier') {
         const name = node.text;
         const importType = importedNames.get(name);
         const isLocalType = localTypes.has(name);
-  
-        console.log('Checking identifier:', name, 
-          '\n  parent type:', node.parent?.type,
-          '\n  import type:', importType,
-          '\n  isLocalType:', isLocalType);
-  
-        // Skip built-ins, locals, etc.
+
+        // For identifiers that are imports, add them
+        if (importType) {
+          dependencies.add(name);
+          return;
+        }
+
+        // Skip built-ins and locals
         if (
           this.builtInIdentifiers.has(name) ||
           typeParameters.has(name) ||
           localIdentifiers.has(name) ||
-          name === mainDeclarationName ||
-          node.parent?.type === 'property_identifier' ||
-          node.parent?.type === 'method_definition'
+          name === mainDeclarationName
         ) {
-          console.log('Skipping:', name, '(local/built-in)');
           return;
         }
-  
-        // Include if:
-        // 1. It's a namespace import or used in namespace context
-        const isNamespaceUsage = 
-          importType === 'namespace' || 
-          (node.parent?.type === 'member_expression' && importedNames.has(name));
-  
-        // 2. It's a type reference (imported or local)
-        const isTypeUsage = 
-          importType === 'named' ||
+
+        // Add local types and type references
+        if (
           isLocalType ||
           node.type === 'type_identifier' ||
           node.parent?.type === 'type_annotation' ||
           node.parent?.type === 'extends_clause' ||
           node.parent?.type === 'implements_clause' ||
           node.parent?.type === 'constraint' ||
-          node.parent?.type === 'new_expression';  // Include types used in new expressions
-  
-        if (isNamespaceUsage || isTypeUsage) {
-          console.log('Adding dependency:', name, 
-            isNamespaceUsage ? '(namespace)' : '(type)');
+          node.parent?.type === 'new_expression'
+        ) {
           dependencies.add(name);
         }
       }
-  
+
       node.children.forEach(processNode);
     };
-  
+
     processNode(declarationNode || targetNode);
   
     console.log('\nFinal dependencies:', [...dependencies]);
     return dependencies;
   }
+
+  async extractCodeChunk(
+    tree: Parser.Tree,
+    identifier: string,
+    filePath: string,
+  ): Promise<{ sourceCode: string; position: SourcePosition } | null> {
+    console.log('\nExtracting code chunk for:', identifier);
+    console.log('From file:', filePath);
+  
+    const fileContent = await readFile(filePath, 'utf-8');
+    console.log('File content:', fileContent);
+  
+    const position = this.findDefinitionInFile(tree, identifier);
+    if (!position) {
+      console.log('No declaration found for:', identifier);
+      return null;
+    }
+
+    console.log('Found matching declaration:', fileContent.substring(
+      position.start.offset,
+      position.end.offset
+    ));
+
+    return {
+      sourceCode: fileContent.substring(position.start.offset, position.end.offset),
+      position
+    };
+  }
+
+  private async fileExists(filePath: string): Promise<boolean> {
+    try {
+      await import('fs').then((fs) => fs.promises.access(filePath));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async findInNodeModules(
+    importPath: string,
+    fromFilePath: string,
+  ): Promise<string | null> {
+    // Start from the directory containing fromFilePath
+    let currentDir = path.dirname(fromFilePath);
+
+    while (currentDir !== path.parse(currentDir).root) {
+      const nodeModulesPath = path.join(currentDir, 'node_modules', importPath);
+
+      try {
+        const stats = await import('fs').then((fs) => fs.promises.stat(nodeModulesPath));
+        if (stats.isFile()) {
+          return nodeModulesPath;
+        }
+
+        // Check for package.json main field
+        const packageJsonPath = path.join(path.dirname(nodeModulesPath), 'package.json');
+        const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf-8'));
+
+        if (packageJson.main) {
+          const mainPath = path.join(path.dirname(nodeModulesPath), packageJson.main);
+          return mainPath;
+        }
+      } catch {
+        // Move up to parent directory
+        currentDir = path.dirname(currentDir);
+        continue;
+      }
+    }
+
+    return null;
+  }
+
 }
 
 export { ASTDependencyAnalyzer, DependencyNode, SourcePosition };
