@@ -1,7 +1,8 @@
 import OpenAI from "openai";
+import { zodToJsonSchema } from 'zod-to-json-schema'
 
 export interface Message {
-  role: 'system' | 'user' | 'assistant';
+  role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
 }
@@ -68,19 +69,28 @@ export class OpenAIEmbedding implements EmbeddingService {
   }
 }
 
+export interface Tool {
+  name: string;
+  description?: string;
+  inputSchema: ReturnType<typeof zodToJsonSchema>
+}
+
 // Our enhanced agent with injectable embedding service
 export abstract class EnhancedAgent extends Agent {
   protected vectorizedHistory: VectorizedMessage[] = [];
   private embeddingService: EmbeddingService;
   private similarityThreshold: number;
+  protected tools: Tool[];
 
   constructor(
     systemPrompt: string,
     embeddingService: EmbeddingService,
+    tools: Tool[] = [],
     memoryWindow: number = 10,
     similarityThreshold: number = 0.7,
   ) {
     super(systemPrompt, memoryWindow);
+    this.tools = tools;
     this.embeddingService = embeddingService;
     this.similarityThreshold = similarityThreshold;
   }

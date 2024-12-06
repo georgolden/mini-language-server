@@ -1,24 +1,6 @@
 import OpenAI from 'openai';
-import { EmbeddingService, EnhancedAgent, Message, OpenAIEmbedding } from './agent.mts';
+import { EmbeddingService, EnhancedAgent, Message, OpenAIEmbedding, Tool } from './agent.mts';
 import Anthropic from "@anthropic-ai/sdk";
-
-const initClaude = async () => {
-  const anthropic = new Anthropic({
-    apiKey: ''
-  });
-
-  const msg = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-latest',
-    max_tokens: 2048,
-    system:
-      ['Prompt'].join(
-        '\n',
-      ),
-    messages: [{ role: 'user', content: 'Hello, Claude' }],
-  })
-
-  console.log(msg)
-}
 
 export class ClaudeEnhancedAgent extends EnhancedAgent {
   private client: Anthropic;
@@ -27,18 +9,27 @@ export class ClaudeEnhancedAgent extends EnhancedAgent {
     systemPrompt: string,
     client: Anthropic,
     embeddingService: EmbeddingService,
+    tools: Tool[] = [],
     memoryWindow: number = 10,
     similarityThreshold: number = 0.7
   ) {
-    super(systemPrompt, embeddingService, memoryWindow, similarityThreshold);
+    super(systemPrompt, embeddingService, tools, memoryWindow, similarityThreshold);
     this.client = client;
   }
 
-  formatMessages(messages: Message[]): any {
+  formatMessages(messages: Message[]): Anthropic.MessageCreateParamsNonStreaming {
     return {
       model: "claude-3-5-sonnet-latest",
       max_tokens: 1024,
       system: this.systemPrompt,
+      tools: this.tools.map(tool => ({
+        name: tool.name,
+        input_schema: {
+          type: 'object',
+          properties: tool.inputSchema,
+        },
+        description: tool.description,
+      })),
       messages: messages.map(({ role, content }) => ({
         role,
         content
