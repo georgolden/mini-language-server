@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 
-interface Message {
+export interface Message {
   role: 'system' | 'user' | 'assistant';
   content: string;
   timestamp: Date;
@@ -47,7 +47,7 @@ export abstract class Agent {
 }
 
 
-interface EmbeddingService {
+export interface EmbeddingService {
   embed(text: string): Promise<number[]>;
 }
 
