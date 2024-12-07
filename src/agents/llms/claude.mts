@@ -1,6 +1,5 @@
-import OpenAI from 'openai';
-import { Agent, type Message, type Tool } from './agent.mts';
 import Anthropic from '@anthropic-ai/sdk';
+import { Agent, type Message, type Tool } from './agent.mjs';
 
 export class ClaudeEnhancedAgent extends Agent {
   private client: Anthropic;
@@ -41,22 +40,6 @@ export class ClaudeEnhancedAgent extends Agent {
   }
 }
 
-const claudeClient = new Anthropic({
-  apiKey:
-    '',
+export const claudeClient = new Anthropic({
+  apiKey: '',
 });
-
-const agent = new ClaudeEnhancedAgent('Use small responses', claudeClient);
-
-async function chat() {
-  const response = await agent.sendMessage('Tell me about cats!');
-  console.log(response);
-
-  const response2 = await agent.sendMessage('Do cats rly sleep for 12-16 hours??');
-  console.log(response2);
-
-  const response3 = await agent.sendMessage('Am i a cat, lol?? i think i have the same needs :(');
-  console.log(response3);
-}
-
-chat();
