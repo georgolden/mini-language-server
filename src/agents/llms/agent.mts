@@ -1,5 +1,4 @@
-import OpenAI from "openai";
-import { zodToJsonSchema } from 'zod-to-json-schema'
+import type { zodToJsonSchema } from 'zod-to-json-schema';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -7,143 +6,55 @@ export interface Message {
   timestamp: Date;
 }
 
-interface VectorizedMessage extends Message {
-  embedding?: number[];
-  relevanceScore?: number;
+export interface Tool {
+  name: string;
+  description?: string;
+  inputSchema: ReturnType<typeof zodToJsonSchema>;
 }
 
 export abstract class Agent {
   protected systemPrompt: string;
   protected memoryWindow: number;
-  protected conversationHistory: Message[] = [];
+  protected history: Message[] = [];
+  protected tools: Tool[];
 
-  constructor(systemPrompt: string, memoryWindow: number = 10) {
+  constructor(systemPrompt: string, tools: Tool[] = [], memoryWindow = 10) {
     this.systemPrompt = systemPrompt;
+    this.tools = tools;
     this.memoryWindow = memoryWindow;
   }
 
-  protected addMessage(role: Message['role'], content: string): void {
-    this.conversationHistory.push({
-      role,
-      content,
-      timestamp: new Date()
-    });
+  protected addMessage(message: Message): void {
+    this.history.push(message);
   }
 
-  protected getRecentMessages(): Message[] {
-    return this.conversationHistory.slice(-this.memoryWindow);
+  async sendMessage(prompt: string): Promise<string> {
+    const context = this.history.slice(-this.memoryWindow);
+
+    const message: Message = {
+      role: 'user',
+      content: prompt,
+      timestamp: new Date(),
+    };
+
+    const formattedMessages = this.formatMessages([...context, message]);
+
+    const response = await this.sendToLLM(formattedMessages);
+    this.addMessage(message);
+    this.addMessage({ role: 'assistant', content: response, timestamp: new Date() });
+
+    return response;
   }
-
-  abstract formatMessages(messages: Message[]): unknown;
-
-  abstract sendMessage(message: string): Promise<string>;
 
   clearMemory(): void {
-    this.conversationHistory = [];
+    this.history = [];
   }
 
   updateSystemPrompt(newPrompt: string): void {
     this.systemPrompt = newPrompt;
   }
-}
 
-
-export interface EmbeddingService {
-  embed(text: string): Promise<number[]>;
-}
-
-// OpenAI implementation example
-export class OpenAIEmbedding implements EmbeddingService {
-  private client: OpenAI;
-
-  constructor(client: OpenAI) {
-    this.client = client;
-  }
-
-  async embed(text: string): Promise<number[]> {
-    const response = await this.client.embeddings.create({
-      model: "text-embedding-3-small",
-      input: text
-    });
-    return response.data[0].embedding;
-  }
-}
-
-export interface Tool {
-  name: string;
-  description?: string;
-  inputSchema: ReturnType<typeof zodToJsonSchema>
-}
-
-// Our enhanced agent with injectable embedding service
-export abstract class EnhancedAgent extends Agent {
-  protected vectorizedHistory: VectorizedMessage[] = [];
-  private embeddingService: EmbeddingService;
-  private similarityThreshold: number;
-  protected tools: Tool[];
-
-  constructor(
-    systemPrompt: string,
-    embeddingService: EmbeddingService,
-    tools: Tool[] = [],
-    memoryWindow: number = 10,
-    similarityThreshold: number = 0.7,
-  ) {
-    super(systemPrompt, memoryWindow);
-    this.tools = tools;
-    this.embeddingService = embeddingService;
-    this.similarityThreshold = similarityThreshold;
-  }
-
-  protected async vectorizeMessage(message: Message): Promise<VectorizedMessage> {
-    const embedding = await this.embeddingService.embed(message.content);
-    return { ...message, embedding };
-  }
-
-  protected override async addMessage(role: Message['role'], content: string): Promise<void> {
-    const vectorizedMessage = await this.vectorizeMessage({ role, content, timestamp: new Date() });
-    this.vectorizedHistory.push(vectorizedMessage);
-  }
-
-  protected async getRelevantMessages(query: string): Promise<Message[]> {
-    const queryEmbedding = await this.embeddingService.embed(query);
-
-    // Calculate similarity scores
-    const scoredMessages = this.vectorizedHistory.map(msg => ({
-      ...msg,
-      relevanceScore: msg.embedding
-        ? this.cosineSimilarity(queryEmbedding, msg.embedding)
-        : 0
-    }));
-
-    // Filter by threshold and sort by relevance
-    return scoredMessages
-      .filter(msg => msg.relevanceScore! > this.similarityThreshold)
-      .sort((a, b) => (b.relevanceScore! - a.relevanceScore!))
-      .slice(0, this.memoryWindow);
-  }
-
-  private cosineSimilarity(a: number[], b: number[]): number {
-    const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
-    const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
-    const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
-    return dotProduct / (magnitudeA * magnitudeB);
-  }
-
-  async sendMessage(message: string): Promise<string> {
-    await this.addMessage('user', message);
-
-    // Get relevant context based on the current message
-    const relevantMessages = await this.getRelevantMessages(message);
-    const formattedMessages = this.formatMessages(relevantMessages);
-
-    const response = await this.sendToLLM(formattedMessages);
-    await this.addMessage('assistant', response);
-
-    return response;
-  }
+  abstract formatMessages(messages: Message[], enhancedSystemPrompt?: string): unknown;
 
   protected abstract sendToLLM(formattedMessages: unknown): Promise<string>;
 }
-
-
