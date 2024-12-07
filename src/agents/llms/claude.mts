@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { Agent, type Message, type Tool } from './agent.mjs';
+import { Agent, ModelResponse, ToolResponse, type Message, type Tool } from './agent.mjs';
 
 export class ClaudeEnhancedAgent extends Agent {
   private client: Anthropic;
@@ -32,14 +32,24 @@ export class ClaudeEnhancedAgent extends Agent {
     };
   }
 
-  protected override async sendToLLM(formattedMessages: any): Promise<string> {
+  protected override async sendToLLM(formattedMessages: ReturnType<typeof this.formatMessages>): Promise<ModelResponse[]> {
     const response = await this.client.messages.create(formattedMessages);
     console.log('FULL FROM LLM:', response);
 
-    return response.content[0].text;
+    const output = response.content.map((content) => {
+      if (content.type === 'tool_use') {
+        console.log(content.input)
+        return { type: 'tool', toolName: content.name, args: [] } as ToolResponse
+      } else if (content.type === 'text') {
+        return { type: 'text', message: content.text } as ModelResponse
+      }
+      return []
+    }).flat()
+
+    return output;
   }
 }
 
 export const claudeClient = new Anthropic({
-  apiKey: '',
+  apiKey: process.env.ANTHROPIC_API,
 });

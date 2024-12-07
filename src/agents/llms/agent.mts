@@ -13,6 +13,19 @@ export interface Tool {
   call: (params: any) => Promise<any>;
 }
 
+export type ModelResponse = ToolResponse | TextResponse;
+
+export interface ToolResponse {
+  type: 'tool';
+  toolName: string;
+  args: string[];
+}
+
+export interface TextResponse {
+  type: 'text';
+  message: string;
+}
+
 export abstract class Agent {
   protected systemPrompt: string;
   protected memoryWindow: number;
@@ -32,19 +45,36 @@ export abstract class Agent {
   async sendMessage(prompt: string): Promise<string> {
     const context = this.history.slice(-this.memoryWindow);
 
-    const message: Message = {
+    const userMessage: Message = {
       role: 'user',
       content: prompt,
       timestamp: new Date(),
     };
 
-    const formattedMessages = this.formatMessages([...context, message]);
+    const formattedMessages = this.formatMessages([...context, userMessage]);
 
     const response = await this.sendToLLM(formattedMessages);
-    this.addMessage(message);
-    this.addMessage({ role: 'assistant', content: response, timestamp: new Date() });
 
-    return response;
+    for (const message of response) {
+
+      if (message.type === 'text') {
+
+        this.addMessage(userMessage);
+        this.addMessage({
+          role: 'assistant',
+          content: message.message,
+          timestamp: new Date()
+        });
+
+        return message.message;
+      }
+
+      if (message.type === 'tool') {
+        // call tool
+      }
+
+    }
+
   }
 
   clearMemory(): void {
@@ -57,5 +87,5 @@ export abstract class Agent {
 
   abstract formatMessages(messages: Message[], enhancedSystemPrompt?: string): unknown;
 
-  protected abstract sendToLLM(formattedMessages: unknown): Promise<string>;
+  protected abstract sendToLLM(formattedMessages: unknown): Promise<ModelResponse[]>;
 }
