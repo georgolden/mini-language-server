@@ -88,7 +88,7 @@
     "lint": "biome lint .",
     "format": "biome format . --write",
     "check": "biome check --apply .",
-    "mcp:debug": "tsc -w -p ./tsconfig.mcp.json & chmod +x ./dist/mcp/mcp.mjs & npx @modelcontextprotocol/inspector ./dist/mcp/mcp.mjs"
+    "mcp:debug": "tsc -w -p ./tsconfig.mcp.json & chmod +x ./dist/mcp/servers/ast.mjs & npx @modelcontextprotocol/inspector ./dist/mcp/servers/ast.mjs"
   },
   "keywords": [],
   "author": "",

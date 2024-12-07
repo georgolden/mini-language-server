@@ -6,6 +6,6 @@
     "target": "ES2022",
     "outDir": "./dist/"
   },
-  "include": ["./src/mcp/mcp.ts"],
+  "include": ["./src/mcp/servers/ast.mts"],
   "exclude": []
 }

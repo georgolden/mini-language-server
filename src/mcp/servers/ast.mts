@@ -3,7 +3,7 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { Logger } from "../logger/SocketLogger.js";
+import { Logger } from "../../logger/SocketLogger.js";
 import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 

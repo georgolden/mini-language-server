@@ -10,6 +10,7 @@ export interface Tool {
   name: string;
   description?: string;
   inputSchema: ReturnType<typeof zodToJsonSchema>;
+  call: (params: any) => Promise<any>;
 }
 
 export abstract class Agent {
