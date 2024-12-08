@@ -97,7 +97,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
     "@modelcontextprotocol/sdk": "^1.0.1",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "openai": "^4.76.0",
     "pino": "^9.5.0",
     "pino-socket": "^7.4.0",

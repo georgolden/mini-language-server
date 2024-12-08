@@ -1,28 +1,25 @@
 import { claudeClient, ClaudeEnhancedAgent } from '../llms/claude.mjs';
+import { getTools } from '../../mcp/clients/ast.mjs';
 
+const createASTAgent = async () => {
+  const tools = await getTools();
 
-const agent = new ClaudeEnhancedAgent(
-  ['Parse AST shit for me UWU', '123', '123'].join('\n'),
-  claudeClient,
-  [
+  const agent = new ClaudeEnhancedAgent(
+    ['You are a helpful assistant'].join('\n'),
+    claudeClient,
+    tools,
+  );
 
-  ]
-);
-
-
-export const sendMessage = agent.sendMessage
+  return {
+    sendMessage: agent.sendMessage.bind(agent),
+  };
+};
 
 async function chat() {
-  const response = await sendMessage('Tell me about cats!')
+  const { sendMessage } = await createASTAgent();
+
+  const response = await sendMessage('List project directory');
   console.log(response);
-
-  const response2 = await sendMessage('Do cats rly sleep for 12-16 hours??');
-  console.log(response2);
-
-  const response3 = await sendMessage('Am i a cat, lol?? i think i have the same needs :(');
-  console.log(response3);
 }
 
-
 chat();
-

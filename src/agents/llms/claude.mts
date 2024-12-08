@@ -1,5 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { Agent, ModelResponse, ToolResponse, type Message, type Tool } from './agent.mjs';
+import {
+  Agent,
+  type ModelResponse,
+  type ToolResponse,
+  type TextResponse,
+  type Message,
+  type Tool,
+} from './agent.mjs';
+import { config } from 'dotenv';
+
+config();
 
 export class ClaudeEnhancedAgent extends Agent {
   private client: Anthropic;
@@ -10,41 +20,65 @@ export class ClaudeEnhancedAgent extends Agent {
   }
 
   formatMessages(messages: Message[]): Anthropic.MessageCreateParamsNonStreaming {
-    console.log('\n');
-    console.log('INPUT:', messages);
-    console.log('\n');
+    //console.log('\n');
+    //console.log('INPUT:', JSON.stringify(messages));
+    //console.log('\n');
+
     return {
       model: 'claude-3-5-sonnet-latest',
       max_tokens: 1024,
       system: this.systemPrompt,
       tools: this.tools.map((tool) => ({
         name: tool.name,
-        input_schema: {
-          type: 'object',
-          properties: tool.inputSchema,
-        },
         description: tool.description,
+        input_schema: tool.inputSchema,
       })),
-      messages: messages.map(({ role, content }) => ({
-        role,
-        content,
-      })),
+      messages: messages.map(({ role, content }) => {
+        // Handle both string and array content formats
+        if (Array.isArray(content)) {
+          return {
+            role,
+            content: content.map((item) => {
+              if (item.type === 'text') {
+                return { type: 'text', text: item.text };
+              }
+              if (item.type === 'tool_result') {
+                return {
+                  type: 'tool_result',
+                  tool_use_id: item.id,
+                  content: item.content,
+                };
+              }
+              return item;
+            }),
+          };
+        }
+        return { role, content };
+      }),
     };
   }
 
-  protected override async sendToLLM(formattedMessages: ReturnType<typeof this.formatMessages>): Promise<ModelResponse[]> {
+  protected override async sendToLLM(
+    formattedMessages: ReturnType<typeof this.formatMessages>,
+  ): Promise<ModelResponse[]> {
+    console.log('FULL TO LLM:', JSON.stringify(formattedMessages));
     const response = await this.client.messages.create(formattedMessages);
     console.log('FULL FROM LLM:', response);
 
-    const output = response.content.map((content) => {
+    const output = response.content.flatMap((content) => {
       if (content.type === 'tool_use') {
-        console.log(content.input)
-        return { type: 'tool', toolName: content.name, args: [] } as ToolResponse
-      } else if (content.type === 'text') {
-        return { type: 'text', message: content.text } as ModelResponse
+        return {
+          type: 'tool',
+          toolUseId: content.id,
+          toolName: content.name,
+          args: content.input || {}, // Use the input directly from tool_use
+        } satisfies ToolResponse;
       }
-      return []
-    }).flat()
+      if (content.type === 'text') {
+        return { type: 'text', message: content.text } satisfies TextResponse;
+      }
+      return [];
+    });
 
     return output;
   }
