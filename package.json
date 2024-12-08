@@ -18,43 +18,23 @@
     "languages": [
       {
         "id": "typescript",
-        "aliases": [
-          "TypeScript",
-          "ts"
-        ],
-        "extensions": [
-          ".ts"
-        ]
+        "aliases": ["TypeScript", "ts"],
+        "extensions": [".ts"]
       },
       {
         "id": "typescriptreact",
-        "aliases": [
-          "TypeScript React",
-          "tsx"
-        ],
-        "extensions": [
-          ".tsx"
-        ]
+        "aliases": ["TypeScript React", "tsx"],
+        "extensions": [".tsx"]
       },
       {
         "id": "javascript",
-        "aliases": [
-          "JavaScript",
-          "js"
-        ],
-        "extensions": [
-          ".js"
-        ]
+        "aliases": ["JavaScript", "js"],
+        "extensions": [".js"]
       },
       {
         "id": "javascriptreact",
-        "aliases": [
-          "JavaScript React",
-          "jsx"
-        ],
-        "extensions": [
-          ".jsx"
-        ]
+        "aliases": ["JavaScript React", "jsx"],
+        "extensions": [".jsx"]
       }
     ],
     "commands": [
@@ -88,7 +68,10 @@
     "lint": "biome lint .",
     "format": "biome format . --write",
     "check": "biome check --apply .",
-    "mcp:debug": "tsc -w -p ./tsconfig.mcp.json & chmod +x ./dist/mcp/servers/ast.mjs & npx @modelcontextprotocol/inspector ./dist/mcp/servers/ast.mjs"
+    "mcp:debug": "npm run mcp:compile_watch & mcp:run_debugger",
+    "mcp:compile": "tsc -p ./tsconfig.mcp.json & chmod +x ./dist/mcp/servers/ast.mjs",
+    "mcp:compile_watch": "tsc -w -p ./tsconfig.mcp.json & chmod +x ./dist/mcp/servers/ast.mjs",
+    "mcp:run_debugger": "npx @modelcontextprotocol/inspector ./dist/mcp/servers/ast.mjs"
   },
   "keywords": [],
   "author": "",

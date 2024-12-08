@@ -5,7 +5,12 @@ const createASTAgent = async () => {
   const tools = await getTools();
 
   const agent = new ClaudeEnhancedAgent(
-    ['You are a helpful assistant'].join('\n'),
+    [
+      'You are assistant focused on the tool usage',
+      'If you dont have enough information to call the tool',
+      'ask a follow up questions to get it',
+      'Dont make assumptions if you dont have enough information'
+    ].join('\n'),
     claudeClient,
     tools,
   );
@@ -18,8 +23,10 @@ const createASTAgent = async () => {
 async function chat() {
   const { sendMessage } = await createASTAgent();
 
-  const response = await sendMessage('List project directory');
+  const response = await sendMessage('List files from my project');
   console.log(response);
+  const response2 = await sendMessage('Fine my project is located at folder ./dev/saygex/');
+  console.log(response2)
 }
 
 chat();

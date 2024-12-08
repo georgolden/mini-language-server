@@ -71,7 +71,7 @@ export class ClaudeEnhancedAgent extends Agent {
           type: 'tool',
           toolUseId: content.id,
           toolName: content.name,
-          args: content.input || {}, // Use the input directly from tool_use
+          args: content.input || {},
         } satisfies ToolResponse;
       }
       if (content.type === 'text') {

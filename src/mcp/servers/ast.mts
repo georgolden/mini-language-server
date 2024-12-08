@@ -10,7 +10,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 const args = process.argv.slice(1);
 
 const GetProjectFiles = z.object({
-  path: z.string().optional().describe('Optional path to list files from a specific directory'),
+  path: z.string().describe('Required! Path to the project to list files from'),
 });
 
 if (args.length === 0 || !args[1]) {
@@ -41,11 +41,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: 'get_project_files',
         description:
-          'Retrieve a comprehensive list of all files available within the project. ' +
-          'This tool allows to list all the files that exist and their paths, making it ' +
-          'easier to determine which files can be accessed or modified. The listing ' +
-          "includes file paths and their organization within the project's structure. " +
-          'Perfect for exploring the project’s contents efficiently.',
+          'Retrieve a list of all files available within the project by provided path. ' +
+          'Path should be a valid string that leads to a project where user wants ' +
+          'to get files from. It will provide information about all the files except ' +
+          'those listed inside of .gitignore. ',
         inputSchema: zodToJsonSchema(GetProjectFiles),
       },
     ],
