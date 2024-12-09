@@ -6,6 +6,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { Logger } from '../../logger/SocketLogger.js';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+import getAllFiles from './files.mjs';
 
 const args = process.argv.slice(1);
 
@@ -55,17 +56,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
   switch (name) {
-    case 'get_project_files':
-      logger.info(args);
+    case 'get_project_files': {
+      const { path } = args ?? { path: '' };
       return {
         content: [
-          // TODO: add implementation to list project files
           {
             type: 'text',
-            text: 'TODO: list dir',
+            text: (await getAllFiles(path as string)).join('\n'),
           },
         ],
       };
+    }
   }
 });
 

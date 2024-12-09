@@ -18,23 +18,43 @@
     "languages": [
       {
         "id": "typescript",
-        "aliases": ["TypeScript", "ts"],
-        "extensions": [".ts"]
+        "aliases": [
+          "TypeScript",
+          "ts"
+        ],
+        "extensions": [
+          ".ts"
+        ]
       },
       {
         "id": "typescriptreact",
-        "aliases": ["TypeScript React", "tsx"],
-        "extensions": [".tsx"]
+        "aliases": [
+          "TypeScript React",
+          "tsx"
+        ],
+        "extensions": [
+          ".tsx"
+        ]
       },
       {
         "id": "javascript",
-        "aliases": ["JavaScript", "js"],
-        "extensions": [".js"]
+        "aliases": [
+          "JavaScript",
+          "js"
+        ],
+        "extensions": [
+          ".js"
+        ]
       },
       {
         "id": "javascriptreact",
-        "aliases": ["JavaScript React", "jsx"],
-        "extensions": [".jsx"]
+        "aliases": [
+          "JavaScript React",
+          "jsx"
+        ],
+        "extensions": [
+          ".jsx"
+        ]
       }
     ],
     "commands": [
@@ -81,6 +101,7 @@
     "@anthropic-ai/sdk": "^0.32.1",
     "@modelcontextprotocol/sdk": "^1.0.1",
     "dotenv": "^16.4.7",
+    "ignore": "^6.0.2",
     "openai": "^4.76.0",
     "pino": "^9.5.0",
     "pino-socket": "^7.4.0",
