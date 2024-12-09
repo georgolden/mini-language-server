@@ -14,7 +14,9 @@ const client = new Client(
     version: '1.0.0',
   },
   {
-    capabilities: {},
+    capabilities: {
+      sampling: {},
+    },
   },
 );
 
