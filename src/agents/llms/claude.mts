@@ -61,9 +61,9 @@ export class ClaudeEnhancedAgent extends Agent {
   protected override async sendToLLM(
     formattedMessages: ReturnType<typeof this.formatMessages>,
   ): Promise<ModelResponse[]> {
-    console.log('FULL TO LLM:', JSON.stringify(formattedMessages));
+    //console.log('FULL TO LLM:', JSON.stringify(formattedMessages));
     const response = await this.client.messages.create(formattedMessages);
-    console.log('FULL FROM LLM:', response);
+    //console.log('FULL FROM LLM:', response);
 
     const output = response.content.flatMap((content) => {
       if (content.type === 'tool_use') {

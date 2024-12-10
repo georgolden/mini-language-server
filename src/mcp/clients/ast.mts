@@ -1,7 +1,12 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { CallToolResultSchema, ListToolsResultSchema } from '@modelcontextprotocol/sdk/dist/types';
+import {
+  CallToolResultSchema,
+  ListToolsResultSchema,
+  CreateMessageRequestSchema,
+} from '@modelcontextprotocol/sdk/dist/types';
 import type { Tool } from '../../agents/llms/agent.mjs';
+import type { Agent } from '../../agents/llms/agent.mjs';
 
 const transport = new StdioClientTransport({
   command: 'dist/mcp/servers/ast.mjs',
@@ -19,6 +24,26 @@ const client = new Client(
     },
   },
 );
+
+export const registerSamplings = (agent: Agent) => {
+  client.setRequestHandler(CreateMessageRequestSchema, async ({ method, params }) => {
+    if (method === 'sampling/createMessage') {
+      console.log(params.messages[0]?.content.text);
+      const response = await agent.sendMessage(params.messages[0]?.content.text as string, false);
+
+      console.log('SAMPLING: ', response);
+
+      return {
+        content: {
+          type: 'text',
+          text: response,
+        },
+        role: 'assistant',
+        model: 'claude',
+      };
+    }
+  });
+};
 
 export const getTools = async (): Promise<Tool[]> => {
   return (
@@ -52,12 +77,12 @@ export const getTools = async (): Promise<Tool[]> => {
         },
         CallToolResultSchema,
       );
-      console.log('\n\n\n\nCALL RESULT: ', result);
+      //console.log('\n\n\n\nCALL RESULT: ', result);
       return result;
     },
   }));
 };
 
 client.connect(transport).then(async () => {
-  console.log(JSON.stringify(await getTools()));
+  //console.log(JSON.stringify(await getTools()));
 });

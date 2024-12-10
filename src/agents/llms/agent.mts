@@ -49,7 +49,7 @@ export abstract class Agent {
     this.memoryWindow = memoryWindow;
   }
 
-  protected addMessage(message: Message): void {
+  addMessage(message: Message): void {
     this.history.push(message);
   }
 
@@ -70,6 +70,7 @@ export abstract class Agent {
 
   async sendMessage(
     prompt: string | { type: 'tool_result'; tool_use_id: string; content: string },
+    withHistory = true,
   ): Promise<string> {
     const context = this.history.slice(-this.memoryWindow);
 
@@ -84,7 +85,7 @@ export abstract class Agent {
             },
           ]);
 
-    const formattedMessages = this.formatMessages([...context, userMessage]);
+    const formattedMessages = this.formatMessages([...(withHistory ? context : []), userMessage]);
     const response = await this.sendToLLM(formattedMessages);
 
     const contentArray: ContentItem[] = [];
@@ -111,24 +112,23 @@ export abstract class Agent {
 
         const toolResult = await tool.call(message.args);
 
-        // Save current state to history only once
         this.composeMessage(contentArray, 'assistant');
 
-        // Then do the follow-up call
-        await this.sendMessage({
+        return await this.sendMessage({
           type: 'tool_result',
           tool_use_id: message.toolUseId,
           content: toolResult.content[0]?.text,
         });
-
-        return;
       }
     }
 
-    // Only save to history if we haven't done a tool call
     if (!hasToolCall && contentArray.length > 0) {
       this.composeMessage(contentArray, 'assistant');
+      const lastText = contentArray.filter((item) => item.type === 'text').pop();
+      return lastText?.text || '';
     }
+
+    return '';
   }
 
   clearMemory(): void {

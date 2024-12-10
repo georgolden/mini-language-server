@@ -4,15 +4,11 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { Logger } from '../../logger/SocketLogger.js';
-import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { getAllFiles } from './files.mjs';
+import { getAllFiles, getFileContent } from './files.mjs';
+import { GetProjectFiles, SummarizeRequest } from '../schemas/ast.mjs';
 
 const args = process.argv.slice(1);
-
-const GetProjectFiles = z.object({
-  path: z.string().describe('Required! Path to the project to list files from'),
-});
 
 if (args.length === 0 || !args[1]) {
   console.error('Usage: mcp-ast <repo-folder>');
@@ -79,11 +75,50 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     case 'summarize_files_content': {
       const { path } = args ?? { path: '' };
+
+      if (typeof path !== 'string') {
+        throw new Error('Argument should be of type string!');
+      }
+
+      const files = await getAllFiles(path);
+
+      const cache: Record<string, string> = {};
+
+      for (const file of files) {
+        const content = await getFileContent(file, path);
+
+        const summary = await server.request(
+          {
+            method: 'sampling/createMessage',
+            params: {
+              maxTokens: 350,
+              messages: [
+                {
+                  content: {
+                    type: 'text',
+                    text: `Summarize the following file content: \n \n <content> \n ${content} \n </content>`,
+                  },
+                  role: 'user',
+                },
+              ],
+            },
+          },
+          SummarizeRequest,
+        );
+
+        logger.debug(JSON.stringify(summary));
+
+        cache[file] = summary?.content?.text ?? '';
+      }
+
       return {
         content: [
           {
             type: 'text',
-            text: (await getAllFiles(path as string)).join('\n'),
+            text: `Summary of all files in project: \n
+              ${Object.entries(cache)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join('\n\n')}`,
           },
         ],
       };

@@ -51,8 +51,6 @@ export async function getAllFiles(dirPath: string, baseDir: string = dirPath): P
 export async function getFileContent(relativePath: string, dir = ''): Promise<string> {
   const filePath = path.resolve(dir, relativePath);
 
-  console.log(filePath);
-
   const content = await readFileAsync(filePath, 'utf8');
 
   return content;

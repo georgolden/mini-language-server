@@ -1,5 +1,5 @@
 import { claudeClient, ClaudeEnhancedAgent } from '../llms/claude.mjs';
-import { getTools } from '../../mcp/clients/ast.mjs';
+import { getTools, registerSamplings } from '../../mcp/clients/ast.mjs';
 
 const createASTAgent = async () => {
   const tools = await getTools();
@@ -15,6 +15,13 @@ const createASTAgent = async () => {
     tools,
   );
 
+  registerSamplings(
+    new ClaudeEnhancedAgent(
+      'You are assistant that helps summarize code snippets ant other file content',
+      claudeClient,
+    ),
+  );
+
   return {
     sendMessage: agent.sendMessage.bind(agent),
   };
@@ -23,10 +30,10 @@ const createASTAgent = async () => {
 async function chat() {
   const { sendMessage } = await createASTAgent();
 
-  const response = await sendMessage('List files from my project');
+  const response = await sendMessage(
+    'Summarize files from my project ./src/agents/ and print the entire project summary',
+  );
   console.log(response);
-  const response2 = await sendMessage('Fine my project is located at folder ./src/agents/');
-  console.log(response2);
 }
 
 chat();
