@@ -77,7 +77,6 @@ export const getTools = async (): Promise<Tool[]> => {
         },
         CallToolResultSchema,
       );
-      //console.log('\n\n\n\nCALL RESULT: ', result);
       return result;
     },
   }));

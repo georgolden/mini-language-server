@@ -19,6 +19,7 @@ const createASTAgent = async () => {
     new ClaudeEnhancedAgent({
       systemPrompt: 'You are assistant that helps summarize code snippets ant other file content',
       client: claudeClient,
+      simpleModel: true,
     }),
   );
 
