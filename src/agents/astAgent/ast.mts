@@ -4,22 +4,22 @@ import { getTools, registerSamplings } from '../../mcp/clients/ast.mjs';
 const createASTAgent = async () => {
   const tools = await getTools();
 
-  const agent = new ClaudeEnhancedAgent(
-    [
+  const agent = new ClaudeEnhancedAgent({
+    systemPrompt: [
       'You are assistant focused on the tool usage',
       'If you dont have enough information to call the tool',
       'ask a follow up questions to get it',
       'Dont make assumptions if you dont have enough information',
     ].join('\n'),
-    claudeClient,
+    client: claudeClient,
     tools,
-  );
+  });
 
   registerSamplings(
-    new ClaudeEnhancedAgent(
-      'You are assistant that helps summarize code snippets ant other file content',
-      claudeClient,
-    ),
+    new ClaudeEnhancedAgent({
+      systemPrompt: 'You are assistant that helps summarize code snippets ant other file content',
+      client: claudeClient,
+    }),
   );
 
   return {

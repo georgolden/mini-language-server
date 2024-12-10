@@ -42,8 +42,12 @@ export abstract class Agent {
   protected history: Message[];
   protected tools: Tool[];
 
-  constructor(systemPrompt: string, tools: Tool[] = [], memoryWindow = 10) {
-    this.systemPrompt = systemPrompt;
+  constructor({
+    systemPrompt,
+    tools = [],
+    memoryWindow = 10,
+  }: { systemPrompt?: string; tools?: Tool[]; memoryWindow?: number }) {
+    this.systemPrompt = systemPrompt ?? '';
     this.tools = tools;
     this.history = [];
     this.memoryWindow = memoryWindow;
@@ -78,12 +82,12 @@ export abstract class Agent {
       typeof prompt === 'string'
         ? this.composeMessage(prompt)
         : this.composeMessage([
-            {
-              type: 'tool_result',
-              id: prompt.tool_use_id,
-              content: prompt.content,
-            },
-          ]);
+          {
+            type: 'tool_result',
+            id: prompt.tool_use_id,
+            content: prompt.content,
+          },
+        ]);
 
     const formattedMessages = this.formatMessages([...(withHistory ? context : []), userMessage]);
     const response = await this.sendToLLM(formattedMessages);
