@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+    // Modern JavaScript Features
+    "target": "ESNext",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
     // Build Output
     "outDir": "./dist",
     "rootDir": "./",
@@ -30,7 +36,6 @@
     "paths": {
       "*": ["node_modules/*"]
     },
-    "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
 
     // Additional Settings
@@ -39,6 +44,6 @@
     "composite": true,
     "preserveWatchOutput": true
   },
-  "include": ["packages/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kawaii Logger-chan ✧(>o<)✧</title>
+    <style>
+        :root {
+            --bg-light: #ffe4e1;
+            --bg-dark: linear-gradient(135deg, #202437, #2a2f4a);
+            --text-light: #444;
+            --text-dark: #e6e6fa;
+            --logs-light: #fffafa;
+            --logs-dark: #3b3f59;
+            --border-light: #ff9de5;
+            --border-dark: #8b90cc;
+            --btn-light: #ffb6c1;
+            --btn-dark: #8c79da;
+            --btn-hover-light: #ff80ab;
+            --btn-hover-dark: #a89cea;
+            --log-debug: #79a6d2; /* Soft blue */
+            --log-info: #4caf50; /* Pastel green */
+            --log-warn: #fdd835; /* Cute yellow */
+            --log-error: #ff6e6e; /* Soft red */
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: var(--bg-dark);
+                --text: var(--text-dark);
+                --logs: var(--logs-dark);
+                --border: var(--border-dark);
+                --btn: var(--btn-dark);
+                --btn-hover: var(--btn-hover-dark);
+            }
+        }
+        
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg: var(--bg-light);
+                --text: var(--text-light);
+                --logs: var(--logs-light);
+                --border: var(--border-light);
+                --btn: var(--btn-light);
+                --btn-hover: var(--btn-hover-light);
+            }
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Courier New', cursive, monospace;
+            margin: 0;
+            padding: 20px;
+            background: var(--bg);
+            color: var(--text);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        #logs {
+            background: var(--logs);
+            border: 3px dashed var(--border);
+            padding: 15px;
+            border-radius: 15px;
+            height: 70vh;
+            overflow: auto;
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .status {
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            display: inline-block;
+            transition: background 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+        .log-entry {
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 10px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+            color: var(--text);
+            font-weight: bold;
+            display: grid;
+            grid-template-columns: auto 100px 1fr;
+        }
+
+        .log-entry span {
+            margin-right: 10px;
+        }
+
+        /* Custom colors for log levels */
+        .log-debug {
+            background: var(--log-debug);
+        }
+
+        .log-info {
+            background: var(--log-info);
+        }
+
+        .log-warn {
+            background: var(--log-warn);
+        }
+
+        .log-error {
+            background: var(--log-error);
+        }
+
+        .clear-btn {
+            background: var(--btn);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .clear-btn:hover {
+            background: var(--btn-hover);
+            transform: scale(1.1);
+        }
+
+        button:focus {
+            outline: none;
+        }
+
+        .no-logs {
+            color: var(--text);
+            font-style: italic;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div id="status" class="status disconnected">Disconnected (´；ω；｀) nya~</div>
+    <div id="logs"><div class="no-logs">UwU... no logs yet, nya~ (´｡• ᵕ •｡`)</div></div>
+    <button onclick="clearLogs()" class="clear-btn">Clear logs ✧(>ω<)✧</button>
+
+<script>
+    let reconnectDelay = 1000; // Start with 1 second delay
+    const MAX_RECONNECT_DELAY = 5000; // Max delay is 5 seconds
+    let ws; // WebSocket instance
+
+    function connect() {
+        ws = new WebSocket('ws://localhost:8080'); // Connect to WebSocket server
+
+        ws.onopen = () => {
+            console.log('Connected! ✧(>ω<)✧');
+            document.getElementById('status').textContent = 'Connected! (๑>ᴗ<๑)✧';
+            document.getElementById('status').classList.remove('disconnected');
+            document.getElementById('status').classList.add('connected');
+            reconnectDelay = 1000; // Reset the delay on successful connection
+        };
+
+        ws.onmessage = (event) => {
+            const { timestamp, level, message } = JSON.parse(event.data);
+            const logsContainer = document.getElementById('logs');
+
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${level}`;
+            logEntry.innerHTML = `
+                <span>[${timestamp}]</span>
+                <span>${level.toUpperCase()}:</span>
+                <span>${message}</span>
+            `;
+
+            // Clear "no logs" message if present
+            const noLogsMessage = document.querySelector('.no-logs');
+            if (noLogsMessage) {
+                noLogsMessage.remove();
+            }
+
+            logsContainer.appendChild(logEntry);
+
+            // Auto-scroll to the bottom
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        };
+
+        ws.onclose = () => {
+            console.log('Disconnected... (╥﹏╥) Retrying in ' + reconnectDelay / 1000 + ' seconds, nya~');
+            document.getElementById('status').textContent = `Disconnected (´；ω；｀) Reconnecting in ${reconnectDelay / 1000}s...`;
+            document.getElementById('status').classList.add('disconnected');
+            document.getElementById('status').classList.remove('connected');
+
+            // Reconnect with exponential backoff
+            setTimeout(connect, reconnectDelay);
+            reconnectDelay = Math.min(reconnectDelay * 1.5, MAX_RECONNECT_DELAY); // Increase delay up to max
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error, nya~:', error);
+            // Don't close WebSocket here; let the `onclose` handler take care of reconnecting
+        };
+    }
+
+    function clearLogs() {
+        const logsContainer = document.getElementById('logs');
+        logsContainer.innerHTML = '<div class="no-logs">UwU... no logs yet, nya~ (´｡• ω •｡`)</div>';
+    }
+
+    // Initialize the connection
+    connect();
+
+    // Add a visibilitychange listener to handle when the user switches tabs
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && ws.readyState !== WebSocket.OPEN) {
+            console.log('Reconnecting because tab is active again, nya~! (≧▽≦)');
+            connect();
+        }
+    });
+</script>
+
+  </body>
+</html>

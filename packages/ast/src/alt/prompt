@@ -1,0 +1,2362 @@
+ npx tsx src/ast/alt/definition.ts
+
+Searching for definition of: Person
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Person
+Found matching declaration: interface_declaration -> interface
+
+Building definition tree for interface: interface_declaration
+Name node: Person (type_identifier)
+Interface body: {
+  type: 'interface_body',
+  children: [
+    { type: '{', text: '{' },
+    { type: 'property_signature', text: 'name: string' },
+    { type: ';', text: ';' },
+    { type: 'property_signature', text: 'age: number' },
+    { type: ';', text: ';' },
+    { type: 'method_signature', text: 'greet(prefix: string): string' },
+    { type: ';', text: ';' },
+    { type: '}', text: '}' }
+  ]
+}
+
+Collecting references for node type: interface_declaration
+Interface body contents: {
+  children: [
+    { type: '{', text: '{' },
+    { type: 'property_signature', text: 'name: string' },
+    { type: ';', text: ';' },
+    { type: 'property_signature', text: 'age: number' },
+    { type: ';', text: ';' },
+    { type: 'method_signature', text: 'greet(prefix: string): string' },
+    { type: ';', text: ';' },
+    { type: '}', text: '}' }
+  ]
+}
+Found reference: name in property_signature
+Found reference: age in property_signature
+Found reference: greet in method_signature
+formal_parameters contents: {
+  children: [
+    { type: '(', text: '(' },
+    { type: 'required_parameter', text: 'prefix: string' },
+    { type: ')', text: ')' }
+  ]
+}
+Found reference: prefix in required_parameter
+
+Collected references: [
+  'name: 1 occurrences in property_signature',
+  'age: 1 occurrences in property_signature',
+  'greet: 1 occurrences in method_signature',
+  'prefix: 1 occurrences in required_parameter'
+]
+
+Processing 4 references
+
+Processing reference: name
+
+Searching for definition of: name
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Person
+Found interface_declaration: {
+  text: 'interface Person {\n' +
+    '        name: string;\n' +
+    '        age: number;\n' +
+    '        greet(prefix: string): string;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Person' },
+    {
+      type: 'interface_body',
+      text: '{\n' +
+        '        name: string;\n' +
+        '        age: number;\n' +
+        '        greet(prefix: string): string;\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: method_signature
+Checking node type: property_identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: )
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Employee
+Found interface_declaration: {
+  text: 'interface Employee extends Person {\n' +
+    '        salary: number;\n' +
+    '        department: Department;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Employee' },
+    { type: 'extends_type_clause', text: 'extends Person' },
+    {
+      type: 'interface_body',
+      text: '{\n        salary: number;\n        department: Department;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: extends_type_clause
+Checking node type: extends
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Department
+Found interface_declaration: {
+  text: 'interface Department {\n        id: number;\n        name: string;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Department' },
+    {
+      type: 'interface_body',
+      text: '{\n        id: number;\n        name: string;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for name
+
+Processing reference: age
+
+Searching for definition of: age
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Person
+Found interface_declaration: {
+  text: 'interface Person {\n' +
+    '        name: string;\n' +
+    '        age: number;\n' +
+    '        greet(prefix: string): string;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Person' },
+    {
+      type: 'interface_body',
+      text: '{\n' +
+        '        name: string;\n' +
+        '        age: number;\n' +
+        '        greet(prefix: string): string;\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: method_signature
+Checking node type: property_identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: )
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Employee
+Found interface_declaration: {
+  text: 'interface Employee extends Person {\n' +
+    '        salary: number;\n' +
+    '        department: Department;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Employee' },
+    { type: 'extends_type_clause', text: 'extends Person' },
+    {
+      type: 'interface_body',
+      text: '{\n        salary: number;\n        department: Department;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: extends_type_clause
+Checking node type: extends
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Department
+Found interface_declaration: {
+  text: 'interface Department {\n        id: number;\n        name: string;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Department' },
+    {
+      type: 'interface_body',
+      text: '{\n        id: number;\n        name: string;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for age
+
+Processing reference: greet
+
+Searching for definition of: greet
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Person
+Found interface_declaration: {
+  text: 'interface Person {\n' +
+    '        name: string;\n' +
+    '        age: number;\n' +
+    '        greet(prefix: string): string;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Person' },
+    {
+      type: 'interface_body',
+      text: '{\n' +
+        '        name: string;\n' +
+        '        age: number;\n' +
+        '        greet(prefix: string): string;\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: method_signature
+Checking node type: property_identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: )
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Employee
+Found interface_declaration: {
+  text: 'interface Employee extends Person {\n' +
+    '        salary: number;\n' +
+    '        department: Department;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Employee' },
+    { type: 'extends_type_clause', text: 'extends Person' },
+    {
+      type: 'interface_body',
+      text: '{\n        salary: number;\n        department: Department;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: extends_type_clause
+Checking node type: extends
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Department
+Found interface_declaration: {
+  text: 'interface Department {\n        id: number;\n        name: string;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Department' },
+    {
+      type: 'interface_body',
+      text: '{\n        id: number;\n        name: string;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for greet
+
+Processing reference: prefix
+
+Searching for definition of: prefix
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Person
+Found interface_declaration: {
+  text: 'interface Person {\n' +
+    '        name: string;\n' +
+    '        age: number;\n' +
+    '        greet(prefix: string): string;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Person' },
+    {
+      type: 'interface_body',
+      text: '{\n' +
+        '        name: string;\n' +
+        '        age: number;\n' +
+        '        greet(prefix: string): string;\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: method_signature
+Checking node type: property_identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: )
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Employee
+Found interface_declaration: {
+  text: 'interface Employee extends Person {\n' +
+    '        salary: number;\n' +
+    '        department: Department;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Employee' },
+    { type: 'extends_type_clause', text: 'extends Person' },
+    {
+      type: 'interface_body',
+      text: '{\n        salary: number;\n        department: Department;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: extends_type_clause
+Checking node type: extends
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Department
+Found interface_declaration: {
+  text: 'interface Department {\n        id: number;\n        name: string;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Department' },
+    {
+      type: 'interface_body',
+      text: '{\n        id: number;\n        name: string;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for prefix
+
+Definition tree result: {
+  identifier: 'Person',
+  kind: 'interface',
+  referencesCount: 4,
+  references: [ 'name', 'age', 'greet', 'prefix' ]
+}
+
+Searching for definition of: Employee
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Person
+Found interface_declaration: {
+  text: 'interface Person {\n' +
+    '        name: string;\n' +
+    '        age: number;\n' +
+    '        greet(prefix: string): string;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Person' },
+    {
+      type: 'interface_body',
+      text: '{\n' +
+        '        name: string;\n' +
+        '        age: number;\n' +
+        '        greet(prefix: string): string;\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: method_signature
+Checking node type: property_identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: )
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Employee
+Found matching declaration: interface_declaration -> interface
+
+Building definition tree for interface: interface_declaration
+Name node: Employee (type_identifier)
+Interface body: {
+  type: 'interface_body',
+  children: [
+    { type: '{', text: '{' },
+    { type: 'property_signature', text: 'salary: number' },
+    { type: ';', text: ';' },
+    { type: 'property_signature', text: 'department: Department' },
+    { type: ';', text: ';' },
+    { type: '}', text: '}' }
+  ]
+}
+
+Collecting references for node type: interface_declaration
+Interface body contents: {
+  children: [
+    { type: '{', text: '{' },
+    { type: 'property_signature', text: 'salary: number' },
+    { type: ';', text: ';' },
+    { type: 'property_signature', text: 'department: Department' },
+    { type: ';', text: ';' },
+    { type: '}', text: '}' }
+  ]
+}
+Found reference: salary in property_signature
+Found reference: department in property_signature
+
+Collected references: [
+  'salary: 1 occurrences in property_signature',
+  'department: 1 occurrences in property_signature'
+]
+
+Processing 2 references
+
+Processing reference: salary
+
+Searching for definition of: salary
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Person
+Found interface_declaration: {
+  text: 'interface Person {\n' +
+    '        name: string;\n' +
+    '        age: number;\n' +
+    '        greet(prefix: string): string;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Person' },
+    {
+      type: 'interface_body',
+      text: '{\n' +
+        '        name: string;\n' +
+        '        age: number;\n' +
+        '        greet(prefix: string): string;\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: method_signature
+Checking node type: property_identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: )
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Employee
+Found interface_declaration: {
+  text: 'interface Employee extends Person {\n' +
+    '        salary: number;\n' +
+    '        department: Department;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Employee' },
+    { type: 'extends_type_clause', text: 'extends Person' },
+    {
+      type: 'interface_body',
+      text: '{\n        salary: number;\n        department: Department;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: extends_type_clause
+Checking node type: extends
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Department
+Found interface_declaration: {
+  text: 'interface Department {\n        id: number;\n        name: string;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Department' },
+    {
+      type: 'interface_body',
+      text: '{\n        id: number;\n        name: string;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for salary
+
+Processing reference: department
+
+Searching for definition of: department
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Person
+Found interface_declaration: {
+  text: 'interface Person {\n' +
+    '        name: string;\n' +
+    '        age: number;\n' +
+    '        greet(prefix: string): string;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Person' },
+    {
+      type: 'interface_body',
+      text: '{\n' +
+        '        name: string;\n' +
+        '        age: number;\n' +
+        '        greet(prefix: string): string;\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: method_signature
+Checking node type: property_identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: )
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Employee
+Found interface_declaration: {
+  text: 'interface Employee extends Person {\n' +
+    '        salary: number;\n' +
+    '        department: Department;\n' +
+    '      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Employee' },
+    { type: 'extends_type_clause', text: 'extends Person' },
+    {
+      type: 'interface_body',
+      text: '{\n        salary: number;\n        department: Department;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: extends_type_clause
+Checking node type: extends
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: ;
+Checking node type: }
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Department
+Found interface_declaration: {
+  text: 'interface Department {\n        id: number;\n        name: string;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Department' },
+    {
+      type: 'interface_body',
+      text: '{\n        id: number;\n        name: string;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for department
+
+Definition tree result: {
+  identifier: 'Employee',
+  kind: 'interface',
+  referencesCount: 2,
+  references: [ 'salary', 'department' ]
+}
+▶ TypeScript Definition Analysis
+  ✖ analyze interface declarations (73.18111ms)
+    AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+      Set([
+      'string', 'number', 'boolean', 'void', 'null', 'undefined',
+      'Promise', 'Array', 'Map', 'Set', 'Object', 'Function',
+      'any', 'unknown', 'never', 'this', 'super', 'console', 'String'
+      ])
+
+        at TestContext.<anonymous> (/home/georgolden/projects/lang-server/src/ast/alt/definition.ts:391:12)
+        at Test.runInAsyncScope (node:async_hooks:206:9)
+        at Test.run (node:internal/test_runner/test:789:25)
+        at Test.start (node:internal/test_runner/test:693:17)
+        at node:internal/test_runner/test:1129:71
+        at node:internal/per_context/primordials:487:82
+        at new Promise (<anonymous>)
+        at new SafePromise (node:internal/per_context/primordials:455:29)
+        at node:internal/per_context/primordials:487:9
+        at Array.map (<anonymous>) {
+      generatedMessage: true,
+      code: 'ERR_ASSERTION',
+      actual: false,
+      expected: true,
+      operator: '=='
+    }
+
+npx tsx src/ast/alt/definition.ts
+
+Searching for definition of: Greeting
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Props
+Found interface_declaration: {
+  text: 'interface Props {\n        name: string;\n        age: number;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Props' },
+    {
+      type: 'interface_body',
+      text: '{\n        name: string;\n        age: number;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: }
+Checking node type: function_declaration
+Found declaration node: function_declaration with name: Greeting
+Found matching declaration: function_declaration -> function
+
+Building definition tree for function: function_declaration
+Name node: Greeting (identifier)
+
+Collecting references for node type: function_declaration
+Found reference: Greeting in function_declaration
+formal_parameters contents: {
+  children: [
+    { type: '(', text: '(' },
+    { type: 'required_parameter', text: '{ name, age }: Props' },
+    { type: ')', text: ')' }
+  ]
+}
+statement_block contents: {
+  children: [
+    { type: '{', text: '{' },
+    {
+      type: 'lexical_declaration',
+      text: 'const message = `Hello ${name}, you are ${age} years old`;'
+    },
+    {
+      type: 'return_statement',
+      text: 'return (\n' +
+        '          <div className="greeting">\n' +
+        '            <h1>{message}</h1>\n' +
+        '            <span>Welcome!</span>\n' +
+        '          </div>\n' +
+        '        );'
+    },
+    { type: '}', text: '}' }
+  ]
+}
+Found reference: message in variable_declarator
+Found reference: name in template_substitution
+Found reference: age in template_substitution
+Found reference: className in assignment_expression
+Found reference: span in binary_expression
+Found reference: Welcome in binary_expression
+
+Collected references: [
+  'Greeting: 1 occurrences in function_declaration',
+  'message: 1 occurrences in variable_declarator',
+  'name: 1 occurrences in template_substitution',
+  'age: 1 occurrences in template_substitution',
+  'className: 1 occurrences in assignment_expression',
+  'span: 1 occurrences in binary_expression',
+  'Welcome: 1 occurrences in binary_expression'
+]
+
+Processing 7 references
+Skipping reference Greeting (self-ref, built-in, or already processed)
+
+Processing reference: message
+
+Searching for definition of: message
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Props
+Found interface_declaration: {
+  text: 'interface Props {\n        name: string;\n        age: number;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Props' },
+    {
+      type: 'interface_body',
+      text: '{\n        name: string;\n        age: number;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: }
+Checking node type: function_declaration
+Found declaration node: function_declaration with name: Greeting
+Found function_declaration: {
+  text: 'function Greeting({ name, age }: Props) {\n' +
+    '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+    '        \n' +
+    '        return (\n' +
+    '          <div className="greeting">\n' +
+    '            <h1>{message}</h1>\n' +
+    '            <span>Welcome!</span>\n' +
+    '          </div>\n' +
+    '        );\n' +
+    '      }',
+  children: [
+    { type: 'function', text: 'function' },
+    { type: 'identifier', text: 'Greeting' },
+    { type: 'formal_parameters', text: '({ name, age }: Props)' },
+    {
+      type: 'statement_block',
+      text: '{\n' +
+        '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+        '        \n' +
+        '        return (\n' +
+        '          <div className="greeting">\n' +
+        '            <h1>{message}</h1>\n' +
+        '            <span>Welcome!</span>\n' +
+        '          </div>\n' +
+        '        );\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: function
+Checking node type: identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: object_pattern
+Checking node type: {
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: ,
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: }
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: )
+Checking node type: statement_block
+Checking node type: {
+Checking node type: lexical_declaration
+Checking node type: const
+Checking node type: variable_declarator
+Found declaration node: variable_declarator with name: message
+Found matching declaration: variable_declarator -> variable
+Found definition for message: variable
+
+Building definition tree for variable: variable_declarator
+Name node: message (identifier)
+
+Collecting references for node type: variable_declarator
+Found reference: message in variable_declarator
+Found reference: name in template_substitution
+Found reference: age in template_substitution
+
+Collected references: [
+  'message: 1 occurrences in variable_declarator',
+  'name: 1 occurrences in template_substitution',
+  'age: 1 occurrences in template_substitution'
+]
+
+Processing 3 references
+Skipping reference message (self-ref, built-in, or already processed)
+
+Processing reference: name
+
+Searching for definition of: name
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Props
+Found interface_declaration: {
+  text: 'interface Props {\n        name: string;\n        age: number;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Props' },
+    {
+      type: 'interface_body',
+      text: '{\n        name: string;\n        age: number;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: }
+Checking node type: function_declaration
+Found declaration node: function_declaration with name: Greeting
+Found function_declaration: {
+  text: 'function Greeting({ name, age }: Props) {\n' +
+    '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+    '        \n' +
+    '        return (\n' +
+    '          <div className="greeting">\n' +
+    '            <h1>{message}</h1>\n' +
+    '            <span>Welcome!</span>\n' +
+    '          </div>\n' +
+    '        );\n' +
+    '      }',
+  children: [
+    { type: 'function', text: 'function' },
+    { type: 'identifier', text: 'Greeting' },
+    { type: 'formal_parameters', text: '({ name, age }: Props)' },
+    {
+      type: 'statement_block',
+      text: '{\n' +
+        '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+        '        \n' +
+        '        return (\n' +
+        '          <div className="greeting">\n' +
+        '            <h1>{message}</h1>\n' +
+        '            <span>Welcome!</span>\n' +
+        '          </div>\n' +
+        '        );\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: function
+Checking node type: identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: object_pattern
+Checking node type: {
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: ,
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: }
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: )
+Checking node type: statement_block
+Checking node type: {
+Checking node type: lexical_declaration
+Checking node type: const
+Checking node type: variable_declarator
+Found declaration node: variable_declarator with name: message
+Checking node type: identifier
+Checking node type: =
+Checking node type: template_string
+Checking node type: `
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: `
+Checking node type: ;
+Checking node type: return_statement
+Checking node type: return
+Checking node type: parenthesized_expression
+Checking node type: (
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: assignment_expression
+Checking node type: identifier
+Checking node type: =
+Checking node type: binary_expression
+Checking node type: non_null_expression
+Checking node type: binary_expression
+Checking node type: binary_expression
+Checking node type: string
+Checking node type: "
+Checking node type: string_fragment
+Checking node type: "
+Checking node type: >
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: binary_expression
+Checking node type: object
+Checking node type: {
+Checking node type: shorthand_property_identifier
+Checking node type: }
+Checking node type: <
+Checking node type: binary_expression
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: /
+Checking node type: <
+Checking node type: identifier
+Checking node type: >
+Checking node type: identifier
+Checking node type: !
+Checking node type: <
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: ERROR
+Checking node type: <
+Checking node type: /
+Checking node type: regex_flags
+Checking node type: ERROR
+Checking node type: >
+Checking node type: )
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for name
+
+Processing reference: age
+
+Searching for definition of: age
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Props
+Found interface_declaration: {
+  text: 'interface Props {\n        name: string;\n        age: number;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Props' },
+    {
+      type: 'interface_body',
+      text: '{\n        name: string;\n        age: number;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: }
+Checking node type: function_declaration
+Found declaration node: function_declaration with name: Greeting
+Found function_declaration: {
+  text: 'function Greeting({ name, age }: Props) {\n' +
+    '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+    '        \n' +
+    '        return (\n' +
+    '          <div className="greeting">\n' +
+    '            <h1>{message}</h1>\n' +
+    '            <span>Welcome!</span>\n' +
+    '          </div>\n' +
+    '        );\n' +
+    '      }',
+  children: [
+    { type: 'function', text: 'function' },
+    { type: 'identifier', text: 'Greeting' },
+    { type: 'formal_parameters', text: '({ name, age }: Props)' },
+    {
+      type: 'statement_block',
+      text: '{\n' +
+        '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+        '        \n' +
+        '        return (\n' +
+        '          <div className="greeting">\n' +
+        '            <h1>{message}</h1>\n' +
+        '            <span>Welcome!</span>\n' +
+        '          </div>\n' +
+        '        );\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: function
+Checking node type: identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: object_pattern
+Checking node type: {
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: ,
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: }
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: )
+Checking node type: statement_block
+Checking node type: {
+Checking node type: lexical_declaration
+Checking node type: const
+Checking node type: variable_declarator
+Found declaration node: variable_declarator with name: message
+Checking node type: identifier
+Checking node type: =
+Checking node type: template_string
+Checking node type: `
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: `
+Checking node type: ;
+Checking node type: return_statement
+Checking node type: return
+Checking node type: parenthesized_expression
+Checking node type: (
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: assignment_expression
+Checking node type: identifier
+Checking node type: =
+Checking node type: binary_expression
+Checking node type: non_null_expression
+Checking node type: binary_expression
+Checking node type: binary_expression
+Checking node type: string
+Checking node type: "
+Checking node type: string_fragment
+Checking node type: "
+Checking node type: >
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: binary_expression
+Checking node type: object
+Checking node type: {
+Checking node type: shorthand_property_identifier
+Checking node type: }
+Checking node type: <
+Checking node type: binary_expression
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: /
+Checking node type: <
+Checking node type: identifier
+Checking node type: >
+Checking node type: identifier
+Checking node type: !
+Checking node type: <
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: ERROR
+Checking node type: <
+Checking node type: /
+Checking node type: regex_flags
+Checking node type: ERROR
+Checking node type: >
+Checking node type: )
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for age
+
+Definition tree result: {
+  identifier: 'message',
+  kind: 'variable',
+  referencesCount: 2,
+  references: [ 'name', 'age' ]
+}
+Adding message to references as variable
+
+Processing reference: name
+
+Searching for definition of: name
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Props
+Found interface_declaration: {
+  text: 'interface Props {\n        name: string;\n        age: number;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Props' },
+    {
+      type: 'interface_body',
+      text: '{\n        name: string;\n        age: number;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: }
+Checking node type: function_declaration
+Found declaration node: function_declaration with name: Greeting
+Found function_declaration: {
+  text: 'function Greeting({ name, age }: Props) {\n' +
+    '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+    '        \n' +
+    '        return (\n' +
+    '          <div className="greeting">\n' +
+    '            <h1>{message}</h1>\n' +
+    '            <span>Welcome!</span>\n' +
+    '          </div>\n' +
+    '        );\n' +
+    '      }',
+  children: [
+    { type: 'function', text: 'function' },
+    { type: 'identifier', text: 'Greeting' },
+    { type: 'formal_parameters', text: '({ name, age }: Props)' },
+    {
+      type: 'statement_block',
+      text: '{\n' +
+        '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+        '        \n' +
+        '        return (\n' +
+        '          <div className="greeting">\n' +
+        '            <h1>{message}</h1>\n' +
+        '            <span>Welcome!</span>\n' +
+        '          </div>\n' +
+        '        );\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: function
+Checking node type: identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: object_pattern
+Checking node type: {
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: ,
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: }
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: )
+Checking node type: statement_block
+Checking node type: {
+Checking node type: lexical_declaration
+Checking node type: const
+Checking node type: variable_declarator
+Found declaration node: variable_declarator with name: message
+Checking node type: identifier
+Checking node type: =
+Checking node type: template_string
+Checking node type: `
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: `
+Checking node type: ;
+Checking node type: return_statement
+Checking node type: return
+Checking node type: parenthesized_expression
+Checking node type: (
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: assignment_expression
+Checking node type: identifier
+Checking node type: =
+Checking node type: binary_expression
+Checking node type: non_null_expression
+Checking node type: binary_expression
+Checking node type: binary_expression
+Checking node type: string
+Checking node type: "
+Checking node type: string_fragment
+Checking node type: "
+Checking node type: >
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: binary_expression
+Checking node type: object
+Checking node type: {
+Checking node type: shorthand_property_identifier
+Checking node type: }
+Checking node type: <
+Checking node type: binary_expression
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: /
+Checking node type: <
+Checking node type: identifier
+Checking node type: >
+Checking node type: identifier
+Checking node type: !
+Checking node type: <
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: ERROR
+Checking node type: <
+Checking node type: /
+Checking node type: regex_flags
+Checking node type: ERROR
+Checking node type: >
+Checking node type: )
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for name
+
+Processing reference: age
+
+Searching for definition of: age
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Props
+Found interface_declaration: {
+  text: 'interface Props {\n        name: string;\n        age: number;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Props' },
+    {
+      type: 'interface_body',
+      text: '{\n        name: string;\n        age: number;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: }
+Checking node type: function_declaration
+Found declaration node: function_declaration with name: Greeting
+Found function_declaration: {
+  text: 'function Greeting({ name, age }: Props) {\n' +
+    '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+    '        \n' +
+    '        return (\n' +
+    '          <div className="greeting">\n' +
+    '            <h1>{message}</h1>\n' +
+    '            <span>Welcome!</span>\n' +
+    '          </div>\n' +
+    '        );\n' +
+    '      }',
+  children: [
+    { type: 'function', text: 'function' },
+    { type: 'identifier', text: 'Greeting' },
+    { type: 'formal_parameters', text: '({ name, age }: Props)' },
+    {
+      type: 'statement_block',
+      text: '{\n' +
+        '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+        '        \n' +
+        '        return (\n' +
+        '          <div className="greeting">\n' +
+        '            <h1>{message}</h1>\n' +
+        '            <span>Welcome!</span>\n' +
+        '          </div>\n' +
+        '        );\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: function
+Checking node type: identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: object_pattern
+Checking node type: {
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: ,
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: }
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: )
+Checking node type: statement_block
+Checking node type: {
+Checking node type: lexical_declaration
+Checking node type: const
+Checking node type: variable_declarator
+Found declaration node: variable_declarator with name: message
+Checking node type: identifier
+Checking node type: =
+Checking node type: template_string
+Checking node type: `
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: `
+Checking node type: ;
+Checking node type: return_statement
+Checking node type: return
+Checking node type: parenthesized_expression
+Checking node type: (
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: assignment_expression
+Checking node type: identifier
+Checking node type: =
+Checking node type: binary_expression
+Checking node type: non_null_expression
+Checking node type: binary_expression
+Checking node type: binary_expression
+Checking node type: string
+Checking node type: "
+Checking node type: string_fragment
+Checking node type: "
+Checking node type: >
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: binary_expression
+Checking node type: object
+Checking node type: {
+Checking node type: shorthand_property_identifier
+Checking node type: }
+Checking node type: <
+Checking node type: binary_expression
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: /
+Checking node type: <
+Checking node type: identifier
+Checking node type: >
+Checking node type: identifier
+Checking node type: !
+Checking node type: <
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: ERROR
+Checking node type: <
+Checking node type: /
+Checking node type: regex_flags
+Checking node type: ERROR
+Checking node type: >
+Checking node type: )
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for age
+
+Processing reference: className
+
+Searching for definition of: className
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Props
+Found interface_declaration: {
+  text: 'interface Props {\n        name: string;\n        age: number;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Props' },
+    {
+      type: 'interface_body',
+      text: '{\n        name: string;\n        age: number;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: }
+Checking node type: function_declaration
+Found declaration node: function_declaration with name: Greeting
+Found function_declaration: {
+  text: 'function Greeting({ name, age }: Props) {\n' +
+    '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+    '        \n' +
+    '        return (\n' +
+    '          <div className="greeting">\n' +
+    '            <h1>{message}</h1>\n' +
+    '            <span>Welcome!</span>\n' +
+    '          </div>\n' +
+    '        );\n' +
+    '      }',
+  children: [
+    { type: 'function', text: 'function' },
+    { type: 'identifier', text: 'Greeting' },
+    { type: 'formal_parameters', text: '({ name, age }: Props)' },
+    {
+      type: 'statement_block',
+      text: '{\n' +
+        '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+        '        \n' +
+        '        return (\n' +
+        '          <div className="greeting">\n' +
+        '            <h1>{message}</h1>\n' +
+        '            <span>Welcome!</span>\n' +
+        '          </div>\n' +
+        '        );\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: function
+Checking node type: identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: object_pattern
+Checking node type: {
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: ,
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: }
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: )
+Checking node type: statement_block
+Checking node type: {
+Checking node type: lexical_declaration
+Checking node type: const
+Checking node type: variable_declarator
+Found declaration node: variable_declarator with name: message
+Checking node type: identifier
+Checking node type: =
+Checking node type: template_string
+Checking node type: `
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: `
+Checking node type: ;
+Checking node type: return_statement
+Checking node type: return
+Checking node type: parenthesized_expression
+Checking node type: (
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: assignment_expression
+Checking node type: identifier
+Checking node type: =
+Checking node type: binary_expression
+Checking node type: non_null_expression
+Checking node type: binary_expression
+Checking node type: binary_expression
+Checking node type: string
+Checking node type: "
+Checking node type: string_fragment
+Checking node type: "
+Checking node type: >
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: binary_expression
+Checking node type: object
+Checking node type: {
+Checking node type: shorthand_property_identifier
+Checking node type: }
+Checking node type: <
+Checking node type: binary_expression
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: /
+Checking node type: <
+Checking node type: identifier
+Checking node type: >
+Checking node type: identifier
+Checking node type: !
+Checking node type: <
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: ERROR
+Checking node type: <
+Checking node type: /
+Checking node type: regex_flags
+Checking node type: ERROR
+Checking node type: >
+Checking node type: )
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for className
+
+Processing reference: span
+
+Searching for definition of: span
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Props
+Found interface_declaration: {
+  text: 'interface Props {\n        name: string;\n        age: number;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Props' },
+    {
+      type: 'interface_body',
+      text: '{\n        name: string;\n        age: number;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: }
+Checking node type: function_declaration
+Found declaration node: function_declaration with name: Greeting
+Found function_declaration: {
+  text: 'function Greeting({ name, age }: Props) {\n' +
+    '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+    '        \n' +
+    '        return (\n' +
+    '          <div className="greeting">\n' +
+    '            <h1>{message}</h1>\n' +
+    '            <span>Welcome!</span>\n' +
+    '          </div>\n' +
+    '        );\n' +
+    '      }',
+  children: [
+    { type: 'function', text: 'function' },
+    { type: 'identifier', text: 'Greeting' },
+    { type: 'formal_parameters', text: '({ name, age }: Props)' },
+    {
+      type: 'statement_block',
+      text: '{\n' +
+        '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+        '        \n' +
+        '        return (\n' +
+        '          <div className="greeting">\n' +
+        '            <h1>{message}</h1>\n' +
+        '            <span>Welcome!</span>\n' +
+        '          </div>\n' +
+        '        );\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: function
+Checking node type: identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: object_pattern
+Checking node type: {
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: ,
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: }
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: )
+Checking node type: statement_block
+Checking node type: {
+Checking node type: lexical_declaration
+Checking node type: const
+Checking node type: variable_declarator
+Found declaration node: variable_declarator with name: message
+Checking node type: identifier
+Checking node type: =
+Checking node type: template_string
+Checking node type: `
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: `
+Checking node type: ;
+Checking node type: return_statement
+Checking node type: return
+Checking node type: parenthesized_expression
+Checking node type: (
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: assignment_expression
+Checking node type: identifier
+Checking node type: =
+Checking node type: binary_expression
+Checking node type: non_null_expression
+Checking node type: binary_expression
+Checking node type: binary_expression
+Checking node type: string
+Checking node type: "
+Checking node type: string_fragment
+Checking node type: "
+Checking node type: >
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: binary_expression
+Checking node type: object
+Checking node type: {
+Checking node type: shorthand_property_identifier
+Checking node type: }
+Checking node type: <
+Checking node type: binary_expression
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: /
+Checking node type: <
+Checking node type: identifier
+Checking node type: >
+Checking node type: identifier
+Checking node type: !
+Checking node type: <
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: ERROR
+Checking node type: <
+Checking node type: /
+Checking node type: regex_flags
+Checking node type: ERROR
+Checking node type: >
+Checking node type: )
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for span
+
+Processing reference: Welcome
+
+Searching for definition of: Welcome
+Checking node type: program
+Checking node type: interface_declaration
+Found declaration node: interface_declaration with name: Props
+Found interface_declaration: {
+  text: 'interface Props {\n        name: string;\n        age: number;\n      }',
+  children: [
+    { type: 'interface', text: 'interface' },
+    { type: 'type_identifier', text: 'Props' },
+    {
+      type: 'interface_body',
+      text: '{\n        name: string;\n        age: number;\n      }'
+    }
+  ]
+}
+Checking node type: interface
+Checking node type: type_identifier
+Checking node type: interface_body
+Checking node type: {
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: string
+Checking node type: ;
+Checking node type: property_signature
+Checking node type: property_identifier
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: predefined_type
+Checking node type: number
+Checking node type: ;
+Checking node type: }
+Checking node type: function_declaration
+Found declaration node: function_declaration with name: Greeting
+Found function_declaration: {
+  text: 'function Greeting({ name, age }: Props) {\n' +
+    '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+    '        \n' +
+    '        return (\n' +
+    '          <div className="greeting">\n' +
+    '            <h1>{message}</h1>\n' +
+    '            <span>Welcome!</span>\n' +
+    '          </div>\n' +
+    '        );\n' +
+    '      }',
+  children: [
+    { type: 'function', text: 'function' },
+    { type: 'identifier', text: 'Greeting' },
+    { type: 'formal_parameters', text: '({ name, age }: Props)' },
+    {
+      type: 'statement_block',
+      text: '{\n' +
+        '        const message = `Hello ${name}, you are ${age} years old`;\n' +
+        '        \n' +
+        '        return (\n' +
+        '          <div className="greeting">\n' +
+        '            <h1>{message}</h1>\n' +
+        '            <span>Welcome!</span>\n' +
+        '          </div>\n' +
+        '        );\n' +
+        '      }'
+    }
+  ]
+}
+Checking node type: function
+Checking node type: identifier
+Checking node type: formal_parameters
+Checking node type: (
+Checking node type: required_parameter
+Checking node type: object_pattern
+Checking node type: {
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: ,
+Checking node type: shorthand_property_identifier_pattern
+Checking node type: }
+Checking node type: type_annotation
+Checking node type: :
+Checking node type: type_identifier
+Checking node type: )
+Checking node type: statement_block
+Checking node type: {
+Checking node type: lexical_declaration
+Checking node type: const
+Checking node type: variable_declarator
+Found declaration node: variable_declarator with name: message
+Checking node type: identifier
+Checking node type: =
+Checking node type: template_string
+Checking node type: `
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: template_substitution
+Checking node type: ${
+Checking node type: identifier
+Checking node type: }
+Checking node type: string_fragment
+Checking node type: `
+Checking node type: ;
+Checking node type: return_statement
+Checking node type: return
+Checking node type: parenthesized_expression
+Checking node type: (
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: assignment_expression
+Checking node type: identifier
+Checking node type: =
+Checking node type: binary_expression
+Checking node type: non_null_expression
+Checking node type: binary_expression
+Checking node type: binary_expression
+Checking node type: string
+Checking node type: "
+Checking node type: string_fragment
+Checking node type: "
+Checking node type: >
+Checking node type: type_assertion
+Checking node type: type_arguments
+Checking node type: <
+Checking node type: type_identifier
+Checking node type: >
+Checking node type: binary_expression
+Checking node type: object
+Checking node type: {
+Checking node type: shorthand_property_identifier
+Checking node type: }
+Checking node type: <
+Checking node type: binary_expression
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: /
+Checking node type: <
+Checking node type: identifier
+Checking node type: >
+Checking node type: identifier
+Checking node type: !
+Checking node type: <
+Checking node type: regex
+Checking node type: /
+Checking node type: regex_pattern
+Checking node type: ERROR
+Checking node type: <
+Checking node type: /
+Checking node type: regex_flags
+Checking node type: ERROR
+Checking node type: >
+Checking node type: )
+Checking node type: ;
+Checking node type: }
+Creating reference-only node for Welcome
+
+Definition tree result: {
+  identifier: 'Greeting',
+  kind: 'function',
+  referencesCount: 6,
+  references: [ 'message', 'name', 'age', 'className', 'span', 'Welcome' ]
+}
+✔ TypeScript Definition Analysis (0.59112ms)
+▶ TSX Definition Analysis
+  ✖ analyze functional component (85.24323ms)
+    AssertionError [ERR_ASSERTION]: false == true
+        at TestContext.<anonymous> (/home/georgolden/projects/lang-server/src/ast/alt/definition.ts:518:12)
+        at Test.runInAsyncScope (node:async_hooks:206:9)
+        at Test.run (node:internal/test_runner/test:789:25)
+        at Test.start (node:internal/test_runner/test:693:17)
+        at node:internal/test_runner/test:1129:71
+        at node:internal/per_context/primordials:487:82
+        at new Promise (<anonymous>)
+        at new SafePromise (node:internal/per_context/primordials:455:29)
+        at node:internal/per_context/primordials:487:9
+        at Array.map (<anonymous>) {
+      generatedMessage: true,
+      code: 'ERR_ASSERTION',
+      actual: false,
+      expected: true,
+      operator: '=='
+    }    
