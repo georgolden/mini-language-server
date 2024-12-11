@@ -15,7 +15,7 @@ type TreeNode = {
   position: Position;
 };
 
-type Tree = Record<string, TreeNode>;
+export type Tree = Record<string, TreeNode>;
 
 function traverseAllNodes(
   node: Parser.SyntaxNode,
@@ -82,7 +82,7 @@ const isGlobal = (node: SyntaxNode) => {
   return node.parent?.type === 'export_statement';
 };
 
-async function parseAndTraverseFile(sourceCode: string) {
+export async function parseAndTraverseFile(sourceCode: string) {
   const parser = new Parser();
   parser.setLanguage(TS.typescript);
   const tree = parser.parse(sourceCode);
@@ -124,4 +124,3 @@ async function parseAndTraverseFile(sourceCode: string) {
 
   return simpleTree;
 }
-
