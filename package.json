@@ -88,7 +88,7 @@
     "lint": "biome lint .",
     "format": "biome format . --write",
     "check": "biome check --apply .",
-    "mcp:debug": "npm run mcp:compile_watch & mcp:run_debugger",
+    "mcp:debug": "npm run mcp:compile_watch & npm run mcp:run_debugger",
     "mcp:compile": "tsc -p ./tsconfig.mcp.json & chmod +x ./dist/mcp/servers/ast.mjs",
     "mcp:compile_watch": "tsc -w -p ./tsconfig.mcp.json & chmod +x ./dist/mcp/servers/ast.mjs",
     "mcp:run_debugger": "npx @modelcontextprotocol/inspector ./dist/mcp/servers/ast.mjs"
