@@ -6,7 +6,20 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { Logger } from '../../logger/SocketLogger.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { getAllFiles, getFileContent } from './files.mjs';
-import { GetProjectFiles, SummarizeRequest } from '../schemas/ast.mjs';
+
+import { z } from 'zod';
+
+const GetProjectFiles = z.object({
+  path: z.string().describe('Required! Path to the project to list files from'),
+});
+
+//export const SummarizeRequest = z.object({
+//  summary: z.string().describe('Required! Quick summary of content of the file. 200 words max'),
+//});
+
+const SummarizeRequest = z.any();
+
+const CodeRunSchema = z.any();
 
 const args = process.argv.slice(1);
 
@@ -44,7 +57,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           'those listed inside of .gitignore. ',
         inputSchema: zodToJsonSchema(GetProjectFiles),
       },
-
       {
         name: 'summarize_files_content',
         description:
@@ -53,6 +65,33 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           'structure, and main functionality. It helps in quickly understanding the purpose and content of ' +
           'multiple files without having to read them in detail.',
         inputSchema: zodToJsonSchema(GetProjectFiles),
+      },
+      {
+        name: 'lint_file',
+        description: 'Run linter on the speicifc file. Can be used to validate the code',
+        inputSchema: zodToJsonSchema(GetProjectFiles),
+      },
+      {
+        name: 'run_file',
+        description: 'Execute specific file and returns the output',
+        inputSchema: zodToJsonSchema(GetProjectFiles),
+      },
+      {
+        name: 'run_code',
+        description: 'Execute specific code snippet and returns the output',
+        inputSchema: zodToJsonSchema(CodeRunSchema),
+      },
+      {
+        name: 'get_simple_tree',
+        description: 'Returns tree of all named symbols in the project',
+        inputSchema: zodToJsonSchema(),
+      },
+      {
+        name: 'get_symbols_for_scope',
+        description:
+          'Get all available named symbols that can be used in scope ' + 
+          'at specific position ',
+        inputSchema: zodToJsonSchema(),
       },
     ],
   };

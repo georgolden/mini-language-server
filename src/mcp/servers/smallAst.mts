@@ -1,14 +1,14 @@
 import Parser, { type SyntaxNode } from 'tree-sitter';
 import TS from 'tree-sitter-typescript';
 
-type Position = {
+export type Position = {
   lineStart: number;
   charStart: number;
   lineEnd: number;
   charEnd: number;
 };
 
-type TreeNode = {
+export type TreeNode = {
   childNodes?: Tree;
   code: string;
   global: boolean;
@@ -96,10 +96,11 @@ export async function parseAndTraverseFile(sourceCode: string) {
       'interface_declaration',
       'class_declaration',
       'type_alias_declaration',
+      'enum_declaration',
     ],
     (node, ancestors) => {
       if (node.isNamed) {
-        const name = node.children.find((el) => el.type === 'identifier')?.text;
+        const name = node.children.find((el) => el.type.includes('identifier'))?.text;
         if (!name) return;
 
         const ancestorPath = ancestors

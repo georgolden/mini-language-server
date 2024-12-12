@@ -82,12 +82,12 @@ export abstract class Agent {
       typeof prompt === 'string'
         ? this.composeMessage(prompt)
         : this.composeMessage([
-          {
-            type: 'tool_result',
-            id: prompt.tool_use_id,
-            content: prompt.content,
-          },
-        ]);
+            {
+              type: 'tool_result',
+              id: prompt.tool_use_id,
+              content: prompt.content,
+            },
+          ]);
 
     const formattedMessages = this.formatMessages([...(withHistory ? context : []), userMessage]);
     const response = await this.sendToLLM(formattedMessages);

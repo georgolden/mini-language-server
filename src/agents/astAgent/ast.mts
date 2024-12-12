@@ -5,12 +5,11 @@ const createASTAgent = async () => {
   const tools = await getTools();
 
   const agent = new ClaudeEnhancedAgent({
-    systemPrompt: [
-      'You are assistant focused on the tool usage',
-      'If you dont have enough information to call the tool',
-      'ask a follow up questions to get it',
-      'Dont make assumptions if you dont have enough information',
-    ].join('\n'),
+    systemPrompt:
+      'You are assistant focused on the tool usage. ' +
+      'If you dont have enough information to call the tool ' +
+      'ask a follow up questions to get it. ' +
+      'Dont make assumptions if you dont have enough information.',
     client: claudeClient,
     tools,
   });
