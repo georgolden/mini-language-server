@@ -12,7 +12,7 @@
     "onLanguage:javascript",
     "onLanguage:javascriptreact"
   ],
-  "main": "./dist/extension.js",
+  "main": "./dist/src/extension.js",
   "type": "commonjs",
   "contributes": {
     "languages": [
@@ -62,7 +62,7 @@
   },
   "scripts": {
     "clean": "rimraf dist",
-    "compile": "tsc -b",
+    "compile": "tsc -b && cp src/server.js dist/src/server.js",
     "watch": "tsc -b -w",
     "build": "npm run clean && npm run compile",
     "lint": "biome lint .",

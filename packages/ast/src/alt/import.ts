@@ -11,7 +11,7 @@ interface ImportIdentifier {
   importKind: ImportKind;
   source: {
     path: string;
-    kind: SourceKind;
+    kind: string;
   };
 }
 
@@ -32,9 +32,9 @@ function getImportIdentifiers(sourceCode: string): ImportIdentifier[] {
     // Handle namespace imports first - they have highest precedence
     const namespaceImports = node.descendantsOfType('namespace_import');
     if (namespaceImports.length > 0) {
-      const namespaceId = namespaceImports[0].descendantsOfType('identifier')[0];
+      const namespaceId = namespaceImports[0]?.descendantsOfType('identifier')[0];
       identifiers.push({
-        identifier: namespaceId.text,
+        identifier: namespaceId?.text || '',
         importKind: 'namespaceImport',
         source,
       });
@@ -46,8 +46,8 @@ function getImportIdentifiers(sourceCode: string): ImportIdentifier[] {
     if (importClause.length > 0) {
       const clause = importClause[0];
       // Check explicitly that this is a default import (no * or {)
-      if (!clause.text.includes('*') && !clause.text.startsWith('{')) {
-        const defaultIdentifier = clause.descendantsOfType('identifier')[0];
+      if (!clause?.text.includes('*') && !clause?.text.startsWith('{')) {
+        const defaultIdentifier = clause?.descendantsOfType('identifier')[0];
         if (defaultIdentifier) {
           identifiers.push({
             identifier: defaultIdentifier.text,
@@ -65,8 +65,8 @@ function getImportIdentifiers(sourceCode: string): ImportIdentifier[] {
       const ids = specifier.descendantsOfType('identifier');
 
       identifiers.push({
-        identifier: ids[0].text,
-        ...(ids.length === 2 ? { renamed: ids[1].text } : {}),
+        identifier: ids[0]?.text || '',
+        ...(ids.length === 2 ? { renamed: ids[1]?.text } : {}),
         importKind: isType ? 'typeImport' : 'regularImport',
         source,
       });

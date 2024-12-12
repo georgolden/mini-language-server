@@ -225,7 +225,7 @@ function buildDefinitionTree(
         nodes.some(
           (n) =>
             n.type === 'type_identifier' ||
-            (n.type === 'identifier' && !IGNORE_NODE_TYPES.has(n.parent?.type)),
+            (n.type === 'identifier' && !IGNORE_NODE_TYPES.has(n.parent?.type || '')),
         )
       ) {
         references.set(id, {

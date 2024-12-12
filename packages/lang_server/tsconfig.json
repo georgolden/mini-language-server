@@ -1,17 +1,14 @@
 {
   "compilerOptions": {
-    // Modern JavaScript Features
     "target": "ESNext",
     "lib": ["ES2022"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
 
-    // Build Output
     "outDir": "./dist",
     "rootDir": "./",
     "declarationMap": true,
 
-    // Type Checking
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -26,19 +23,17 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "esModuleInterop": true,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "sourceMap": true,
 
-    // Module Resolution
     "baseUrl": "./",
     "paths": {
       "*": ["node_modules/*"]
     },
     "allowSyntheticDefaultImports": true,
 
-    // Additional Settings
     "incremental": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "composite": true,

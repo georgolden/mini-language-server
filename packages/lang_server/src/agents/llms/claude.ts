@@ -38,11 +38,13 @@ export class ClaudeEnhancedAgent extends Agent {
       model: this.model,
       max_tokens: 1024,
       system: this.systemPrompt,
+      //@ts-ignore
       tools: this.tools.map((tool) => ({
         name: tool.name,
         description: tool.description,
         input_schema: tool.inputSchema,
       })),
+      //@ts-ignore
       messages: messages.map(({ role, content }) => {
         if (Array.isArray(content)) {
           return {
@@ -92,5 +94,5 @@ export class ClaudeEnhancedAgent extends Agent {
 }
 
 export const claudeClient = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API,
+  apiKey: process.env['ANTHROPIC_API'],
 });

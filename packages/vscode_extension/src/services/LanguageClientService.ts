@@ -14,7 +14,7 @@ interface LanguageClientDeps extends ServiceDependencies {
   workspacePath: string;
 }
 
-const LANG_SERVER_PATH = path.join('dist', 'server.js');
+const LANG_SERVER_PATH = path.join('dist', 'src', 'server.js');
 
 export class LanguageClientService implements IService {
   public readonly state: ServiceState = {

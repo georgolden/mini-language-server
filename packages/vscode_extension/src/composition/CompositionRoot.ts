@@ -1,12 +1,12 @@
 import { ExtensionContext, workspace } from 'vscode';
-import { ILogger } from '../src/logger/Logger';
-import { FileWatcherService } from '../src/services/FileWatcherService';
-import { LanguageClientService } from '../src/services/LanguageClientService';
-import { CommandService } from '../src/services/CommandService';
-import { InputBoxService } from '../src/services/InputBoxService';
+import { ILogger } from '../logger/Logger';
+import { FileWatcherService } from '../services/FileWatcherService';
+import { LanguageClientService } from '../services/LanguageClientService';
+import { CommandService } from '../services/CommandService';
+import { InputBoxService } from '../services/InputBoxService';
 import { createFileCommands } from '../commands/fileCommands';
 import { createInputBoxCommands } from '../commands/inputBoxCommands';
-import { IService } from '../src/services/types';
+import { IService } from '../services/types';
 
 interface CompositionRootDeps {
   logger: ILogger;

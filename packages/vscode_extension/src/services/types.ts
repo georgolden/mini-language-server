@@ -1,4 +1,4 @@
-import { ILogger } from '../logger/Logger';
+import { ILogger } from '../logger/Logger.js';
 
 export interface ServiceDependencies {
   logger: ILogger;

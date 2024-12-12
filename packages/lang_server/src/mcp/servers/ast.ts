@@ -83,7 +83,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     ],
   };
 });
-
+//@ts-ignore
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 

@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import ignore, { type Ignore } from 'ignore';
+import ignoreLib, { type Ignore } from 'ignore';
+
+const ignore = ignoreLib.default;
 
 const readFileAsync = fs.promises.readFile;
 const readdirAsync = fs.promises.readdir;

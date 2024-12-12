@@ -26,6 +26,7 @@ const client = new Client(
 );
 
 export const registerSamplings = (agent: Agent) => {
+  //@ts-ignore
   client.setRequestHandler(CreateMessageRequestSchema, async ({ method, params }) => {
     if (method === 'sampling/createMessage') {
       console.log(params.messages[0]?.content.text);

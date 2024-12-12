@@ -2,7 +2,8 @@
   "name": "@almighty/lang_server",
   "displayName": "Mini Language Server",
   "version": "0.0.1",
-  "main": "./dist/server.js",
+  "main": "./dist/src/server.js",
+  "types": "./dist/src/server.d.ts",
   "type": "module",
   "scripts": {
     "clean": "rimraf dist",
@@ -13,9 +14,9 @@
     "format": "biome format . --write",
     "check": "biome check --apply .",
     "mcp:debug": "npm run mcp:compile_watch & npm run mcp:run_debugger",
-    "mcp:compile": "tsc -p ./tsconfig.mcp.json & chmod +x ./dist/mcp/servers/ast.mjs",
-    "mcp:compile_watch": "tsc -w -p ./tsconfig.mcp.json & chmod +x ./dist/mcp/servers/ast.mjs",
-    "mcp:run_debugger": "npx @modelcontextprotocol/inspector ./dist/mcp/servers/ast.mjs"
+    "mcp:compile": "tsc -b & chmod +x ./dist/src/mcp/servers/ast.js",
+    "mcp:compile_watch": "tsc -b -w & chmod +x ./dist/src/mcp/servers/ast.js",
+    "mcp:run_debugger": "npx @modelcontextprotocol/inspector ./dist/src/mcp/servers/ast.js"
   },
   "keywords": [],
   "author": "",
