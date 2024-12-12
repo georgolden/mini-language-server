@@ -1,130 +1,34 @@
 {
-  "name": "mini-language-server",
+  "name": "almighty",
   "displayName": "Mini Language Server",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": ">=1.75.0"
-  },
-  "activationEvents": [
-    "workspaceContains:**/*.{js,jsx,ts,tsx}",
-    "onLanguage:typescript",
-    "onLanguage:typescriptreact",
-    "onLanguage:javascript",
-    "onLanguage:javascriptreact"
+  "private": true,
+  "packageManager": "npm@10.8.2",
+  "workspaces": [
+    "packages/ast",
+    "packages/core_server",
+    "packages/lang_server",
+    "packages/vscode_extension"
   ],
-  "main": "./out/extension.js",
-  "type": "commonjs",
-  "contributes": {
-    "languages": [
-      {
-        "id": "typescript",
-        "aliases": [
-          "TypeScript",
-          "ts"
-        ],
-        "extensions": [
-          ".ts"
-        ]
-      },
-      {
-        "id": "typescriptreact",
-        "aliases": [
-          "TypeScript React",
-          "tsx"
-        ],
-        "extensions": [
-          ".tsx"
-        ]
-      },
-      {
-        "id": "javascript",
-        "aliases": [
-          "JavaScript",
-          "js"
-        ],
-        "extensions": [
-          ".js"
-        ]
-      },
-      {
-        "id": "javascriptreact",
-        "aliases": [
-          "JavaScript React",
-          "jsx"
-        ],
-        "extensions": [
-          ".jsx"
-        ]
-      }
-    ],
-    "commands": [
-      {
-        "command": "miniLanguageServer.showFileCount",
-        "title": "Mini Language Server: Show File Count"
-      },
-      {
-        "command": "miniLanguageServer.listFiles",
-        "title": "Mini Language Server: List All Files"
-      },
-      {
-        "command": "miniLanguageServer.showInputBox",
-        "title": "Mini Language Server: Show Input Box",
-        "category": "Mini Language Server"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "miniLanguageServer.showInputBox",
-        "key": "ctrl+shift+i",
-        "mac": "cmd+shift+i"
-      }
-    ]
-  },
+  "version": "0.0.1",
   "scripts": {
-    "clean": "rimraf out",
-    "compile": "tsc -b",
-    "watch": "tsc -b -w",
-    "build": "npm run clean && npm run compile",
-    "lint": "biome lint .",
-    "format": "biome format . --write",
-    "check": "biome check --apply .",
-    "mcp:debug": "npm run mcp:compile_watch & npm run mcp:run_debugger",
-    "mcp:compile": "tsc -p ./tsconfig.mcp.json & chmod +x ./dist/mcp/servers/ast.mjs",
-    "mcp:compile_watch": "tsc -w -p ./tsconfig.mcp.json & chmod +x ./dist/mcp/servers/ast.mjs",
-    "mcp:run_debugger": "npx @modelcontextprotocol/inspector ./dist/mcp/servers/ast.mjs"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "clean": "turbo run clean"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "description": "",
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.32.1",
-    "@modelcontextprotocol/sdk": "^1.0.1",
-    "dotenv": "^16.4.7",
-    "ignore": "^6.0.2",
-    "openai": "^4.76.0",
-    "pino": "^9.5.0",
-    "pino-socket": "^7.4.0",
-    "tree-sitter": "^0.21.1",
-    "tree-sitter-javascript": "^0.23.1",
-    "tree-sitter-typescript": "^0.23.2",
-    "vscode-languageclient": "^9.0.1",
-    "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-textdocument": "^1.0.12",
-    "vscode-uri": "^3.0.8",
-    "ws": "^8.18.0",
-    "zod": "^3.23.8",
-    "zod-to-json-schema": "^3.23.5"
-  },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.9.0",
     "@types/sinon": "^17.0.3",
-    "@types/vscode": "^1.95.0",
-    "@types/ws": "^8.5.13",
     "rimraf": "^6.0.1",
     "sinon": "^19.0.2",
     "tsx": "^4.19.2",
+    "turbo": "^2.3.3",
     "typescript": "^5.6.3"
   }
 }

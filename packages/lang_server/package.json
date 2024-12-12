@@ -1,0 +1,53 @@
+{
+  "name": "@almighty/lang_server",
+  "displayName": "Mini Language Server",
+  "version": "0.0.1",
+  "main": "./dist/src/server.js",
+  "types": "./dist/src/server.d.ts",
+  "type": "module",
+  "scripts": {
+    "clean": "rimraf dist",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w",
+    "build": "npm run clean && npm run compile",
+    "lint": "biome lint .",
+    "format": "biome format . --write",
+    "check": "biome check --apply .",
+    "mcp:debug": "npm run mcp:compile_watch & npm run mcp:run_debugger",
+    "mcp:compile": "tsc -b & chmod +x ./dist/src/mcp/servers/ast.js",
+    "mcp:compile_watch": "tsc -b -w & chmod +x ./dist/src/mcp/servers/ast.js",
+    "mcp:run_debugger": "npx @modelcontextprotocol/inspector ./dist/src/mcp/servers/ast.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "dotenv": "^16.4.7",
+    "ignore": "^6.0.2",
+    "openai": "^4.76.0",
+    "pino": "^9.5.0",
+    "pino-socket": "^7.4.0",
+    "tree-sitter": "^0.21.1",
+    "tree-sitter-javascript": "^0.23.1",
+    "tree-sitter-typescript": "^0.23.2",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12",
+    "vscode-uri": "^3.0.8",
+    "ws": "^8.18.0",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.23.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.9.0",
+    "@types/sinon": "^17.0.3",
+    "@types/ws": "^8.5.13",
+    "rimraf": "^6.0.1",
+    "sinon": "^19.0.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

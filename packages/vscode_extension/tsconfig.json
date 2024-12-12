@@ -1,5 +1,10 @@
 {
   "compilerOptions": {
+    // Modern JavaScript Features
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "CommonJS",
+
     // Build Output
     "outDir": "./dist",
     "rootDir": "./",
@@ -35,10 +40,10 @@
 
     // Additional Settings
     "incremental": true,
-    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "tsBuildInfoFile": "./dist/.tsbuildinfo", 
     "composite": true,
     "preserveWatchOutput": true
   },
-  "include": ["packages/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

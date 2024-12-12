@@ -1,0 +1,90 @@
+{
+  "name": "@almighty/vscode_extension",
+  "displayName": "Mini Language Server",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": ">=1.75.0"
+  },
+  "activationEvents": [
+    "workspaceContains:**/*.{js,jsx,ts,tsx}",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact"
+  ],
+  "main": "./dist/src/extension.js",
+  "type": "commonjs",
+  "contributes": {
+    "languages": [
+      {
+        "id": "typescript",
+        "aliases": ["TypeScript", "ts"],
+        "extensions": [".ts"]
+      },
+      {
+        "id": "typescriptreact",
+        "aliases": ["TypeScript React", "tsx"],
+        "extensions": [".tsx"]
+      },
+      {
+        "id": "javascript",
+        "aliases": ["JavaScript", "js"],
+        "extensions": [".js"]
+      },
+      {
+        "id": "javascriptreact",
+        "aliases": ["JavaScript React", "jsx"],
+        "extensions": [".jsx"]
+      }
+    ],
+    "commands": [
+      {
+        "command": "miniLanguageServer.showFileCount",
+        "title": "Mini Language Server: Show File Count"
+      },
+      {
+        "command": "miniLanguageServer.listFiles",
+        "title": "Mini Language Server: List All Files"
+      },
+      {
+        "command": "miniLanguageServer.showInputBox",
+        "title": "Mini Language Server: Show Input Box",
+        "category": "Mini Language Server"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "miniLanguageServer.showInputBox",
+        "key": "ctrl+shift+i",
+        "mac": "cmd+shift+i"
+      }
+    ]
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "compile": "tsc -b && cp src/server.js dist/src/server.js",
+    "watch": "tsc -b -w",
+    "build": "npm run clean && npm run compile",
+    "lint": "biome lint .",
+    "format": "biome format . --write",
+    "check": "biome check --apply ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1",
+    "@almighty/lang_server": "0.0.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.9.0",
+    "@types/sinon": "^17.0.3",
+    "@types/vscode": "^1.95.0",
+    "rimraf": "^6.0.1",
+    "sinon": "^19.0.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
