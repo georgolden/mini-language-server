@@ -1,3 +1,4 @@
+import { Logger } from '../../../../logger/SocketLogger.js';
 import { getAllFiles, getFileContent } from '../files/index.js';
 import { parseAndTraverseFile, type Tree, type TreeNode } from './smallAst.js';
 import path from 'node:path';
@@ -75,18 +76,22 @@ export const getAvailableDeclarations = (
 };
 
 const main = async () => {
-  console.log(await getAllFiles('./packages/lang_server/src/agents/'))
+  //console.log(await getAllFiles('./packages/lang_server/src/agents/'))
   const tree = await parseProjectTree(await getAllFiles('./packages/lang_server/src/agents/'));
 
-  console.log(JSON.stringify(tree, null, 2));
-  //console.log(
-  //  getAvailableDeclarations(
-  //    tree,
-  //    Object.keys(tree).find((el) => el.includes('claude.mts')) as string,
-  //    20,
-  //    0,
-  //  ),
-  //);
+  const logger = new Logger();
+
+  setTimeout(async () => {
+    //logger.debug(JSON.stringify(tree, null, 2));
+    logger.debug(
+      getAvailableDeclarations(
+        tree,
+        Object.keys(tree).find((el) => el.includes('claude.ts')) as string,
+        35,
+        0,
+      )
+    );
+  }, 2000)
 };
 
 main();

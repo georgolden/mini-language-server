@@ -6,10 +6,12 @@ import {
   type TextResponse,
   type Message,
   type Tool,
-} from './agent';
+} from './agent.js';
 import { config } from 'dotenv';
 
 config();
+
+const test = 123;
 
 export class ClaudeEnhancedAgent extends Agent {
   private client: Anthropic;

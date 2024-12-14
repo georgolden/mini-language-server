@@ -1,5 +1,5 @@
-import { claudeClient, ClaudeEnhancedAgent } from '../llms/claude';
-import { getTools, registerSamplings } from '../../mcp/clients/ast';
+import { claudeClient, ClaudeEnhancedAgent } from '../llms/claude.js';
+import { getTools, registerSamplings } from '../../mcp/clients/ast.js';
 
 const createASTAgent = async () => {
   const tools = await getTools();
