@@ -6,7 +6,7 @@ import {
   type TextResponse,
   type Message,
   type Tool,
-} from './agent.js';
+} from './agent';
 import { config } from 'dotenv';
 
 config();

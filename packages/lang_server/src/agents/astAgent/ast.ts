@@ -1,5 +1,5 @@
-import { claudeClient, ClaudeEnhancedAgent } from '../llms/claude.js';
-import { getTools, registerSamplings } from '../../mcp/clients/ast.js';
+import { claudeClient, ClaudeEnhancedAgent } from '../llms/claude';
+import { getTools, registerSamplings } from '../../mcp/clients/ast';
 
 const createASTAgent = async () => {
   const tools = await getTools();
@@ -31,7 +31,7 @@ async function chat() {
   const { sendMessage } = await createASTAgent();
 
   const response = await sendMessage(
-    'Summarize files from my project ./src/agents/ and print the entire project summary',
+    'Summarize files from my project ./packages/lang_server/src/agents/ and print the entire project summary',
   );
   console.log(response);
 }

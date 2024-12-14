@@ -1,12 +1,12 @@
-import { getAllFiles, getFileContent } from './files.js';
-import { parseAndTraverseFile, type Tree } from './smallAst.js';
+import { getAllFiles, getFileContent } from '../files/index';
+import { parseAndTraverseFile, type Tree, type TreeNode } from './smallAst';
 import path from 'node:path';
 
 export const parseProjectTree = async (files: string[]) => {
   const projectTree: Record<string, Tree> = {};
   for (const file of files) {
-    if (path.extname(file) === '.mts') {
-      projectTree[file] = await parseAndTraverseFile(await getFileContent(file, './src/agents/'));
+    if (['.mts', '.ts'].includes(path.extname(file))) {
+      projectTree[file] = await parseAndTraverseFile(await getFileContent(file, './packages/lang_server/src/agents/'));
     }
   }
 
@@ -75,18 +75,18 @@ export const getAvailableDeclarations = (
 };
 
 const main = async () => {
-  const tree = await parseProjectTree(await getAllFiles('./src/agents/'));
+  console.log(await getAllFiles('./packages/lang_server/src/agents/'))
+  const tree = await parseProjectTree(await getAllFiles('./packages/lang_server/src/agents/'));
 
-  console.dir(tree);
-
-  console.log(
-    getAvailableDeclarations(
-      tree,
-      Object.keys(tree).find((el) => el.includes('claude.mts')) as string,
-      20,
-      0,
-    ),
-  );
+  console.log(JSON.stringify(tree, null, 2));
+  //console.log(
+  //  getAvailableDeclarations(
+  //    tree,
+  //    Object.keys(tree).find((el) => el.includes('claude.mts')) as string,
+  //    20,
+  //    0,
+  //  ),
+  //);
 };
 
 main();

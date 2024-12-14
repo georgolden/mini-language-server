@@ -1,12 +1,12 @@
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { Client } from '@modelcontextprotocol/sdk/client/index';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio';
 import {
   CallToolResultSchema,
   ListToolsResultSchema,
   CreateMessageRequestSchema,
-} from '@modelcontextprotocol/sdk/dist/types.js';
-import type { Tool } from '../../agents/llms/agent.js';
-import type { Agent } from '../../agents/llms/agent.js';
+} from '@modelcontextprotocol/sdk/dist/types';
+import type { Tool } from '../../agents/llms/agent';
+import type { Agent } from '../../agents/llms/agent';
 
 const transport = new StdioClientTransport({
   command: 'dist/mcp/servers/ast.mjs',

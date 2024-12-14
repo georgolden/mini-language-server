@@ -17,6 +17,17 @@ export type TreeNode = {
 
 export type Tree = Record<string, TreeNode>;
 
+const supportedDeclarations = [
+  'variable_declarator',
+  'function_declaration',
+  'interface_declaration',
+  'class_declaration',
+  'abstract_class_declaration',
+  'method_definition',
+  'type_alias_declaration',
+  'enum_declaration'
+]
+
 function traverseAllNodes(
   node: Parser.SyntaxNode,
   types: string[],
@@ -90,21 +101,25 @@ export async function parseAndTraverseFile(sourceCode: string) {
 
   traverseAllNodes(
     tree.rootNode,
-    [
-      'variable_declarator',
-      'function_declaration',
-      'interface_declaration',
-      'class_declaration',
-      'type_alias_declaration',
-      'enum_declaration',
-    ],
+    supportedDeclarations,
     (node, ancestors) => {
       if (node.isNamed) {
         const name = node.children.find((el) => el.type.includes('identifier'))?.text;
         if (!name) return;
 
+        const isDefinitionType = (type: string) => supportedDeclarations.includes(type);
+
+        const getNodeName = (node: SyntaxNode) => {
+          return node.children.find((el) => el.type.includes('identifier'))?.text;
+        };
+
         const ancestorPath = ancestors
-          .map((ancestor) => ancestor.children.find((el) => el.type === 'identifier')?.text)
+          .map((ancestor) => {
+            if (isDefinitionType(ancestor.type)) {
+              return getNodeName(ancestor);
+            }
+            return null;
+          })
           .filter((name): name is string => !!name);
 
         const fullPath = [...ancestorPath, name];
