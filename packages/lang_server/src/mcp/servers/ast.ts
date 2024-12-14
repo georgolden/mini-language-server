@@ -5,7 +5,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { Logger } from '../../logger/SocketLogger.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { getAllFiles, getFileContent } from './capabilities/files';
+import { getAllFiles, getFileContent } from './capabilities/files/index.js';
 import { z } from 'zod';
 
 const GetProjectFiles = z.object({});

@@ -1,5 +1,5 @@
-import { getAllFiles, getFileContent } from '../files/index';
-import { parseAndTraverseFile, type Tree, type TreeNode } from './smallAst';
+import { getAllFiles, getFileContent } from '../files/index.js';
+import { parseAndTraverseFile, type Tree, type TreeNode } from './smallAst.js';
 import path from 'node:path';
 
 export const parseProjectTree = async (files: string[]) => {
