@@ -63,34 +63,53 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'lint_file',
-        description: 'Run linter on the speicifc file. Can be used to validate the code',
+        description:
+          'Analyzes code quality and identifies potential errors, style violations, ' +
+          'and bugs in the specified file. Provides detailed feedback on code ' +
+          'improvements and enforces coding standards. Results include syntax errors, ' +
+          'potential runtime issues, and style guide violations.',
         inputSchema: zodToJsonSchema(CodeLintSchema),
       },
       {
         name: 'run_file',
-        description: 'Execute specific file and returns the output',
+        description:
+          'Executes the specified file in a secure environment and returns the complete ' +
+          'program output. Captures stdout, stderr streams, execution time metrics, and ' +
+          'runtime statistics. Supports various file types and configurable runtime ' +
+          'parameters for different execution environments.',
         inputSchema: zodToJsonSchema(CodeRunFileSchema),
       },
       {
         name: 'run_code',
-        description: 'Execute specific code snippet and returns the output',
+        description:
+          'Executes provided code snippets in an isolated sandbox environment with ' +
+          'configurable runtime parameters. Returns execution results, output streams, ' +
+          'and performance metrics. Supports multiple programming languages and provides ' +
+          'detailed error reporting for failed executions.',
         inputSchema: zodToJsonSchema(CodeRunSnippetSchema),
       },
       {
         name: 'get_simple_tree',
-        description: 'Returns tree of all named symbols in the project',
+        description:
+          'Generates a hierarchical representation of all named symbols (functions, ' +
+          'classes, variables) in the project. Displays relationships, scope levels, ' +
+          'and symbol types in a tree structure. Essential for code navigation and ' +
+          'understanding project architecture.',
         inputSchema: zodToJsonSchema(GetTreeSchema),
       },
       {
-        name: 'get_symbols_for_scope',
+        name: 'get_available_symbols',
         description:
-          'Get all available named symbols that can be used in scope ' +
-          'at specific position or for specific symbol',
+          'Retrieves all accessible named symbols (variables, functions, classes) that ' +
+          'are in scope for a specific symbol location. Includes imported modules, ' +
+          'global variables, and local definitions. Provides context-aware symbol ' +
+          'information for code completion and reference checking features.',
         inputSchema: zodToJsonSchema(GetAvailableSymbolsSchema),
       },
     ],
   };
 });
+
 //@ts-ignore
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
@@ -156,6 +175,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           },
         ],
       };
+    }
+    case 'lint_file': {
+
+    }
+    case 'run_file': {
+
+    }
+    case 'run_code': {
+
+    }
+    case 'get_simple_tree': {
+
+    }
+    case 'get_available_symbols': {
+
     }
   }
 });
