@@ -24,9 +24,11 @@ const supportedDeclarations = [
   'class_declaration',
   'abstract_class_declaration',
   'method_definition',
+  'constructor_definition',
+  'public_field_definition',
   'type_alias_declaration',
-  'enum_declaration'
-]
+  'enum_declaration',
+];
 
 function traverseAllNodes(
   node: Parser.SyntaxNode,
@@ -70,7 +72,9 @@ function addToNestedTree(tree: Tree, path: string[], node: Omit<TreeNode, 'child
     current = currentNode.childNodes;
   }
 
-  const nodeName = path[path.length - 1] as string;
+  const nodeOriginalName = path[path.length - 1] as string;
+  const nodeName = nodeOriginalName === 'constructor' ? 'class_constructor' : nodeOriginalName;
+
   if (!current[nodeName]) {
     current[nodeName] = {
       ...node,
@@ -99,44 +103,40 @@ export async function parseAndTraverseFile(sourceCode: string) {
   const tree = parser.parse(sourceCode);
   const simpleTree: Tree = {};
 
-  traverseAllNodes(
-    tree.rootNode,
-    supportedDeclarations,
-    (node, ancestors) => {
-      if (node.isNamed) {
-        const name = node.children.find((el) => el.type.includes('identifier'))?.text;
-        if (!name) return;
+  traverseAllNodes(tree.rootNode, supportedDeclarations, (node, ancestors) => {
+    if (node.isNamed) {
+      const name = node.children.find((el) => el.type.includes('identifier'))?.text;
+      if (!name) return;
 
-        const isDefinitionType = (type: string) => supportedDeclarations.includes(type);
+      const isDefinitionType = (type: string) => supportedDeclarations.includes(type);
 
-        const getNodeName = (node: SyntaxNode) => {
-          return node.children.find((el) => el.type.includes('identifier'))?.text;
-        };
+      const getNodeName = (node: SyntaxNode) => {
+        return node.children.find((el) => el.type.includes('identifier'))?.text;
+      };
 
-        const ancestorPath = ancestors
-          .map((ancestor) => {
-            if (isDefinitionType(ancestor.type)) {
-              return getNodeName(ancestor);
-            }
-            return null;
-          })
-          .filter((name): name is string => !!name);
+      const ancestorPath = ancestors
+        .map((ancestor) => {
+          if (isDefinitionType(ancestor.type)) {
+            return getNodeName(ancestor);
+          }
+          return null;
+        })
+        .filter((name): name is string => !!name);
 
-        const fullPath = [...ancestorPath, name];
+      const fullPath = [...ancestorPath, name];
 
-        addToNestedTree(simpleTree, fullPath, {
-          code: node.text,
-          global: isGlobal(node),
-          position: {
-            lineStart: node.startPosition.row,
-            charStart: node.startPosition.column,
-            lineEnd: node.endPosition.row,
-            charEnd: node.endPosition.column,
-          },
-        });
-      }
-    },
-  );
+      addToNestedTree(simpleTree, fullPath, {
+        code: node.text,
+        global: isGlobal(node),
+        position: {
+          lineStart: node.startPosition.row,
+          charStart: node.startPosition.column,
+          lineEnd: node.endPosition.row,
+          charEnd: node.endPosition.column,
+        },
+      });
+    }
+  });
 
   return simpleTree;
 }

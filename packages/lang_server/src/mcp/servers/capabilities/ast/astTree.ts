@@ -7,7 +7,9 @@ export const parseProjectTree = async (files: string[]) => {
   const projectTree: Record<string, Tree> = {};
   for (const file of files) {
     if (['.mts', '.ts'].includes(path.extname(file))) {
-      projectTree[file] = await parseAndTraverseFile(await getFileContent(file, './packages/lang_server/src/agents/'));
+      projectTree[file] = await parseAndTraverseFile(
+        await getFileContent(file, './packages/lang_server/src/agents/'),
+      );
     }
   }
 
@@ -40,18 +42,14 @@ export const getAvailableDeclarations = (
     for (const [name, node] of Object.entries(tree)) {
       if (node.global) {
         availableDeclarations.push({ file, name, node });
-        continue;
       }
 
-      if (file === targetFile) {
-        const isWithin = isPositionWithinNode(position, node);
+      const isWithin = isPositionWithinNode(position, node);
+      const isSiblingOrParent =
+        parentChain.some((parent) => isPositionWithinNode(position, parent.node)) || !isWithin;
 
-        const isSiblingOrParent =
-          parentChain.some((parent) => isPositionWithinNode(position, parent.node)) || !isWithin;
-
-        if (isSiblingOrParent) {
-          availableDeclarations.push({ file, name, node });
-        }
+      if (isSiblingOrParent) {
+        availableDeclarations.push({ file, name, node });
       }
 
       if (node.childNodes) {
@@ -76,22 +74,19 @@ export const getAvailableDeclarations = (
 };
 
 const main = async () => {
-  //console.log(await getAllFiles('./packages/lang_server/src/agents/'))
   const tree = await parseProjectTree(await getAllFiles('./packages/lang_server/src/agents/'));
-
   const logger = new Logger();
 
   setTimeout(async () => {
-    //logger.debug(JSON.stringify(tree, null, 2));
     logger.debug(
       getAvailableDeclarations(
         tree,
         Object.keys(tree).find((el) => el.includes('claude.ts')) as string,
         35,
-        0,
-      )
+        10,
+      ),
     );
-  }, 2000)
+  }, 2000);
 };
 
 main();
