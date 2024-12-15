@@ -177,7 +177,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       };
     }
     case 'lint_file': {
-
+      // prob need lang server capabilities
+      return {}
     }
     case 'run_file': {
 
