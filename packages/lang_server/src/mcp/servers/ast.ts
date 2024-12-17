@@ -8,14 +8,30 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { getAllFiles, getFileContent } from './capabilities/files/index.js';
 import { z } from 'zod';
 
-const GetProjectFiles = z.object({});
-const SummarizeRequest = z.any();
-const CodeLintSchema = z.any();
-const CodeRunFileSchema = z.any();
-const CodeRunSnippetSchema = z.any();
-const GetTreeSchema = z.any();
-const GetAvailableSymbolsSchema = z.any();
-const InsertCodeSchema = z.any();
+const GetProjectFiles = z.object({
+  path: z.string().describe('Required! Path to the project directory to list files from'),
+});
+const SummarizeRequest = z.any({
+
+});
+const CodeLintSchema = z.any({
+
+});
+const CodeRunFileSchema = z.any({
+
+});
+const CodeRunSnippetSchema = z.any({ 
+
+});
+const GetTreeSchema = z.any({
+
+});
+const GetAvailableSymbolsSchema = z.any({
+
+});
+const InsertCodeSchema = z.any({
+
+});
 
 const args = process.argv.slice(1);
 
