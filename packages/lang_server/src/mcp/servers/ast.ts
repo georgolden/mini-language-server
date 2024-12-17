@@ -15,6 +15,7 @@ const CodeRunFileSchema = z.any();
 const CodeRunSnippetSchema = z.any();
 const GetTreeSchema = z.any();
 const GetAvailableSymbolsSchema = z.any();
+const InsertCodeSchema = z.any();
 
 const args = process.argv.slice(1);
 
@@ -106,6 +107,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           'information for code completion and reference checking features.',
         inputSchema: zodToJsonSchema(GetAvailableSymbolsSchema),
       },
+      {
+        name: 'insert_code',
+        description:
+          'Inserts or appends code snippets into a specified file at a given position. ' +
+          'Supports intelligent code insertion with proper indentation and formatting. ' +
+          'Handles multiple programming languages and maintains code structure. ' +
+          'Includes validation to prevent syntax errors from incorrect insertions.',
+        inputSchema: zodToJsonSchema(InsertCodeSchema),
+      },
     ],
   };
 });
@@ -178,19 +188,52 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     case 'lint_file': {
       // prob need lang server capabilities
-      return {}
+      // we can for now try the command with samplings
+      //  -> get lint command from package.json
+      //  -> ask llm to modify command for single file
+      //  -> exec and output result
+      return {};
     }
     case 'run_file': {
-
+      // idk what is the usecase for this
+      return {};
+    }
+    case 'run_project': {
+      // approach i think of:
+      //  llm should get some knowledge about the project
+      //  how to run it and what the expected output is
+      //  for example if it is a server it should be able
+      //  to test it via curl or similar way
+      //  for frotends it will be trickier
+      //  but we can write some headless browser integration
+      //  like puppeteer and see how it works
+      //
+      //  -> we can start by parsing the command
+      //  -> getting output from the summarize_files_content
+      //  -> get understanding of the project and how to test it
+      //  -> add additional tools like 'curl' and 'puppeteer'
+      //  -> map output to llm (for frontends will be super hard)
+      //  -> we can use mcp example for puppeteer as base idk
+      return {};
     }
     case 'run_code': {
-
+      // basic command to run snippet of code and get output
+      // llm is required to provide all necessary arguments
+      //  -> accept code and args
+      //  -> execute and return result/logs
+      return {};
     }
     case 'get_simple_tree': {
-
+      // tbh idk where to use this command
+      return {};
     }
     case 'get_available_symbols': {
-
+      // will be used before llm is trying to adjust any code
+      // it will provide context of what can be used in the project
+      // can be super bloated so samplings should be integrated
+      return {};
+    }
+    case 'append_code': {
     }
   }
 });
