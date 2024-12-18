@@ -28,7 +28,7 @@ const GetAvailableSymbolsSchema = z.object(
     column: z.string().describe(''),
   }
 ).or(z.object({
-  
+
 }));
 const InsertCodeSchema = z.object({
   replace: z.boolean().optional().describe('Position to replace the code'),
@@ -45,6 +45,8 @@ const InsertCodeSchema = z.object({
       'are equal we just insert code instead of replacing',
     ),
 });
+
+type InsertCodeInput = z.infer<typeof InsertCodeSchema>;
 
 const args = process.argv.slice(1);
 
@@ -153,6 +155,43 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     ],
   };
 });
+
+async function insertCode(input: InsertCodeInput): Promise<InsertCodeOutput> {
+  try {
+    // Read file content
+    const fileContent = await readFile(input.filePath, 'utf-8');
+    const lines = fileContent.split('\n');
+
+    // Calculate proper indentation
+    const baseIndent = getLineIndentation(lines[input.position.line]);
+    const indent = input.indentLevel
+      ? ' '.repeat(baseIndent + (input.indentLevel * 2))
+      : ' '.repeat(baseIndent);
+
+    // Insert code with proper indentation
+    const codeLines = input.code.split('\n')
+      .map(line => indent + line);
+
+    // Insert at specific position
+    lines.splice(input.position.line, 0, ...codeLines);
+
+    // Write back to file
+    const modifiedContent = lines.join('\n');
+    await writeFile(input.filePath, modifiedContent);
+
+    return {
+      success: true,
+      modifiedFile: modifiedContent
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      modifiedFile: '',
+      error: error.message
+    };
+  }
+}
 
 //@ts-ignore
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -289,6 +328,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return {};
     }
     case 'insert_code': {
+
+
       return {}
     }
   }
