@@ -7,6 +7,7 @@ import { Logger } from '../../logger/SocketLogger.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { getAllFiles, getFileContent } from './capabilities/files/index.js';
 import { z } from 'zod';
+import { readFile, writeFile } from 'node:fs/promises';
 
 const GetProjectFiles = z.object({
   path: z.string().describe('Required! Path to the project directory to list files from'),
@@ -33,6 +34,7 @@ const GetAvailableSymbolsSchema = z.object(
 const InsertCodeSchema = z.object({
   replace: z.boolean().optional().describe('Position to replace the code'),
   code: z.string().describe('Code to insert'),
+  filePath: z.string().describe('Path to the file'),
   position: z
     .object({
       startRow: z.number().describe('Start line'),
@@ -45,6 +47,12 @@ const InsertCodeSchema = z.object({
       'are equal we just insert code instead of replacing',
     ),
 });
+
+type InsertCodeOutput = {
+  success: boolean;
+  modifiedFile: string;
+  error?: string;
+};
 
 type InsertCodeInput = z.infer<typeof InsertCodeSchema>;
 
@@ -156,26 +164,67 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   };
 });
 
+function getLineIndentation(line: string): number {
+  const match = line.match(/^(\s*)/);
+  return match ? match[0].length : 0;
+}
+
 async function insertCode(input: InsertCodeInput): Promise<InsertCodeOutput> {
   try {
-    // Read file content
     const fileContent = await readFile(input.filePath, 'utf-8');
-    const lines = fileContent.split('\n');
+    let lines = fileContent.split('\n');
 
-    // Calculate proper indentation
-    const baseIndent = getLineIndentation(lines[input.position.line]);
-    const indent = input.indentLevel
-      ? ' '.repeat(baseIndent + (input.indentLevel * 2))
-      : ' '.repeat(baseIndent);
+    // If start and end positions are same - just insert
+    if (input.position.startRow === input.position.endRow &&
+      input.position.startColumn === input.position.endColumn) {
 
-    // Insert code with proper indentation
-    const codeLines = input.code.split('\n')
-      .map(line => indent + line);
+      // Get indentation of target line
+      const line = lines[input.position.startRow];
+      if (!line) throw new Error('Line is outside file')
+      const baseIndent = getLineIndentation(line);
 
-    // Insert at specific position
-    lines.splice(input.position.line, 0, ...codeLines);
+      // Prepare code with proper indentation
+      const codeLines = input.code.split('\n').map((line, index) => {
+        return index === 0 ? line : ' '.repeat(baseIndent) + line;
+      });
 
-    // Write back to file
+      // Insert code
+      const targetLine = lines[input.position.startRow];
+      lines[input.position.startRow] =
+        targetLine?.slice(0, input.position.startColumn) +
+        codeLines.join('\n') +
+        targetLine?.slice(input.position.startColumn);
+
+    } else if (input.replace) {
+      // Handle multi-line replace
+
+      // Get content before the replacement
+      const beforeContent = lines.slice(0, input.position.startRow);
+      const afterContent = lines.slice(input.position.endRow + 1);
+
+      // Get the partial content of start and end lines if needed
+      const startLineContent = lines[input.position.startRow]?.slice(0, input.position.startColumn);
+      const endLineContent = lines[input.position.endRow]?.slice(input.position.endColumn);
+
+      // Get indentation of target position
+      const line = lines[input.position.startRow]
+      if (!line) throw new Error('Line is not within file')
+      const baseIndent = getLineIndentation(line);
+
+      // Prepare new code with proper indentation
+      const newCode = input.code.split('\n').map((line, index) => {
+        // First line uses start line indentation
+        if (index === 0) return startLineContent + line;
+        return ' '.repeat(baseIndent) + line;
+      });
+
+      // Add the end line content to last line of new code
+      newCode[newCode.length - 1] += endLineContent ?? '';
+
+      // Combine everything
+      lines = [...beforeContent, ...newCode, ...afterContent];
+    }
+
     const modifiedContent = lines.join('\n');
     await writeFile(input.filePath, modifiedContent);
 
