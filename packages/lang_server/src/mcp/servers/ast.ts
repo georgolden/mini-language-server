@@ -11,26 +11,37 @@ import { z } from 'zod';
 const GetProjectFiles = z.object({
   path: z.string().describe('Required! Path to the project directory to list files from'),
 });
-const SummarizeRequest = z.any({
-
+const GetFileContent = z.object({
+  path: z.string().optional().describe('Optional path to the subdir'),
+  file: z.string().describe('Path to the file to get content from')
 });
-const CodeLintSchema = z.any({
-
+const SummarizeRequest = z.object({
+  path: z.string().optional().describe('Optional path to the subdir'),
 });
-const CodeRunFileSchema = z.any({
-
-});
-const CodeRunSnippetSchema = z.any({ 
-
-});
-const GetTreeSchema = z.any({
-
-});
-const GetAvailableSymbolsSchema = z.any({
-
-});
-const InsertCodeSchema = z.any({
-
+const CodeLintSchema = z.any();
+const CodeRunFileSchema = z.any();
+const CodeRunSnippetSchema = z.any();
+const GetTreeSchema = z.any();
+const GetAvailableSymbolsSchema = z.object(
+  {
+    row: z.string().describe('Line number'),
+    column: z.string().describe(''),
+  }
+).or(z.object({}));
+const InsertCodeSchema = z.object({
+  replace: z.boolean().optional().describe('Position to replace the code'),
+  code: z.string().describe('Code to insert'),
+  position: z
+    .object({
+      startRow: z.number().describe('Start line'),
+      startColumn: z.number().describe('Start character'),
+      endRow: z.number().describe('End line'),
+      endColumn: z.number().describe('End character'),
+    })
+    .describe(
+      'Position to insert at, if start and end line/character' +
+      ' are equal we just insert code instead of replacing',
+    ),
 });
 
 const args = process.argv.slice(1);
@@ -69,6 +80,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           'those listed inside of .gitignore. ',
         inputSchema: zodToJsonSchema(GetProjectFiles),
       },
+      {
+        name: 'get_file_content',
+        description: '',
+        inputSchema: zodToJsonSchema(GetFileContent),
+      }
       {
         name: 'summarize_files_content',
         description:
@@ -132,6 +148,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           'Includes validation to prevent syntax errors from incorrect insertions.',
         inputSchema: zodToJsonSchema(InsertCodeSchema),
       },
+      {
+        name: '',
+      },
     ],
   };
 });
@@ -142,12 +161,33 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   switch (name) {
     case 'get_project_files': {
-      const { path } = args ?? { path: '' };
+      const { path } = args;
+
+      if (!path) {
+        throw new Error('No path for get_project_files command!');
+      }
+
       return {
         content: [
           {
             type: 'text',
             text: (await getAllFiles(path as string)).join('\n'),
+          },
+        ],
+      };
+    }
+    case 'get_file_content': {
+      const { file, path } = args;
+
+      if (!path) {
+        throw new Error('No path for get_project_files command!');
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: await getFileContent(path),
           },
         ],
       };
