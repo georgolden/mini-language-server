@@ -27,7 +27,9 @@ const GetAvailableSymbolsSchema = z.object(
     row: z.string().describe('Line number'),
     column: z.string().describe(''),
   }
-).or(z.object({}));
+).or(z.object({
+  
+}));
 const InsertCodeSchema = z.object({
   replace: z.boolean().optional().describe('Position to replace the code'),
   code: z.string().describe('Code to insert'),
@@ -39,8 +41,8 @@ const InsertCodeSchema = z.object({
       endColumn: z.number().describe('End character'),
     })
     .describe(
-      'Position to insert at, if start and end line/character' +
-      ' are equal we just insert code instead of replacing',
+      'Position to insert at, if start and end line/character ' +
+      'are equal we just insert code instead of replacing',
     ),
 });
 
@@ -148,9 +150,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           'Includes validation to prevent syntax errors from incorrect insertions.',
         inputSchema: zodToJsonSchema(InsertCodeSchema),
       },
-      {
-        name: '',
-      },
     ],
   };
 });
@@ -187,7 +186,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [
           {
             type: 'text',
-            text: await getFileContent(path),
+            text: await getFileContent(file, path),
           },
         ],
       };
@@ -289,7 +288,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // can be super bloated so samplings should be integrated
       return {};
     }
-    case 'append_code': {
+    case 'insert_code': {
+      return {}
     }
   }
 });
