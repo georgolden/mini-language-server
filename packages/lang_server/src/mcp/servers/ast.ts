@@ -5,16 +5,13 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { Logger } from '../../logger/SocketLogger.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { getAllFiles, getFileContent } from './capabilities/files/index.js';
 import { z } from 'zod';
-import { insertCodeTool } from './capabilities/files/insert.js';
-import { getFileContentTool } from './capabilities/files/content.js';
+import { insertCodeCommand, insertCodeTool } from './capabilities/files/insert.js';
+import { getFileContentCommand, getFileContentTool } from './capabilities/files/content.js';
 import { getProjectFilesCommand } from './capabilities/files/files.js';
 import { getAvailableSymbolsTool } from './capabilities/ast/astCommand.js';
+import { summarizeFilesCommand, summarizeFilesTool } from './capabilities/files/summary.js';
 
-const SummarizeRequest = z.object({
-  path: z.string().optional().describe('Optional path to the subdir'),
-});
 const CodeLintSchema = z.any();
 const CodeRunFileSchema = z.any();
 const CodeRunSnippetSchema = z.any();
@@ -47,15 +44,6 @@ const server = new Server(
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
-      {
-        name: 'summarize_files_content',
-        description:
-          'Analyze and provide concise summaries of the contents of specified files within the project. ' +
-          'This tool reads the content of each file and generates a comprehensive summary of their key points, ' +
-          'structure, and main functionality. It helps in quickly understanding the purpose and content of ' +
-          'multiple files without having to read them in detail.',
-        inputSchema: zodToJsonSchema(GetProjectFiles),
-      },
       {
         name: 'lint_file',
         description:
@@ -94,72 +82,31 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       getAvailableSymbolsTool,
       getFileContentTool,
+      summarizeFilesTool,
       insertCodeTool,
     ],
   };
 });
 
+const commands: Record<string, (args: any, options: { server: any; logger: any }) => Promise<any>> =
+  {
+    get_project_files: getProjectFilesCommand,
+    get_file_content: getFileContentCommand,
+    summarize_files_content: summarizeFilesCommand,
+    insert_code: insertCodeCommand,
+  };
+
 //@ts-ignore
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
+  const command = commands[name];
+
+  if (!command) throw new Error('unknown command');
+
+  return await command(args, { server, logger });
+
   switch (name) {
-    case 'get_project_files': {
-      return getProjectFilesCommand(args);
-    }
-    case 'get_file_content': {
-      return await getFileContentCommand(args);
-    }
-    case 'summarize_files_content': {
-      const { path } = args ?? { path: '' };
-
-      if (typeof path !== 'string') {
-        throw new Error('Argument should be of type string!');
-      }
-
-      const files = await getAllFiles(path);
-
-      const cache: Record<string, string> = {};
-
-      for (const file of files) {
-        const content = await getFileContent(file, path);
-
-        const summary = await server.request(
-          {
-            method: 'sampling/createMessage',
-            params: {
-              maxTokens: 350,
-              messages: [
-                {
-                  content: {
-                    type: 'text',
-                    text: `Summarize the following file content: \n \n <content> \n ${content} \n </content>`,
-                  },
-                  role: 'user',
-                },
-              ],
-            },
-          },
-          SummarizeRequest,
-        );
-
-        logger.debug(JSON.stringify(summary));
-
-        cache[file] = summary?.content?.text ?? '';
-      }
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Summary of all files in project: \n
-              ${Object.entries(cache)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join('\n\n')}`,
-          },
-        ],
-      };
-    }
     case 'lint_file': {
       // prob need lang server capabilities
       // we can for now try the command with samplings
@@ -205,9 +152,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // will be used before llm is trying to adjust any code
       // it will provide context of what can be used in the project
       // can be super bloated so samplings should be integrated
-      return {};
-    }
-    case 'insert_code': {
       return {};
     }
   }

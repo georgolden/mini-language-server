@@ -42,7 +42,7 @@ export const insertCodeTool = {
   inputSchema: zodToJsonSchema(InsertCodeSchema),
 };
 
-export async function insertCode(input: InsertCodeInput): Promise<InsertCodeOutput> {
+export const insertCodeCommand = async (input: InsertCodeInput): Promise<InsertCodeOutput> => {
   try {
     const fileContent = await readFile(input.filePath, 'utf-8');
     let lines = fileContent.split('\n');
@@ -99,9 +99,9 @@ export async function insertCode(input: InsertCodeInput): Promise<InsertCodeOutp
       error: error.message,
     };
   }
-}
+};
 
-insertCode({
+insertCodeCommand({
   code: 'const booba = 1;',
   filePath: 'test-dir/utils.ts',
   position: {
