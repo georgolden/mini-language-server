@@ -8,8 +8,9 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { getAllFiles, getFileContent } from './capabilities/files/index.js';
 import { z } from 'zod';
 import { insertCodeTool } from './capabilities/files/insert.js';
-import { getFileContentCommand } from './capabilities/files/content.js';
+import { getFileContentTool } from './capabilities/files/content.js';
 import { getProjectFilesCommand } from './capabilities/files/files.js';
+import { getAvailableSymbolsTool } from './capabilities/ast/astCommand.js';
 
 const SummarizeRequest = z.object({
   path: z.string().optional().describe('Optional path to the subdir'),
@@ -18,12 +19,6 @@ const CodeLintSchema = z.any();
 const CodeRunFileSchema = z.any();
 const CodeRunSnippetSchema = z.any();
 const GetTreeSchema = z.any();
-const GetAvailableSymbolsSchema = z
-  .object({
-    row: z.string().describe('Line number'),
-    column: z.string().describe(''),
-  })
-  .or(z.object({}));
 
 const args = process.argv.slice(1);
 
@@ -97,16 +92,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           'understanding project architecture.',
         inputSchema: zodToJsonSchema(GetTreeSchema),
       },
-      {
-        name: 'get_available_symbols',
-        description:
-          'Retrieves all accessible named symbols (variables, functions, classes) that ' +
-          'are in scope for a specific symbol location. Includes imported modules, ' +
-          'global variables, and local definitions. Provides context-aware symbol ' +
-          'information for code completion and reference checking features.',
-        inputSchema: zodToJsonSchema(GetAvailableSymbolsSchema),
-      },
-      getFileContentCommand,
+      getAvailableSymbolsTool,
+      getFileContentTool,
       insertCodeTool,
     ],
   };
