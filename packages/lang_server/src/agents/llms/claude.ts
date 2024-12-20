@@ -91,6 +91,8 @@ export class ClaudeEnhancedAgent extends Agent {
       return [];
     });
 
+    console.log(output);
+
     return output;
   }
 }

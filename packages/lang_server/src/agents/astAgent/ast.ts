@@ -58,9 +58,9 @@ const createASTAgent = async () => {
 async function chat() {
   const { sendMessage } = await createASTAgent();
 
-  const response = await sendMessage(
-    'Implement simple calculator with node, no external dependencies',
-  );
+  console.log('send');
+  const response = await sendMessage('lint file src/agents/astAgent/ast.ts');
+
   console.log(response);
 }
 

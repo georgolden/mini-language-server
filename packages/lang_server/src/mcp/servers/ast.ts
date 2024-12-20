@@ -2,7 +2,10 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import type {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
 import { Logger } from '../../logger/SocketLogger.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { z } from 'zod';
@@ -11,9 +14,8 @@ import { getFileContentCommand, getFileContentTool } from './capabilities/files/
 import { getProjectFilesCommand } from './capabilities/files/files.js';
 import { getAvailableSymbolsTool } from './capabilities/ast/astCommand.js';
 import { summarizeFilesCommand, summarizeFilesTool } from './capabilities/files/summary.js';
-import { lintCommand } from './capabilities/linter/lint.js';
+import { lintCommand, lintTool } from './capabilities/linter/lint.js';
 
-const CodeLintSchema = z.any();
 const CodeRunFileSchema = z.any();
 const CodeRunSnippetSchema = z.any();
 const GetTreeSchema = z.any();
@@ -76,6 +78,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       getFileContentTool,
       summarizeFilesTool,
       insertCodeTool,
+      lintTool,
     ],
   };
 });
