@@ -11,6 +11,7 @@ import { getFileContentCommand, getFileContentTool } from './capabilities/files/
 import { getProjectFilesCommand } from './capabilities/files/files.js';
 import { getAvailableSymbolsTool } from './capabilities/ast/astCommand.js';
 import { summarizeFilesCommand, summarizeFilesTool } from './capabilities/files/summary.js';
+import { lintCommand } from './capabilities/linter/lint.js';
 
 const CodeLintSchema = z.any();
 const CodeRunFileSchema = z.any();
@@ -44,15 +45,6 @@ const server = new Server(
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
-      {
-        name: 'lint_file',
-        description:
-          'Analyzes code quality and identifies potential errors, style violations, ' +
-          'and bugs in the specified file. Provides detailed feedback on code ' +
-          'improvements and enforces coding standards. Results include syntax errors, ' +
-          'potential runtime issues, and style guide violations.',
-        inputSchema: zodToJsonSchema(CodeLintSchema),
-      },
       {
         name: 'run_file',
         description:
@@ -94,6 +86,7 @@ const commands: Record<string, (args: any, options: { server: any; logger: any }
     get_file_content: getFileContentCommand,
     summarize_files_content: summarizeFilesCommand,
     insert_code: insertCodeCommand,
+    lint_file: lintCommand,
   };
 
 //@ts-ignore
@@ -108,11 +101,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   switch (name) {
     case 'lint_file': {
-      // prob need lang server capabilities
-      // we can for now try the command with samplings
-      //  -> get lint command from package.json
-      //  -> ask llm to modify command for single file
-      //  -> exec and output result
       return {};
     }
     case 'run_file': {
