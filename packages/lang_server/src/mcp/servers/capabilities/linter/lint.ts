@@ -6,7 +6,7 @@
 
 import { z } from 'zod';
 import { getAllFiles } from '../files/index.js';
-import { zodToJsonSchema } from 'zod-to-json-schema/dist/types/zodToJsonSchema.js';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 
 const GetLintCommandRequest = z.object({
   path: z.string().optional().describe('Optional path to the subdir'),

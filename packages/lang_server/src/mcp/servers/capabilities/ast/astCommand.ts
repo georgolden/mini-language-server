@@ -1,12 +1,10 @@
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
-const GetAvailableSymbolsSchema = z
-  .object({
-    row: z.string().describe('Line number'),
-    column: z.string().describe(''),
-  })
-  .or(z.object({}));
+const GetAvailableSymbolsSchema = z.object({
+  row: z.string().describe('Line number'),
+  column: z.string().describe(''),
+});
 
 export const getAvailableSymbolsTool = {
   name: 'get_available_symbols',

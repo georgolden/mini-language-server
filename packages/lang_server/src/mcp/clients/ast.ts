@@ -1,15 +1,15 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import type {
+import {
   CallToolResultSchema,
   ListToolsResultSchema,
   CreateMessageRequestSchema,
-} from '@modelcontextprotocol/sdk/dist/types.js';
+} from '@modelcontextprotocol/sdk/types.js';
 import type { Tool } from '../../agents/llms/agent.js';
 import type { Agent } from '../../agents/llms/agent.js';
 
 const transport = new StdioClientTransport({
-  command: 'dist/mcp/servers/ast.mjs',
+  command: 'dist/src/mcp/servers/ast.js',
   args: ['./'],
 });
 

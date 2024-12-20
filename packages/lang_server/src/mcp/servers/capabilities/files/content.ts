@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+import { getFileContent } from './index.js';
 
 const GetFileContent = z.object({
   path: z.string().optional().describe('Optional path to the subdir'),

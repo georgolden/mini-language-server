@@ -2,10 +2,7 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import type {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { Logger } from '../../logger/SocketLogger.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { z } from 'zod';
@@ -16,9 +13,9 @@ import { getAvailableSymbolsTool } from './capabilities/ast/astCommand.js';
 import { summarizeFilesCommand, summarizeFilesTool } from './capabilities/files/summary.js';
 import { lintCommand, lintTool } from './capabilities/linter/lint.js';
 
-const CodeRunFileSchema = z.any();
-const CodeRunSnippetSchema = z.any();
-const GetTreeSchema = z.any();
+//const CodeRunFileSchema = z.any();
+//const CodeRunSnippetSchema = z.any();
+//const GetTreeSchema = z.any();
 
 const args = process.argv.slice(1);
 
@@ -47,33 +44,33 @@ const server = new Server(
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
-      {
-        name: 'run_file',
-        description:
-          'Executes the specified file in a secure environment and returns the complete ' +
-          'program output. Captures stdout, stderr streams, execution time metrics, and ' +
-          'runtime statistics. Supports various file types and configurable runtime ' +
-          'parameters for different execution environments.',
-        inputSchema: zodToJsonSchema(CodeRunFileSchema),
-      },
-      {
-        name: 'run_code',
-        description:
-          'Executes provided code snippets in an isolated sandbox environment with ' +
-          'configurable runtime parameters. Returns execution results, output streams, ' +
-          'and performance metrics. Supports multiple programming languages and provides ' +
-          'detailed error reporting for failed executions.',
-        inputSchema: zodToJsonSchema(CodeRunSnippetSchema),
-      },
-      {
-        name: 'get_simple_tree',
-        description:
-          'Generates a hierarchical representation of all named symbols (functions, ' +
-          'classes, variables) in the project. Displays relationships, scope levels, ' +
-          'and symbol types in a tree structure. Essential for code navigation and ' +
-          'understanding project architecture.',
-        inputSchema: zodToJsonSchema(GetTreeSchema),
-      },
+      //{
+      //  name: 'run_file',
+      //  description:
+      //    'Executes the specified file in a secure environment and returns the complete ' +
+      //    'program output. Captures stdout, stderr streams, execution time metrics, and ' +
+      //    'runtime statistics. Supports various file types and configurable runtime ' +
+      //    'parameters for different execution environments.',
+      //  inputSchema: zodToJsonSchema(CodeRunFileSchema),
+      //},
+      //{
+      //  name: 'run_code',
+      //  description:
+      //    'Executes provided code snippets in an isolated sandbox environment with ' +
+      //    'configurable runtime parameters. Returns execution results, output streams, ' +
+      //    'and performance metrics. Supports multiple programming languages and provides ' +
+      //    'detailed error reporting for failed executions.',
+      //  inputSchema: zodToJsonSchema(CodeRunSnippetSchema),
+      //},
+      //{
+      //  name: 'get_simple_tree',
+      //  description:
+      //    'Generates a hierarchical representation of all named symbols (functions, ' +
+      //    'classes, variables) in the project. Displays relationships, scope levels, ' +
+      //    'and symbol types in a tree structure. Essential for code navigation and ' +
+      //    'understanding project architecture.',
+      //  inputSchema: zodToJsonSchema(GetTreeSchema),
+      //},
       getAvailableSymbolsTool,
       getFileContentTool,
       summarizeFilesTool,
