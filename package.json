@@ -7,7 +7,8 @@
     "packages/ast",
     "packages/core_server",
     "packages/lang_server",
-    "packages/vscode_extension"
+    "packages/vscode_extension",
+    "packages/llm_app"
   ],
   "version": "0.0.1",
   "scripts": {
