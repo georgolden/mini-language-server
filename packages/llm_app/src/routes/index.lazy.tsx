@@ -1,4 +1,5 @@
 import { createLazyFileRoute } from '@tanstack/react-router';
+import KawaiiLogger from '../components/logger';
 
 export const Route = createLazyFileRoute('/')({
   component: Index,
@@ -7,7 +8,8 @@ export const Route = createLazyFileRoute('/')({
 function Index() {
   return (
     <div className="p-2">
-      <h3>Welcome Home!</h3>
+      <h3>Logger chan</h3>
+      <KawaiiLogger />
     </div>
   );
 }

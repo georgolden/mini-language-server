@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 
+import http from 'node:http';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { Logger } from '../../logger/SocketLogger.js';
-import { zodToJsonSchema } from 'zod-to-json-schema';
-import { z } from 'zod';
 import { insertCodeCommand, insertCodeTool } from './capabilities/files/insert.js';
 import { getFileContentCommand, getFileContentTool } from './capabilities/files/content.js';
 import { getProjectFilesCommand } from './capabilities/files/files.js';
@@ -145,5 +144,31 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-const transport = new StdioServerTransport();
-server.connect(transport).catch(console.error);
+//const transport = new SSEServerTransport("/message", {
+//
+//});
+
+let transport: SSEServerTransport;
+const app = http.createServer(async (req, res) => {
+  if (req.method === 'GET' && req.url === '/sse') {
+    console.log('Received connection');
+    transport = new SSEServerTransport('/message', res);
+    await server.connect(transport);
+
+    server.onclose = async () => {
+      await server.close();
+      process.exit(0);
+    };
+  } else if (req.method === 'POST' && req.url === '/message') {
+    console.log('Received message');
+    await transport.handlePostMessage(req, res);
+  } else {
+    res.writeHead(404);
+    res.end();
+  }
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server-chan is running on port ${PORT} nya~`);
+});
