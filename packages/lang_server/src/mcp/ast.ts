@@ -74,13 +74,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 const commands: Record<string, (args: any, options: { server: any; logger: any }) => Promise<any>> =
-  {
-    get_project_files: getProjectFilesCommand,
-    get_file_content: getFileContentCommand,
-    summarize_files_content: summarizeFilesCommand,
-    insert_code: insertCodeCommand,
-    lint_file: lintCommand,
-  };
+{
+  get_project_files: getProjectFilesCommand,
+  get_file_content: getFileContentCommand,
+  summarize_files_content: summarizeFilesCommand,
+  insert_code: insertCodeCommand,
+  lint_file: lintCommand,
+};
 
 //@ts-ignore
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -142,12 +142,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 //
 //});
 
-const app = http.createServer();
-const logger = new Logger(app);
-const transport = new WebSocketServerTransport(app, logger);
+//const app = http.createServer();
+//const logger = new Logger();
+const transport = new WebSocketServerTransport(
+  3001,
+
+  //logger
+);
 transport.start();
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Server-chan is running on port ${PORT} nya~`);
-});
+//const PORT = process.env.PORT || 3001;
+//app.listen(PORT, () => {
+//  console.log(`Server-chan is running on port ${PORT} nya~`);
+//});
+
+//app.on('error', console.log);
+//app.on('connect', console.log);
+//app.on('request', console.log);
+//app.on('connection', console.log);

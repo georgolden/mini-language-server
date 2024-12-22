@@ -15,9 +15,9 @@ export class WebSocketServerTransport implements Transport {
   onerror?: (error: Error) => void;
   onmessage?: (message: JSONRPCMessage) => void;
 
-  constructor(server: Server, logger: Logger) {
+  constructor(port: number, logger: Logger) {
     this._sessionId = randomUUID();
-    this._wss = new WebSocketServer({ server, path: '/ws' });
+    this._wss = new WebSocketServer({ port });
     this.logger = logger;
   }
 
@@ -27,29 +27,31 @@ export class WebSocketServerTransport implements Transport {
         reject(new Error('WebSocket server not initialized'));
         return;
       }
+      console.log('websocket init');
 
       this._wss.on('connection', (ws) => {
+        console.log('ABOBA');
         this._ws = ws;
-        this.logger.info('New client connected! ^_^');
+        this.logger?.info('New client connected! ^_^');
 
         ws.on('message', async (data) => {
           try {
             const message = JSON.parse(data.toString());
-            this.logger.debug(message);
+            this.logger?.debug(message);
             await this.handleMessage(message);
           } catch (error) {
-            this.logger.error(error);
+            this.logger?.error(error);
             this.onerror?.(error as Error);
           }
         });
 
         ws.on('close', () => {
-          this.logger.info('Client disconnected >_<');
+          this.logger?.info('Client disconnected >_<');
           this.onclose?.();
         });
 
         ws.on('error', (error) => {
-          this.logger.error(error);
+          this.logger?.error(error);
           this.onerror?.(error);
         });
 
@@ -57,7 +59,7 @@ export class WebSocketServerTransport implements Transport {
       });
 
       this._wss.on('error', (error) => {
-        this.logger.error(error);
+        this.logger?.error(error);
         reject(error);
       });
     });

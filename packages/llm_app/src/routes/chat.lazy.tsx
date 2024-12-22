@@ -11,7 +11,7 @@ function ChatRoute() {
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:3000/ws');
+    const ws = new WebSocket('ws://localhost:3002/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
