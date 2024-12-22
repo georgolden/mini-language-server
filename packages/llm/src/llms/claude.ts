@@ -7,11 +7,6 @@ import {
   type Message,
   type Tool,
 } from './agent.js';
-import { config } from 'dotenv';
-
-config();
-
-const test = 123;
 
 export class ClaudeEnhancedAgent extends Agent {
   private client: Anthropic;
@@ -97,6 +92,7 @@ export class ClaudeEnhancedAgent extends Agent {
   }
 }
 
-export const claudeClient = new Anthropic({
-  apiKey: process.env['ANTHROPIC_API'],
-});
+export const createClaudeClient = (apiKey: string) =>
+  new Anthropic({
+    apiKey,
+  });

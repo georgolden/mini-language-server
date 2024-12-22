@@ -5,8 +5,7 @@ import {
   ListToolsResultSchema,
   CreateMessageRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import type { Tool } from '../../agents/llms/agent.js';
-import type { Agent } from '../../agents/llms/agent.js';
+import type { Tool, Agent } from '../llms/agent.js';
 
 const transport = new StdioClientTransport({
   command: 'dist/src/mcp/servers/ast.js',

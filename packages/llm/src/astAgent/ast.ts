@@ -1,7 +1,7 @@
-import { claudeClient, ClaudeEnhancedAgent } from '../llms/claude.js';
-import { getTools, registerSamplings } from '../../mcp/clients/ast.js';
+import { ClaudeEnhancedAgent } from '../llms/claude.js';
+import { getTools, registerSamplings } from '../mcp/ast.js';
 
-const createASTAgent = async () => {
+export const createASTAgent = async (client) => {
   const tools = await getTools();
 
   const agent = new ClaudeEnhancedAgent({
@@ -20,14 +20,14 @@ const createASTAgent = async () => {
       'Ask specific follow-up questions when information is insufficient. ' +
       'Respond with "NO" to non-coding requests. ' +
       'Never skip steps or make assumptions - follow the sequence exactly.',
-    client: claudeClient,
+    client,
     tools,
   });
 
   registerSamplings(
     new ClaudeEnhancedAgent({
       systemPrompt: 'You are assistant that helps summarize code snippets ant other file content',
-      client: claudeClient,
+      client,
       simpleModel: true,
     }),
   );
@@ -55,13 +55,13 @@ const createASTAgent = async () => {
 //
 // lets try to ask it to build calculator haha :D
 
-async function chat() {
-  const { sendMessage } = await createASTAgent();
-
-  console.log('send');
-  const response = await sendMessage('lint file src/agents/astAgent/ast.ts');
-
-  console.log(response);
-}
-
-chat();
+//async function chat() {
+//  const { sendMessage } = await createASTAgent();
+//
+//  console.log('send');
+//  const response = await sendMessage('lint file src/agents/astAgent/ast.ts');
+//
+//  console.log(response);
+//}
+//
+//chat();
