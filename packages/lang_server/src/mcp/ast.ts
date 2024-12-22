@@ -2,9 +2,9 @@
 
 import http from 'node:http';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+import { WebSocketServerTransport } from './websocket.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { Logger } from '../../logger/SocketLogger.js';
+import { Logger } from '../logger/SocketLogger.js';
 import { insertCodeCommand, insertCodeTool } from './capabilities/files/insert.js';
 import { getFileContentCommand, getFileContentTool } from './capabilities/files/content.js';
 import { getProjectFilesCommand } from './capabilities/files/files.js';
@@ -80,13 +80,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 const commands: Record<string, (args: any, options: { server: any; logger: any }) => Promise<any>> =
-  {
-    get_project_files: getProjectFilesCommand,
-    get_file_content: getFileContentCommand,
-    summarize_files_content: summarizeFilesCommand,
-    insert_code: insertCodeCommand,
-    lint_file: lintCommand,
-  };
+{
+  get_project_files: getProjectFilesCommand,
+  get_file_content: getFileContentCommand,
+  summarize_files_content: summarizeFilesCommand,
+  insert_code: insertCodeCommand,
+  lint_file: lintCommand,
+};
 
 //@ts-ignore
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -148,11 +148,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 //
 //});
 
-let transport: SSEServerTransport;
+let transport: WebSocketServerTransport;
 const app = http.createServer(async (req, res) => {
   if (req.method === 'GET' && req.url === '/sse') {
     console.log('Received connection');
-    transport = new SSEServerTransport('/message', res);
+    transport = new WebSocketServerTransport(3001);
     await server.connect(transport);
 
     server.onclose = async () => {
@@ -161,7 +161,7 @@ const app = http.createServer(async (req, res) => {
     };
   } else if (req.method === 'POST' && req.url === '/message') {
     console.log('Received message');
-    await transport.handlePostMessage(req, res);
+    await transport.handleMessage(req, res);
   } else {
     res.writeHead(404);
     res.end();

@@ -10,6 +10,7 @@
     "compile": "tsc -b",
     "watch": "tsc -b -w",
     "build": "npm run clean && npm run compile",
+    "dev": "tsx --watch ./src/mcp/ast.ts",
     "lint": "biome lint .",
     "format": "biome format . --write",
     "check": "biome check --apply .",

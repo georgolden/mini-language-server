@@ -8,6 +8,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "compile": "tsc -b",
+    "dev": "tsx --watch src/server.ts",
     "watch": "tsc -b -w",
     "build": "npm run clean && npm run compile",
     "lint": "biome lint .",
@@ -23,8 +24,10 @@
   "description": "",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
+    "@fastify/websocket": "^11.0.1",
     "@modelcontextprotocol/sdk": "^1.0.1",
     "dotenv": "^16.4.7",
+    "fastify": "^5.2.0",
     "ignore": "^6.0.2",
     "openai": "^4.76.0",
     "pino": "^9.5.0",

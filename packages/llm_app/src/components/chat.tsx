@@ -1,83 +1,75 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 
-const KawaiiChat = ({ onSendMessage }) => {
-  const [messages, setMessages] = useState([]);
+export interface Message {
+  role: 'user' | 'assistant';
+  content: string | any[];
+  timestamp: Date;
+}
+
+interface KawaiiChatProps {
+  messages: Message[];
+  onSendMessage: (message: string) => void;
+}
+
+const renderContent = (content) => {
+  console.log('CONTENT: ', content);
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  return content.map((item, index) => {
+    switch (item.type) {
+      case 'text':
+        return <div key={index}>{item.text}</div>;
+      case 'tool_use':
+        return (
+          <div key={index} className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg my-1">
+            <div className="text-xs text-purple-600 dark:text-purple-300">
+              Using tool: {item.name}
+            </div>
+            <pre className="text-xs overflow-x-auto">{JSON.stringify(item.input, null, 2)}</pre>
+          </div>
+        );
+      case 'tool_result':
+        return (
+          <div key={index} className="bg-green-100 dark:bg-green-900 p-2 rounded-lg my-1">
+            <div className="text-xs text-green-600 dark:text-green-300">Tool result:</div>
+            <div>{item.content}</div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  });
+};
+
+const KawaiiChat = ({ onSendMessage, messages }: KawaiiChatProps) => {
   const [inputText, setInputText] = useState('');
-  const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!inputText.trim()) return;
-
-    const userMessage = {
-      role: 'user',
-      content: inputText,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInputText('');
-
-    try {
-      const response = await onSendMessage(inputText);
-      const assistantMessage = {
-        role: 'assistant',
-        content: response,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Failed to send message:', error);
-    }
-  };
-
-  const renderContent = (content) => {
-    console.log('CONTENT: ', content);
-    if (typeof content === 'string') {
-      return content;
-    }
-
-    return content.map((item, index) => {
-      switch (item.type) {
-        case 'text':
-          return <div key={index}>{item.text}</div>;
-        case 'tool_use':
-          return (
-            <div key={index} className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg my-1">
-              <div className="text-xs text-purple-600 dark:text-purple-300">
-                Using tool: {item.name}
-              </div>
-              <pre className="text-xs overflow-x-auto">{JSON.stringify(item.input, null, 2)}</pre>
-            </div>
-          );
-        case 'tool_result':
-          return (
-            <div key={index} className="bg-green-100 dark:bg-green-900 p-2 rounded-lg my-1">
-              <div className="text-xs text-green-600 dark:text-green-300">Tool result:</div>
-              <div>{item.content}</div>
-            </div>
-          );
-        default:
-          return null;
-      }
-    });
-  };
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const formatTimestamp = (date) => {
     return new Date(date).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputText.trim()) return;
+
+    onSendMessage(inputText);
+    setInputText('');
   };
 
   return (

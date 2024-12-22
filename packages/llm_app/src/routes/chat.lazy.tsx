@@ -1,26 +1,67 @@
 import { createLazyFileRoute } from '@tanstack/react-router';
-import KawaiiChat from '../components/chat';
-import { createASTAgent, createClaudeClient } from '@almighty/llm';
-import { useEffect, useRef } from 'react';
+import KawaiiChat, { type Message } from '../components/chat';
+import { useEffect, useRef, useState } from 'react';
 
 export const Route = createLazyFileRoute('/chat')({
-  component: About,
+  component: ChatRoute,
 });
 
-function About() {
-  const chat = useRef(null);
+function ChatRoute() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    (async () => {
-      const claude = createClaudeClient('');
-      chat.current = await createASTAgent(claude);
-    })();
+    const ws = new WebSocket('ws://localhost:3000/ws');
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log('Connected to server nya~! ٩(◕‿◕｡)۶');
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: data.role,
+          content: data.content,
+          timestamp: new Date(),
+        },
+      ]);
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error nyaa!', error);
+    };
+
+    return () => {
+      ws.close();
+    };
   }, []);
+
+  const handleSendMessage = (content: string) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(
+        JSON.stringify({
+          message: content,
+        }),
+      );
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'user',
+          content,
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  };
 
   return (
     <div className="p-2 h-5/6">
-      Hello Chat!
-      <KawaiiChat onSendMessage={console.log} />
+      <KawaiiChat messages={messages} onSendMessage={handleSendMessage} />
     </div>
   );
 }
