@@ -65,7 +65,7 @@ const KawaiiLogger = () => {
   const logsContainerRef = useRef(null);
 
   const connect = () => {
-    const ws = new WebSocket('ws://localhost:8080');
+    const ws = new WebSocket('ws://localhost:3001/logs');
     wsRef.current = ws;
 
     ws.onopen = () => {

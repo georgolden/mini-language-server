@@ -1,8 +1,7 @@
 import { ClaudeEnhancedAgent } from '../llms/claude.js';
-import { getTools, registerSamplings } from '../mcp/ast.js';
+import { registerSamplings } from '../mcp/ast.js';
 
-export const createASTAgent = async (client) => {
-  const tools = await getTools();
+export const createASTAgent = async (client, tools) => {
 
   const agent = new ClaudeEnhancedAgent({
     systemPrompt:

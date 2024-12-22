@@ -3,12 +3,10 @@ import websocketPlugin from '@fastify/websocket';
 import { createClaudeClient } from './llms/claude.js';
 import { createASTAgent } from './astAgent/ast.js';
 import 'dotenv/config';
+import { initializeMCPClient } from './mcp/ast.js';
 
 const server = fastify({ logger: true, disableRequestLogging: true });
 server.register(websocketPlugin);
-
-const claudeClient = createClaudeClient(process.env.ANTHROPIC_API);
-const astAgent = createASTAgent(claudeClient);
 
 interface IMessage {
   message: string;
@@ -45,9 +43,13 @@ const start = async () => {
 
 server.register(async (fastify) => {
   fastify.get('/ws', { websocket: true }, (connection, req) => {
-    connection.on('message', (message: string) => {
+    connection.on('message', async (message: string) => {
       fastify.log.info(`WebSocket message received: ${message}`);
 
+      const claudeClient = createClaudeClient(process.env.ANTHROPIC_API);
+
+      const mcpClient = await initializeMCPClient();
+      const astAgent = createASTAgent(claudeClient, await mcpClient.getTools());
       const interval = setInterval(() => {
         const response: IResponse = {
           status: 'Nyandom message from server~!',

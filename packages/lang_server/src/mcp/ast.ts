@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import http from 'node:http';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { WebSocketServerTransport } from './websocket.js';
@@ -16,16 +14,12 @@ import { lintCommand, lintTool } from './capabilities/linter/lint.js';
 //const CodeRunSnippetSchema = z.any();
 //const GetTreeSchema = z.any();
 
-const args = process.argv.slice(1);
-
-if (args.length === 0 || !args[1]) {
-  console.error('Usage: mcp-ast <repo-folder>');
-  process.exit(1);
-}
-
-const logger = new Logger();
-
-logger.debug('test');
+//const args = process.argv.slice(1);
+//
+//if (args.length === 0 || !args[1]) {
+//  console.error('Usage: mcp-ast <repo-folder>');
+//  process.exit(1);
+//}
 
 const server = new Server(
   {
@@ -80,13 +74,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 const commands: Record<string, (args: any, options: { server: any; logger: any }) => Promise<any>> =
-{
-  get_project_files: getProjectFilesCommand,
-  get_file_content: getFileContentCommand,
-  summarize_files_content: summarizeFilesCommand,
-  insert_code: insertCodeCommand,
-  lint_file: lintCommand,
-};
+  {
+    get_project_files: getProjectFilesCommand,
+    get_file_content: getFileContentCommand,
+    summarize_files_content: summarizeFilesCommand,
+    insert_code: insertCodeCommand,
+    lint_file: lintCommand,
+  };
 
 //@ts-ignore
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -148,25 +142,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 //
 //});
 
-let transport: WebSocketServerTransport;
-const app = http.createServer(async (req, res) => {
-  if (req.method === 'GET' && req.url === '/sse') {
-    console.log('Received connection');
-    transport = new WebSocketServerTransport(3001);
-    await server.connect(transport);
-
-    server.onclose = async () => {
-      await server.close();
-      process.exit(0);
-    };
-  } else if (req.method === 'POST' && req.url === '/message') {
-    console.log('Received message');
-    await transport.handleMessage(req, res);
-  } else {
-    res.writeHead(404);
-    res.end();
-  }
-});
+const app = http.createServer();
+const logger = new Logger(app);
+const transport = new WebSocketServerTransport(app, logger);
+transport.start();
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

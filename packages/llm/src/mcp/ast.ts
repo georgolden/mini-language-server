@@ -1,25 +1,11 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
+import { WebSocketClientTransport } from '@modelcontextprotocol/sdk/client/websocket.js';
 import {
   CallToolResultSchema,
   ListToolsResultSchema,
   CreateMessageRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import type { Tool, Agent } from '../llms/agent.js';
-
-const transport = new SSEClientTransport(new URL('localhost:3001'));
-
-const client = new Client(
-  {
-    name: 'ast-client',
-    version: '1.0.0',
-  },
-  {
-    capabilities: {
-      sampling: {},
-    },
-  },
-);
 
 export const registerSamplings = (agent: Agent) => {
   //@ts-ignore
@@ -42,7 +28,7 @@ export const registerSamplings = (agent: Agent) => {
   });
 };
 
-export const getTools = async (): Promise<Tool[]> => {
+const getTools = async (client): Promise<Tool[]> => {
   return (
     await client.request(
       {
@@ -79,6 +65,24 @@ export const getTools = async (): Promise<Tool[]> => {
   }));
 };
 
-client.connect(transport).then(async () => {
-  //console.log(JSON.stringify(await getTools()));
-});
+export const initializeMCPClient = async () => {
+  const transport = new WebSocketClientTransport(new URL('ws://localhost:3001/ws'));
+  const client = new Client(
+    {
+      name: 'ast-client',
+      version: '1.0.0',
+    },
+    {
+      capabilities: {
+        sampling: {},
+      },
+    },
+  );
+
+  await client.connect(transport);
+  //registerSamplings(agent);
+  return {
+    client,
+    getTools: async () => await getTools(client),
+  };
+};

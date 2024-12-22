@@ -1,20 +1,24 @@
 import { type WebSocket, WebSocketServer } from 'ws';
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
+import type { Logger } from '../logger/SocketLogger.js';
+import type { Server } from 'node:http';
 import { randomUUID } from 'node:crypto';
 
 export class WebSocketServerTransport implements Transport {
   private _wss?: WebSocketServer;
   private _ws?: WebSocket;
   private _sessionId: string;
+  private logger: Logger;
 
   onclose?: () => void;
   onerror?: (error: Error) => void;
   onmessage?: (message: JSONRPCMessage) => void;
 
-  constructor(port: number) {
+  constructor(server: Server, logger: Logger) {
     this._sessionId = randomUUID();
-    this._wss = new WebSocketServer({ port });
+    this._wss = new WebSocketServer({ server, path: '/ws' });
+    this.logger = logger;
   }
 
   async start(): Promise<void> {
@@ -26,21 +30,26 @@ export class WebSocketServerTransport implements Transport {
 
       this._wss.on('connection', (ws) => {
         this._ws = ws;
+        this.logger.info('New client connected! ^_^');
 
         ws.on('message', async (data) => {
           try {
             const message = JSON.parse(data.toString());
+            this.logger.debug(message);
             await this.handleMessage(message);
           } catch (error) {
+            this.logger.error(error);
             this.onerror?.(error as Error);
           }
         });
 
         ws.on('close', () => {
+          this.logger.info('Client disconnected >_<');
           this.onclose?.();
         });
 
         ws.on('error', (error) => {
+          this.logger.error(error);
           this.onerror?.(error);
         });
 
@@ -48,6 +57,7 @@ export class WebSocketServerTransport implements Transport {
       });
 
       this._wss.on('error', (error) => {
+        this.logger.error(error);
         reject(error);
       });
     });
