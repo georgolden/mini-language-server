@@ -38,6 +38,7 @@ export class WebSocketServerTransport implements Transport {
           try {
             const message = JSON.parse(data.toString());
             this.logger?.debug(message);
+            console.log(message);
             await this.handleMessage(message);
           } catch (error) {
             this.logger?.error(error);

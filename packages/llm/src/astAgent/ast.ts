@@ -1,8 +1,7 @@
 import { ClaudeEnhancedAgent } from '../llms/claude.js';
 import { registerSamplings } from '../mcp/ast.js';
 
-export const createASTAgent = async (client, tools) => {
-
+export const createASTAgent = async (client, tools, mcpClient) => {
   const agent = new ClaudeEnhancedAgent({
     systemPrompt:
       'You are a code-focused AI assistant. Follow this exact tool usage sequence: ' +
@@ -29,6 +28,7 @@ export const createASTAgent = async (client, tools) => {
       client,
       simpleModel: true,
     }),
+    mcpClient,
   );
 
   return {

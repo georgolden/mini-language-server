@@ -7,7 +7,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import type { Tool, Agent } from '../llms/agent.js';
 
-export const registerSamplings = (agent: Agent) => {
+export const registerSamplings = (agent: Agent, client: Client) => {
   //@ts-ignore
   client.setRequestHandler(CreateMessageRequestSchema, async ({ method, params }) => {
     if (method === 'sampling/createMessage') {
@@ -79,7 +79,9 @@ export const initializeMCPClient = async () => {
     },
   );
 
-  await client.connect(transport)
+  console.log(123);
+  await client.connect(transport);
+  console.log(123);
 
   console.log(
     'RESPONSE:',

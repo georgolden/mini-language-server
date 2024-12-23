@@ -44,25 +44,23 @@ const start = async () => {
 server.register(async (fastify) => {
   fastify.get('/ws', { websocket: true }, async (connection, req) => {
     console.log('ws con');
-    const claudeClient = createClaudeClient(process.env.ANTHROPIC_API);
 
+    const claudeClient = createClaudeClient(process.env.ANTHROPIC_API);
     const mcpClient = await initializeMCPClient();
-    const astAgent = createASTAgent(claudeClient, await getTools(mcpClient));
+    console.log(mcpClient);
+    const astAgent = createASTAgent(claudeClient, await getTools(mcpClient), mcpClient);
     connection.on('open', console.log);
     connection.on('message', async (message: string) => {
       fastify.log.info(`WebSocket message received: ${message}`);
       console.log('TOOLS: ', await getTools(mcpClient));
-      const interval = setInterval(() => {
-        const response: IResponse = {
-          status: 'Nyandom message from server~!',
-          timestamp: Date.now(),
-        };
-        connection.send(JSON.stringify(response));
-      }, 5000);
+      const response: IResponse = {
+        role: 'Mochi-tan',
+        content: 'Nyanpasu!!! message from server~!',
+        timestamp: Date.now(),
+      };
+      connection.send(JSON.stringify(response));
 
-      connection.on('close', () => {
-        clearInterval(interval);
-      });
+      connection.on('close', () => {});
     });
   });
 });

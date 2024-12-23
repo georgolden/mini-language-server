@@ -109,7 +109,7 @@ const KawaiiChat = ({ onSendMessage, messages }: KawaiiChatProps) => {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 bg-white dark:bg-gray-800 shadow-lg">
+      <form onSubmit={handleSubmit} className="p-4 bg-pink-200 dark:bg-gray-800 shadow-lg">
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}
