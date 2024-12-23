@@ -42,6 +42,7 @@ function ChatRoute() {
 
   const handleSendMessage = (content: string) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log(content)
       wsRef.current.send(
         JSON.stringify({
           message: content,

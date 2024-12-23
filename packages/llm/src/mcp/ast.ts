@@ -28,7 +28,7 @@ export const registerSamplings = (agent: Agent) => {
   });
 };
 
-const getTools = async (client): Promise<Tool[]> => {
+export const getTools = async (client: Client): Promise<Tool[]> => {
   return (
     await client.request(
       {
@@ -66,7 +66,7 @@ const getTools = async (client): Promise<Tool[]> => {
 };
 
 export const initializeMCPClient = async () => {
-  const transport = new WebSocketClientTransport(new URL('ws://localhost:3001/ws'));
+  const transport = new WebSocketClientTransport(new URL('ws://localhost:3001'));
   const client = new Client(
     {
       name: 'ast-client',
@@ -79,10 +79,18 @@ export const initializeMCPClient = async () => {
     },
   );
 
-  await client.connect(transport);
+  await client.connect(transport)
+
+  console.log(
+    'RESPONSE:',
+    await client.request(
+      {
+        method: 'tools/list',
+        params: {},
+      },
+      ListToolsResultSchema,
+    ),
+  );
   //registerSamplings(agent);
-  return {
-    client,
-    getTools: async () => await getTools(client),
-  };
+  return client;
 };

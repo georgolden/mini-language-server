@@ -74,13 +74,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 const commands: Record<string, (args: any, options: { server: any; logger: any }) => Promise<any>> =
-{
-  get_project_files: getProjectFilesCommand,
-  get_file_content: getFileContentCommand,
-  summarize_files_content: summarizeFilesCommand,
-  insert_code: insertCodeCommand,
-  lint_file: lintCommand,
-};
+  {
+    get_project_files: getProjectFilesCommand,
+    get_file_content: getFileContentCommand,
+    summarize_files_content: summarizeFilesCommand,
+    insert_code: insertCodeCommand,
+    lint_file: lintCommand,
+  };
 
 //@ts-ignore
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -149,7 +149,7 @@ const transport = new WebSocketServerTransport(
 
   //logger
 );
-transport.start();
+server.connect(transport);
 
 //const PORT = process.env.PORT || 3001;
 //app.listen(PORT, () => {
