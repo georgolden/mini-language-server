@@ -90,7 +90,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   if (!command) throw new Error('unknown command');
 
-  return await command(args, { server, logger });
+  return await command(args, { server });
 
   switch (name) {
     case 'lint_file': {

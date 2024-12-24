@@ -73,10 +73,10 @@ const KawaiiChat = ({ onSendMessage, messages }: KawaiiChatProps) => {
   };
 
   return (
-    <div className="flex flex-col rounded-2xl overflow-hidden h-full max-w-3xl mx-auto bg-pink-50 dark:bg-gray-900">
+    <div className="flex flex-col dark:text-white rounded-2xl overflow-hidden h-full max-w-3xl mx-auto bg-pink-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-pink-200  dark:bg-purple-900 p-4 text-center shadow-md">
-        <h1 className="text-2xl font-bold text-pink-700 dark:text-pink-300">
+      <div className="bg-pink-200  dark:bg-purple-800 p-4 text-center shadow-md">
+        <h1 className="text-2xl font-bold text-pink-700 dark:text-pink-100">
           Mochi-chan's Chatroom ٩(◕‿◕｡)۶
         </h1>
       </div>
@@ -89,19 +89,21 @@ const KawaiiChat = ({ onSendMessage, messages }: KawaiiChatProps) => {
             className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}
           >
             <div
-              className={`max-w-[80%] px-4 py-2 rounded-2xl ${
+              className={`max-w-[80%] flex flex-col gap-2 px-4 py-2 rounded-2xl ${
                 message.role === 'user'
-                  ? 'bg-pink-200 dark:bg-pink-800 rounded-tr-sm'
-                  : 'bg-white dark:bg-gray-800 rounded-tl-sm'
+                  ? 'bg-pink-200 dark:bg-purple-800 rounded-tr-sm'
+                  : 'bg-white dark:bg-gray-700 rounded-tl-sm'
               }`}
             >
-              <div className="text-sm font-medium mb-1">
-                {message.role === 'user' ? 'Onii-chan' : 'Mochi-chan'}
+              <div className="flex w-full gap-4 items-center justify-between">
+                <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                  {message.role === 'user' ? 'Onii-chan' : 'Mochi-chan'}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {formatTimestamp(message.timestamp)}
+                </div>
               </div>
               <div className="break-words">{renderContent(message?.content)}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {formatTimestamp(message.timestamp)}
-              </div>
             </div>
           </div>
         ))}

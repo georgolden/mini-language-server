@@ -2,8 +2,10 @@ import fastify from 'fastify';
 import websocketPlugin from '@fastify/websocket';
 import { createClaudeClient } from './llms/claude.js';
 import { createASTAgent } from './astAgent/ast.js';
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import { getTools, initializeMCPClient } from './mcp/ast.js';
+
+dotenv.config();
 
 const server = fastify({ logger: true, disableRequestLogging: true });
 server.register(websocketPlugin);
@@ -46,16 +48,18 @@ server.register(async (fastify) => {
     console.log('ws con');
 
     const claudeClient = createClaudeClient(process.env.ANTHROPIC_API);
+    console.log('ENV: ', process.env);
     const mcpClient = await initializeMCPClient();
-    console.log(mcpClient);
-    const astAgent = createASTAgent(claudeClient, await getTools(mcpClient), mcpClient);
+    const astAgent = await createASTAgent(claudeClient, await getTools(mcpClient), mcpClient);
     connection.on('open', console.log);
     connection.on('message', async (message: string) => {
-      fastify.log.info(`WebSocket message received: ${message}`);
-      console.log('TOOLS: ', await getTools(mcpClient));
+      console.log(`WebSocket message received: ${typeof message}`);
+      const request = JSON.parse(message);
+      const responseMessage = await astAgent.sendMessage(request.message);
+      console.log(`LLM: ${responseMessage}`);
       const response: IResponse = {
         role: 'Mochi-tan',
-        content: 'Nyanpasu!!! message from server~!',
+        content: responseMessage,
         timestamp: Date.now(),
       };
       connection.send(JSON.stringify(response));

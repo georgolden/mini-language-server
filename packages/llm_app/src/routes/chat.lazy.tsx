@@ -20,7 +20,7 @@ function ChatRoute() {
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log(data)
+      console.log()
 
       setMessages((prev) => [
         ...prev,

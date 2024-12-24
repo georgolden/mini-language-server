@@ -19,7 +19,7 @@ export const summarizeFilesTool = {
   inputSchema: zodToJsonSchema(SummarizeFilesSchema),
 };
 
-export const summarizeFilesCommand = async (args, { server, logger }) => {
+export const summarizeFilesCommand = async (args, { server }) => {
   const { path } = args ?? { path: '' };
 
   if (typeof path !== 'string') {
@@ -52,7 +52,7 @@ export const summarizeFilesCommand = async (args, { server, logger }) => {
       SummarizeRequest,
     );
 
-    logger.debug(JSON.stringify(summary));
+    //logger.debug(JSON.stringify(summary));
 
     cache[file] = summary?.content?.text ?? '';
   }

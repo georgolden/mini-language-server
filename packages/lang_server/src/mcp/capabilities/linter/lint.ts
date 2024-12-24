@@ -26,7 +26,7 @@ export const lintTool = {
   inputSchema: zodToJsonSchema(CodeLintSchema),
 };
 
-export const lintCommand = async (args, { server, logger }) => {
+export const lintCommand = async (args, { server }) => {
   // for now js/ts only
 
   const allFIles = await getAllFiles('./');

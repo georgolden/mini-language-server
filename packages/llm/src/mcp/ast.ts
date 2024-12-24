@@ -83,16 +83,16 @@ export const initializeMCPClient = async () => {
   await client.connect(transport);
   console.log(123);
 
-  console.log(
-    'RESPONSE:',
-    await client.request(
-      {
-        method: 'tools/list',
-        params: {},
-      },
-      ListToolsResultSchema,
-    ),
-  );
+  //console.log(
+  //  'RESPONSE:',
+  //  await client.request(
+  //    {
+  //      method: 'tools/list',
+  //      params: {},
+  //    },
+  //    ListToolsResultSchema,
+  //  ),
+  //);
   //registerSamplings(agent);
   return client;
 };
