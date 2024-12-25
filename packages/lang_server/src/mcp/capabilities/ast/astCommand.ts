@@ -19,6 +19,6 @@ export const getAvailableSymbolsTool = {
 // will be used before llm is trying to adjust any code
 // it will provide context of what can be used in the project
 // can be super bloated so samplings should be integrated
-export const getAvailableSymbols = () => {
+export const getAvailableSymbolsCommand = async (args, options) => {
   return {};
 };

@@ -59,6 +59,7 @@ export class WebSocketServerTransport implements Transport {
 
   async handleMessage(message: unknown): Promise<void> {
     if (this.onmessage) {
+      console.log(message);
       await this.onmessage(message as JSONRPCMessage);
     }
   }

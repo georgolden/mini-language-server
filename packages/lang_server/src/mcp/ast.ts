@@ -5,8 +5,11 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { Logger } from '../logger/SocketLogger.js';
 import { insertCodeCommand, insertCodeTool } from './capabilities/files/insert.js';
 import { getFileContentCommand, getFileContentTool } from './capabilities/files/content.js';
-import { getProjectFilesCommand } from './capabilities/files/files.js';
-import { getAvailableSymbolsTool } from './capabilities/ast/astCommand.js';
+import { getProjectFilesCommand, getProjectFilesTool } from './capabilities/files/files.js';
+import {
+  getAvailableSymbolsCommand,
+  getAvailableSymbolsTool,
+} from './capabilities/ast/astCommand.js';
 import { summarizeFilesCommand, summarizeFilesTool } from './capabilities/files/summary.js';
 import { lintCommand, lintTool } from './capabilities/linter/lint.js';
 
@@ -64,6 +67,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       //    'understanding project architecture.',
       //  inputSchema: zodToJsonSchema(GetTreeSchema),
       //},
+      getProjectFilesTool,
       getAvailableSymbolsTool,
       getFileContentTool,
       summarizeFilesTool,
@@ -76,6 +80,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 const commands: Record<string, (args: any, options: { server: any; logger: any }) => Promise<any>> =
   {
     get_project_files: getProjectFilesCommand,
+    get_available_symbols: getAvailableSymbolsCommand,
     get_file_content: getFileContentCommand,
     summarize_files_content: summarizeFilesCommand,
     insert_code: insertCodeCommand,
