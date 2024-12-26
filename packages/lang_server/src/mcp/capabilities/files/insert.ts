@@ -21,7 +21,7 @@ const InsertCodeSchema = z.object({
     })
     .describe(
       'Position to insert at, if start and end line/character ' +
-        'are equal we just insert code instead of replacing',
+      'are equal we just insert code instead of replacing',
     ),
 });
 
@@ -46,12 +46,24 @@ export const insertCodeTool = {
 
 export const insertCodeCommand = async (input: InsertCodeInput) => {
   try {
-    //const fileContent = await readFile(input.filePath, 'utf-8');
-    //let lines = fileContent.split('\n');
-    //
     const dirPath = path.dirname(input.filePath);
     await mkdir(dirPath, { recursive: true });
 
+    // For empty files or new files, write directly
+    if (input.position.startRow === 0 && input.position.startColumn === 0 && input.replace) {
+      await writeFile(input.filePath, input.code);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: 'Code inserted succesfully',
+          },
+        ],
+      };
+    }
+
+    // Read existing file or create empty
     let fileContent = '';
     try {
       await access(input.filePath);
@@ -62,40 +74,46 @@ export const insertCodeCommand = async (input: InsertCodeInput) => {
 
     let lines = fileContent.split('\n');
 
+    // Ensure we have enough lines
+    while (lines.length <= input.position.startRow) {
+      lines.push('');
+    }
+
+    // Handle insertion at specific position
     if (
       input.position.startRow === input.position.endRow &&
       input.position.startColumn === input.position.endColumn
     ) {
-      const line = lines[input.position.startRow];
-      if (!line) throw new Error('Line is outside file');
+      const line = lines[input.position.startRow] || '';
       const baseIndent = getLineIndentation(line);
 
-      const codeLines = input.code.split('\n').map((line, index) => {
-        return index === 0 ? line : ' '.repeat(baseIndent) + line;
+      const codeLines = input.code.split('\n').map((codeLine, index) => {
+        return index === 0 ? codeLine : ' '.repeat(baseIndent) + codeLine;
       });
 
-      const targetLine = lines[input.position.startRow];
       lines[input.position.startRow] =
-        targetLine?.slice(0, input.position.startColumn) +
+        line.slice(0, input.position.startColumn) +
         codeLines.join('\n') +
-        targetLine?.slice(input.position.startColumn);
-    } else if (input.replace) {
+        line.slice(input.position.startColumn);
+    }
+    // Handle replace mode
+    else if (input.replace) {
       const beforeContent = lines.slice(0, input.position.startRow);
       const afterContent = lines.slice(input.position.endRow + 1);
 
-      const startLineContent = lines[input.position.startRow]?.slice(0, input.position.startColumn);
-      const endLineContent = lines[input.position.endRow]?.slice(input.position.endColumn);
+      const startLine = lines[input.position.startRow] || '';
+      const endLine = lines[input.position.endRow] || '';
 
-      const line = lines[input.position.startRow];
-      if (!line) throw new Error('Line is not within file');
-      const baseIndent = getLineIndentation(line);
+      const baseIndent = getLineIndentation(startLine);
 
-      const newCode = input.code.split('\n').map((line, index) => {
-        if (index === 0) return startLineContent + line;
-        return ' '.repeat(baseIndent) + line;
+      const newCode = input.code.split('\n').map((codeLine, index) => {
+        if (index === 0) return startLine.slice(0, input.position.startColumn) + codeLine;
+        return ' '.repeat(baseIndent) + codeLine;
       });
 
-      newCode[newCode.length - 1] += endLineContent ?? '';
+      if (newCode.length > 0) {
+        newCode[newCode.length - 1] += endLine.slice(input.position.endColumn);
+      }
 
       lines = [...beforeContent, ...newCode, ...afterContent];
     }
@@ -107,14 +125,7 @@ export const insertCodeCommand = async (input: InsertCodeInput) => {
       content: [
         {
           type: 'text',
-          text: JSON.stringify(
-            {
-              success: true,
-              modifiedFile: modifiedContent,
-            },
-            null,
-            2,
-          ),
+          text: 'Code inserted succesfully',
         },
       ],
     };
@@ -123,28 +134,9 @@ export const insertCodeCommand = async (input: InsertCodeInput) => {
       content: [
         {
           type: 'text',
-          text: JSON.stringify(
-            {
-              success: false,
-              error: (error as any)?.message ?? '',
-            },
-            null,
-            2,
-          ),
+          text: 'Error while inserting code',
         },
       ],
     };
   }
 };
-
-insertCodeCommand({
-  code: 'const booba = 1;',
-  filePath: 'test-dir/utils.ts',
-  position: {
-    startRow: 0,
-    startColumn: 0,
-    endRow: 0,
-    endColumn: 100,
-  },
-  replace: true,
-});

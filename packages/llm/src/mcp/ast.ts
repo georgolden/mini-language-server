@@ -11,10 +11,7 @@ export const registerSamplings = (agent: Agent, client: Client) => {
   //@ts-ignore
   client.setRequestHandler(CreateMessageRequestSchema, async ({ method, params }) => {
     if (method === 'sampling/createMessage') {
-      console.log(params.messages[0]?.content.text);
       const response = await agent.sendMessage(params.messages[0]?.content.text as string, false);
-
-      console.log('SAMPLING: ', response);
 
       return {
         content: {
@@ -79,9 +76,7 @@ export const initializeMCPClient = async () => {
     },
   );
 
-  console.log(123);
   await client.connect(transport);
-  console.log(123);
 
   //console.log(
   //  'RESPONSE:',

@@ -45,7 +45,7 @@ export abstract class Agent {
   constructor({
     systemPrompt,
     tools = [],
-    memoryWindow = 10,
+    memoryWindow = 100,
   }: { systemPrompt?: string; tools?: Tool[]; memoryWindow?: number }) {
     this.systemPrompt = systemPrompt ?? '';
     this.tools = tools;

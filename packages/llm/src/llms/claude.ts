@@ -16,7 +16,7 @@ export class ClaudeEnhancedAgent extends Agent {
     systemPrompt,
     client,
     tools = [],
-    memoryWindow = 10,
+    memoryWindow = 100,
     simpleModel = false,
   }: {
     systemPrompt?: string;
