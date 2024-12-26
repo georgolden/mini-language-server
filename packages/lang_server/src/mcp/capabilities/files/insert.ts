@@ -1,4 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
+import path from 'node:path';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { z } from 'zod';
 
@@ -10,7 +11,7 @@ function getLineIndentation(line: string): number {
 const InsertCodeSchema = z.object({
   replace: z.boolean().optional().describe('Position to replace the code'),
   code: z.string().describe('Code to insert'),
-  filePath: z.string().describe('Path to the file'),
+  filePath: z.string().describe('Path to the existing file to insert code to'),
   position: z
     .object({
       startRow: z.number().describe('Start line'),
@@ -38,13 +39,27 @@ export const insertCodeTool = {
     'Inserts or appends code snippets into a specified file at a given position. ' +
     'Supports intelligent code insertion with proper indentation and formatting. ' +
     'Handles multiple programming languages and maintains code structure. ' +
-    'Includes validation to prevent syntax errors from incorrect insertions.',
+    'Includes validation to prevent syntax errors from incorrect insertions. ' +
+    'Can only take existing file as argument.',
   inputSchema: zodToJsonSchema(InsertCodeSchema),
 };
 
-export const insertCodeCommand = async (input: InsertCodeInput): Promise<InsertCodeOutput> => {
+export const insertCodeCommand = async (input: InsertCodeInput) => {
   try {
-    const fileContent = await readFile(input.filePath, 'utf-8');
+    //const fileContent = await readFile(input.filePath, 'utf-8');
+    //let lines = fileContent.split('\n');
+    //
+    const dirPath = path.dirname(input.filePath);
+    await mkdir(dirPath, { recursive: true });
+
+    let fileContent = '';
+    try {
+      await access(input.filePath);
+      fileContent = await readFile(input.filePath, 'utf-8');
+    } catch {
+      await writeFile(input.filePath, '');
+    }
+
     let lines = fileContent.split('\n');
 
     if (
@@ -89,14 +104,35 @@ export const insertCodeCommand = async (input: InsertCodeInput): Promise<InsertC
     await writeFile(input.filePath, modifiedContent);
 
     return {
-      success: true,
-      modifiedFile: modifiedContent,
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(
+            {
+              success: true,
+              modifiedFile: modifiedContent,
+            },
+            null,
+            2,
+          ),
+        },
+      ],
     };
   } catch (error) {
     return {
-      success: false,
-      modifiedFile: '',
-      error: error.message,
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(
+            {
+              success: false,
+              error: (error as any)?.message ?? '',
+            },
+            null,
+            2,
+          ),
+        },
+      ],
     };
   }
 };

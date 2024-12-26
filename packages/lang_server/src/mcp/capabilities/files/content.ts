@@ -16,7 +16,7 @@ export const getFileContentTool = {
 export const getFileContentCommand = async (args) => {
   const { file, path } = args;
 
-  if (!path) {
+  if (!file) {
     throw new Error('No path for get_file_content command!');
   }
 
