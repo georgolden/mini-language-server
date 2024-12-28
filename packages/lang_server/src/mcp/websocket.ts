@@ -8,6 +8,9 @@ export class WebSocketServerTransport implements Transport {
   private _wss?: WebSocketServer;
   private _ws?: WebSocket;
   private _sessionId: string;
+  private _reconnectAttempts = 0;
+  private _maxReconnectAttempts = 5;
+  private _reconnectTimeout = 1000;
 
   onclose?: () => void;
   onerror?: (error: Error) => void;
@@ -16,6 +19,24 @@ export class WebSocketServerTransport implements Transport {
   constructor(port: number) {
     this._sessionId = randomUUID();
     this._wss = new WebSocketServer({ port });
+  }
+
+  private async reconnect(): Promise<void> {
+    if (this._reconnectAttempts >= this._maxReconnectAttempts) {
+      throw new Error('Max reconnection attempts reached');
+    }
+
+    this._reconnectAttempts++;
+    console.log(
+      `Attempting to reconnect (${this._reconnectAttempts}/${this._maxReconnectAttempts})`,
+    );
+
+    try {
+      await this.start();
+      this._reconnectAttempts = 0;
+    } catch (error) {
+      setTimeout(() => this.reconnect(), this._reconnectTimeout * this._reconnectAttempts);
+    }
   }
 
   async start(): Promise<void> {
@@ -40,8 +61,9 @@ export class WebSocketServerTransport implements Transport {
           }
         });
 
-        ws.on('close', () => {
+        ws.on('close', async () => {
           this.onclose?.();
+          await this.reconnect();
         });
 
         ws.on('error', (error) => {

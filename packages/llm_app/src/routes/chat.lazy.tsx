@@ -8,6 +8,7 @@ export const Route = createLazyFileRoute('/chat')({
 
 function ChatRoute() {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [connected, setConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -20,16 +21,25 @@ function ChatRoute() {
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log()
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: data.role,
-          content: data.content,
-          timestamp: new Date(),
-        },
-      ]);
+      if (data.type === 'message') {
+        console.log(data.messages);
+        setMessages((prev) => [
+          ...prev,
+          ...data.messages.map((el) => ({
+            role: el.role,
+            content:
+              typeof el.content === 'string'
+                ? el.content
+                : Array.isArray(el.content)
+                  ? el.content.map((arr) => (arr.text ? arr.text : arr.content)).join('\n')
+                  : '',
+            timestamp: new Date(),
+          })),
+        ]);
+      } else if (data.type === 'mcp-connect') {
+        setConnected(data.connected);
+      }
     };
 
     ws.onerror = (error) => {
@@ -43,27 +53,33 @@ function ChatRoute() {
 
   const handleSendMessage = (content: string) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      console.log(content)
+      console.log(content);
       wsRef.current.send(
         JSON.stringify({
+          type: 'message',
           message: content,
         }),
       );
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'user',
-          content,
-          timestamp: new Date(),
-        },
-      ]);
     }
   };
 
+  const handleConnect = () => {
+    wsRef.current?.send(
+      JSON.stringify({
+        type: 'mcp-connect',
+      }),
+    );
+  };
+
   return (
-    <div className="p-2 h-5/6">
-      <KawaiiChat messages={messages} onSendMessage={handleSendMessage} />
+    <div className="flex mx-auto w-7/12 gap-12 p-2 h-5/6">
+      <KawaiiChat messages={messages} connected={connected} onSendMessage={handleSendMessage} />
+      <div>
+        <button onClick={handleConnect} className="bg-sky-500 rounded-2xl h-fit p-5" type="button">
+          Connect
+        </button>
+        <p>{connected ? 'Connected nya!!' : 'Disconnected :('}</p>
+      </div>
     </div>
   );
 }

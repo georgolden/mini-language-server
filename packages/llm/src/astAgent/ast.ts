@@ -31,9 +31,7 @@ export const createASTAgent = async (client, tools, mcpClient) => {
     mcpClient,
   );
 
-  return {
-    sendMessage: agent.sendMessage.bind(agent),
-  };
+  return agent;
 };
 
 // i want to try this:

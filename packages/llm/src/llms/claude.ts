@@ -30,6 +30,10 @@ export class ClaudeEnhancedAgent extends Agent {
     this.client = client;
   }
 
+  getMessages() {
+    return this.history;
+  }
+
   formatMessages(messages: Message[]): Anthropic.MessageCreateParamsNonStreaming {
     return {
       model: this.model,

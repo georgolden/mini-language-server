@@ -140,3 +140,13 @@ export async function parseAndTraverseFile(sourceCode: string) {
 
   return simpleTree;
 }
+
+//{
+//  name: 'get_simple_tree',
+//  description:
+//    'Generates a hierarchical representation of all named symbols (functions, ' +
+//    'classes, variables) in the project. Displays relationships, scope levels, ' +
+//    'and symbol types in a tree structure. Essential for code navigation and ' +
+//    'understanding project architecture.',
+//  inputSchema: zodToJsonSchema(GetTreeSchema),
+//},

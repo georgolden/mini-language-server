@@ -9,6 +9,7 @@ export interface Message {
 
 interface KawaiiChatProps {
   messages: Message[];
+  connected: boolean;
   onSendMessage: (message: string) => void;
 }
 
@@ -44,7 +45,7 @@ const renderContent = (content) => {
   });
 };
 
-const KawaiiChat = ({ onSendMessage, messages }: KawaiiChatProps) => {
+const KawaiiChat = ({ onSendMessage, messages, connected }: KawaiiChatProps) => {
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -73,7 +74,7 @@ const KawaiiChat = ({ onSendMessage, messages }: KawaiiChatProps) => {
   };
 
   return (
-    <div className="flex flex-col dark:text-white rounded-2xl overflow-hidden h-full max-w-3xl mx-auto bg-pink-50 dark:bg-gray-900">
+    <div className="flex flex-col dark:text-white rounded-2xl overflow-hidden h-full w-full bg-pink-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-pink-200  dark:bg-purple-800 p-4 text-center shadow-md">
         <h1 className="text-2xl font-bold text-pink-700 dark:text-pink-100">
@@ -114,15 +115,16 @@ const KawaiiChat = ({ onSendMessage, messages }: KawaiiChatProps) => {
       <form onSubmit={handleSubmit} className="p-4 bg-pink-200 dark:bg-gray-800 shadow-lg">
         <div className="flex items-center gap-2">
           <input
+            disabled={!connected}
             ref={inputRef}
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="Type your message here, onii-chan! (◕‿◕✿)"
             className="flex-1 px-4 py-2 rounded-full border-2 border-pink-200 
-                     dark:border-purple-700 dark:bg-gray-900 dark:text-white
+                     dark:border-purple-700 dark:bg-gray-900 dark:text-red
                      focus:outline-none focus:border-pink-400 dark:focus:border-purple-500
-                     transition-colors"
+                     transition-colors dark:disabled:placeholder-gray-600"
           />
           <button
             type="submit"
