@@ -4,7 +4,10 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { insertCodeCommand, insertCodeTool } from './capabilities/files/insert.js';
 import { getFileContentCommand, getFileContentTool } from './capabilities/files/content.js';
 import { getProjectFilesCommand, getProjectFilesTool } from './capabilities/files/files.js';
-import { getAvailableSymbolsCommand, getAvailableSymbolsTool } from './capabilities/ast/astCommand.js';
+import {
+  getAvailableSymbolsCommand,
+  getAvailableSymbolsTool,
+} from './capabilities/ast/astCommand.js';
 import { lintCommand, lintTool } from './capabilities/linter/lint.js';
 
 // Server configuration
@@ -33,13 +36,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 }));
 
 // Command handlers
-const commands: Record<string, (args: any, options: { server: any; logger: any }) => Promise<any>> = {
-  get_project_files: getProjectFilesCommand,
-  get_available_symbols: getAvailableSymbolsCommand,
-  get_file_content: getFileContentCommand,
-  insert_code: insertCodeCommand,
-  lint_file: lintCommand,
-};
+const commands: Record<string, (args: any, options: { server: any; logger: any }) => Promise<any>> =
+  {
+    get_project_files: getProjectFilesCommand,
+    get_available_symbols: getAvailableSymbolsCommand,
+    get_file_content: getFileContentCommand,
+    insert_code: insertCodeCommand,
+    lint_file: lintCommand,
+  };
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;

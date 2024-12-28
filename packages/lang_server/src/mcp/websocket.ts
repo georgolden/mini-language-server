@@ -23,14 +23,14 @@ export class WebSocketServerTransport implements Transport {
     }
 
     this.state = ConnectionState.CONNECTING;
-    
+
     this.wss = new WebSocketServer({ port: this.port });
 
     return new Promise((resolve) => {
       this.wss!.on('connection', (ws) => {
         this.ws = ws;
         this.state = ConnectionState.CONNECTED;
-        
+
         ws.on('message', async (data) => {
           const message = await this.messageHandler.handleMessage(data);
           (this as WSEvents).onmessage?.(message);

@@ -1,4 +1,4 @@
-import { JSONRPCMessage } from "@modelcontextprotocol/sdk/types.js";
+import { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 
 export enum ConnectionState {
   DISCONNECTED,
@@ -14,7 +14,10 @@ export interface WSEvents {
 }
 
 export class WSError extends Error {
-  constructor(message: string, public readonly code: string) {
+  constructor(
+    message: string,
+    public readonly code: string,
+  ) {
     super(message);
     this.name = 'WSError';
   }
