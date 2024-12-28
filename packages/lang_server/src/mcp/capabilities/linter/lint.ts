@@ -4,8 +4,8 @@
 //  -> ask llm to modify command for single file
 //  -> exec and output result
 
+import { IFSManager } from '../../interfaces/FSManager.js';
 import { z } from 'zod';
-import { getAllFiles } from '../files/index.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 const GetLintCommandRequest = z.object({
@@ -26,10 +26,14 @@ export const lintTool = {
   inputSchema: zodToJsonSchema(CodeLintSchema),
 };
 
-export const lintCommand = async (args, { server }) => {
+export const lintCommand = async (
+  { fsManager }: { fsManager: IFSManager },
+  args: unknown,
+  { server }: { server: { request: (params: any, schema: any) => Promise<any> } }
+) => {
   // for now js/ts only
 
-  const allFIles = await getAllFiles('./');
+  const allFIles = await fsManager.getAllFiles('./');
   // prob wont work for multiple package.jsons lul
   const packagejson = allFIles.find((el) => el.includes('package.json'));
 
