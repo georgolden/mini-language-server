@@ -1,110 +1,73 @@
-import { type WebSocket, WebSocketServer } from 'ws';
-import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
-import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
-import type { Server } from 'node:http';
+import { WebSocket, WebSocketServer } from 'ws';
+import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
+import { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import { randomUUID } from 'node:crypto';
+import { ConnectionState, WSError, WSEvents } from './types.js';
+import { MessageHandler } from './MessageHandler.js';
 
 export class WebSocketServerTransport implements Transport {
-  private _wss?: WebSocketServer;
-  private _ws?: WebSocket;
-  private _sessionId: string;
-  private _reconnectAttempts = 0;
-  private _maxReconnectAttempts = 5;
-  private _reconnectTimeout = 1000;
+  private state: ConnectionState = ConnectionState.DISCONNECTED;
+  private wss?: WebSocketServer;
+  private ws?: WebSocket;
+  private readonly sessionId: string;
+  private readonly messageHandler: MessageHandler;
 
-  onclose?: () => void;
-  onerror?: (error: Error) => void;
-  onmessage?: (message: JSONRPCMessage) => void;
-
-  constructor(port: number) {
-    this._sessionId = randomUUID();
-    this._wss = new WebSocketServer({ port });
-  }
-
-  private async reconnect(): Promise<void> {
-    if (this._reconnectAttempts >= this._maxReconnectAttempts) {
-      throw new Error('Max reconnection attempts reached');
-    }
-
-    this._reconnectAttempts++;
-    console.log(
-      `Attempting to reconnect (${this._reconnectAttempts}/${this._maxReconnectAttempts})`,
-    );
-
-    try {
-      await this.start();
-      this._reconnectAttempts = 0;
-    } catch (error) {
-      setTimeout(() => this.reconnect(), this._reconnectTimeout * this._reconnectAttempts);
-    }
+  constructor(private readonly port: number) {
+    this.sessionId = randomUUID();
+    this.messageHandler = new MessageHandler();
   }
 
   async start(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (!this._wss) {
-        reject(new Error('WebSocket server not initialized'));
-        return;
-      }
-      console.log('websocket init');
+    if (this.state !== ConnectionState.DISCONNECTED) {
+      return;
+    }
 
-      this._wss.on('connection', (ws) => {
-        console.log('ABOBA');
-        this._ws = ws;
+    this.state = ConnectionState.CONNECTING;
+    
+    this.wss = new WebSocketServer({ port: this.port });
 
+    return new Promise((resolve) => {
+      this.wss!.on('connection', (ws) => {
+        this.ws = ws;
+        this.state = ConnectionState.CONNECTED;
+        
         ws.on('message', async (data) => {
-          try {
-            const message = JSON.parse(data.toString());
-            console.log(message);
-            await this.handleMessage(message);
-          } catch (error) {
-            this.onerror?.(error as Error);
-          }
+          const message = await this.messageHandler.handleMessage(data);
+          (this as WSEvents).onmessage?.(message);
         });
-
-        ws.on('close', async () => {
-          this.onclose?.();
-          await this.reconnect();
+        ws.on('close', () => {
+          this.state = ConnectionState.DISCONNECTED;
+          (this as WSEvents).onclose?.();
         });
 
         ws.on('error', (error) => {
-          this.onerror?.(error);
+          (this as WSEvents).onerror?.(new WSError(error.message, 'CONNECTION_ERROR'));
         });
 
         resolve();
       });
-
-      this._wss.on('error', (error) => {
-        reject(error);
-      });
     });
-  }
-
-  async handleMessage(message: unknown): Promise<void> {
-    if (this.onmessage) {
-      console.log(message);
-      await this.onmessage(message as JSONRPCMessage);
-    }
   }
 
   async send(message: JSONRPCMessage): Promise<void> {
-    if (!this._ws) {
-      throw new Error('No WebSocket connection established');
+    if (this.state !== ConnectionState.CONNECTED || !this.ws) {
+      throw new WSError('No active connection', 'NO_CONNECTION');
     }
 
-    return new Promise((resolve, reject) => {
-      this._ws!.send(JSON.stringify(message), (error) => {
-        if (error) reject(error);
-        else resolve();
-      });
-    });
+    this.ws.send(JSON.stringify(message));
   }
 
   async close(): Promise<void> {
-    this._ws?.close();
-    this._wss?.close();
+    this.ws?.close();
+    await new Promise<void>((resolve) => this.wss?.close(() => resolve()));
+    this.state = ConnectionState.CLOSED;
   }
 
-  get sessionId(): string {
-    return this._sessionId;
+  getSessionId(): string {
+    return this.sessionId;
+  }
+
+  getState(): ConnectionState {
+    return this.state;
   }
 }
