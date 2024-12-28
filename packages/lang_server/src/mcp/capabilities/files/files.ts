@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { getAllFiles } from './index.js';
+import type { IFSManager } from '../../interfaces/FSManager.js';
 
 const GetProjectFiles = z.object({
   path: z.string().describe('Required! Path to the project directory to list files from'),
@@ -16,8 +16,10 @@ export const getProjectFilesTool = {
   inputSchema: zodToJsonSchema(GetProjectFiles),
 };
 
-export const getProjectFilesCommand = async (args) => {
-  const { path } = args;
+export const getProjectFilesCommand = async (
+  { fsManager }: { fsManager: IFSManager },
+  { path }: { path: string; }
+) => {
 
   if (!path) {
     throw new Error('No path for get_project_files command!');
@@ -27,7 +29,7 @@ export const getProjectFilesCommand = async (args) => {
     content: [
       {
         type: 'text',
-        text: (await getAllFiles(path as string)).join('\n'),
+        text: (await fsManager.getAllFiles(path)).join('\n'),
       },
     ],
   };

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { getFileContent } from './index.js';
+import type { IFSManager } from '../../interfaces/FSManager.js';
 
 const GetFileContent = z.object({
   path: z.string().optional().describe('Optional path to the subdir'),
@@ -13,9 +13,10 @@ export const getFileContentTool = {
   inputSchema: zodToJsonSchema(GetFileContent),
 };
 
-export const getFileContentCommand = async (args) => {
-  const { file, path } = args;
-
+export const getFileContentCommand = async (
+  { fsManager }: { fsManager: IFSManager },
+  { file, path }: { file?: string; path: string }
+) => {
   if (!file) {
     throw new Error('No path for get_file_content command!');
   }
@@ -24,7 +25,7 @@ export const getFileContentCommand = async (args) => {
     content: [
       {
         type: 'text',
-        text: await getFileContent(file, path),
+        text: await fsManager.getFileContent(file, path),
       },
     ],
   };

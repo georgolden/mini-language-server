@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { getAllFiles, getFileContent } from './index.js';
+import type { IFSManager } from '../../interfaces/FSManager.js';
 
 const SummarizeRequest = z.object({
   path: z.string().optional().describe('Optional path to the subdir'),
@@ -19,19 +19,20 @@ export const summarizeFilesTool = {
   inputSchema: zodToJsonSchema(SummarizeFilesSchema),
 };
 
-export const summarizeFilesCommand = async (args, { server }) => {
-  const { path } = args ?? { path: '' };
-
+export const summarizeFilesCommand = async (
+  { fsManager }: { fsManager: IFSManager },
+  { path = '' }: { path: string; }, { server }: any
+) => {
   if (typeof path !== 'string') {
     throw new Error('Argument should be of type string!');
   }
 
-  const files = await getAllFiles(path);
+  const files = await fsManager.getAllFiles(path);
 
   const cache: Record<string, string> = {};
 
   for (const file of files) {
-    const content = await getFileContent(file, path);
+    const content = await fsManager.getFileContent(file, path);
 
     const summary = await server.request(
       {

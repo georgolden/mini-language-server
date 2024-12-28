@@ -9,6 +9,7 @@ import {
   getAvailableSymbolsTool,
 } from './capabilities/ast/astCommand.js';
 import { lintCommand, lintTool } from './capabilities/linter/lint.js';
+import { FSManager } from './FSManager.js';
 
 // Server configuration
 const server = new Server(
@@ -35,14 +36,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   ],
 }));
 
+const fsManager = new FSManager();
+
+const dependencies = { fsManager };
+
 // Command handlers
 const commands: Record<string, (args: any, options: { server: any; logger: any }) => Promise<any>> =
   {
-    get_project_files: getProjectFilesCommand,
-    get_available_symbols: getAvailableSymbolsCommand,
-    get_file_content: getFileContentCommand,
-    insert_code: insertCodeCommand,
-    lint_file: lintCommand,
+    get_project_files: getProjectFilesCommand.bind(null, dependencies),
+    get_available_symbols: getAvailableSymbolsCommand.bind(null, dependencies),
+    get_file_content: getFileContentCommand.bind(null, dependencies),
+    insert_code: insertCodeCommand.bind(null, dependencies),
+    lint_file: lintCommand.bind(null, dependencies),
   };
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
