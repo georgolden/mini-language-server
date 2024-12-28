@@ -6,6 +6,7 @@
   "types": "./dist/src/server.d.ts",
   "type": "module",
   "scripts": {
+    "test": "tap run --disable-coverage",
     "clean": "rimraf dist",
     "compile": "tsc -b",
     "watch": "tsc -b -w",
