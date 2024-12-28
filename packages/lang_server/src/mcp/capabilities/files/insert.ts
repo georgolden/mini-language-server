@@ -21,7 +21,7 @@ const InsertCodeSchema = z.object({
     })
     .describe(
       'Position to insert at, if start and end line/character ' +
-      'are equal we just insert code instead of replacing',
+        'are equal we just insert code instead of replacing',
     ),
 });
 

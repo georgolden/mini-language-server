@@ -11,7 +11,7 @@ export class MessageHandler {
   async handleMessage(data: unknown): Promise<JSONRPCMessage> {
     try {
       const message = JSON.parse(data as string);
-      
+
       if (!this.validateMessage(message)) {
         throw new WSError('Invalid message format', 'INVALID_MESSAGE');
       }
@@ -19,9 +19,7 @@ export class MessageHandler {
       return message;
     } catch (error) {
       const err = error as Error;
-      throw new WSError(
-        `Message parsing failed: ${err.message}`, 
-        'MESSAGE_PARSE_ERROR'
-      );
+      throw new WSError(`Message parsing failed: ${err.message}`, 'MESSAGE_PARSE_ERROR');
     }
-  }}
+  }
+}
