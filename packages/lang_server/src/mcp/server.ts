@@ -4,69 +4,64 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { insertCodeCommand, insertCodeTool } from './capabilities/files/insert.js';
 import { getFileContentCommand, getFileContentTool } from './capabilities/files/content.js';
 import { getProjectFilesCommand, getProjectFilesTool } from './capabilities/files/files.js';
-import {
-  getAvailableSymbolsCommand,
-  getAvailableSymbolsTool,
-} from './capabilities/ast/astCommand.js';
+import { getAvailableSymbolsCommand, getAvailableSymbolsTool } from './capabilities/ast/astCommand.js';
 import { lintCommand, lintTool } from './capabilities/linter/lint.js';
-import { FSManager } from './FSManager.js';
+import type { IFSManager } from './interfaces/FSManager.js';
 
-// Server configuration
-const server = new Server(
-  {
-    name: 'mcp-server',
-    version: '1.0.0',
-  },
-  {
-    capabilities: {
-      tools: {},
-      resources: {},
+export interface MCPServerConfig {
+  wsPort: number;
+  keepAliveInterval: number;
+}
+
+export interface MCPServerDependencies {
+  fsManager: IFSManager;
+}
+
+export const createMCPServer = (config: MCPServerConfig, deps: MCPServerDependencies) => {
+  const server = new Server(
+    {
+      name: 'mcp-server',
+      version: '1.0.0',
     },
-  },
-);
+    {
+      capabilities: {
+        tools: {},
+        resources: {},
+      },
+    },
+  );
 
-// Tool registration
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [
-    getProjectFilesTool,
-    getAvailableSymbolsTool,
-    getFileContentTool,
-    insertCodeTool,
-    lintTool,
-  ],
-}));
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: [
+      getProjectFilesTool,
+      getAvailableSymbolsTool,
+      getFileContentTool,
+      insertCodeTool,
+      lintTool,
+    ],
+  }));
 
-const fsManager = new FSManager();
-
-const dependencies = { fsManager };
-
-// Command handlers
-const commands: Record<string, (args: any, options: { server: any; logger: any }) => Promise<any>> =
-  {
-    get_project_files: getProjectFilesCommand.bind(null, dependencies),
-    get_available_symbols: getAvailableSymbolsCommand.bind(null, dependencies),
-    get_file_content: getFileContentCommand.bind(null, dependencies),
-    insert_code: insertCodeCommand.bind(null, dependencies),
-    lint_file: lintCommand.bind(null, dependencies),
+  const commands = {
+    get_project_files: getProjectFilesCommand.bind(null, deps),
+    get_available_symbols: getAvailableSymbolsCommand.bind(null, deps),
+    get_file_content: getFileContentCommand.bind(null, deps),
+    insert_code: insertCodeCommand.bind(null, deps),
+    lint_file: lintCommand.bind(null, deps),
   };
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
-  const command = commands[name];
-  if (!command) throw new Error('unknown command');
-  const result = await command(args, {
-    server,
-    logger: console,
+  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
+    const { name, arguments: args } = request.params;
+    const command = commands[name as keyof typeof commands];
+    if (!command) throw new Error('unknown command');
+    const result = await command(args, {
+      server,
+    });
+    console.log(result);
+    return { result };
   });
-  console.log(result);
-  return result;
-});
 
-// WebSocket transport setup
-const wsConfig = {
-  port: 3001,
-  keepAliveInterval: 30000,
-};
+  const transport = new WebSocketServerTransport(config.wsPort);
+  server.connect(transport);
 
-const transport = new WebSocketServerTransport(wsConfig.port);
-server.connect(transport);
+  return server;
+}
