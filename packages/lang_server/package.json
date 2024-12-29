@@ -11,7 +11,7 @@
     "compile": "tsc -b",
     "watch": "tsc -b -w",
     "build": "npm run clean && npm run compile",
-    "dev": "tsx --watch ./src/mcp/server.ts ./",
+    "dev": "tsx --watch ./src/mcp/main.ts ./",
     "lint": "biome lint .",
     "format": "biome format . --write",
     "check": "biome check --apply .",

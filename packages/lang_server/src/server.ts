@@ -10,11 +10,13 @@ import {
 } from 'vscode-languageserver/node.js';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { WorkspaceFSManager } from './server/workspace/WorkspaceFSManager.js';
+import { createMCPServer } from './mcp/server.js';
 
 export class AnalysisServer {
   private connection = createConnection(ProposedFeatures.all);
   private documents = new TextDocuments(TextDocument);
   private workspaceManager: WorkspaceFSManager | undefined;
+  private mcpServer: any;
 
   constructor() {
     this.connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
@@ -27,6 +29,12 @@ export class AnalysisServer {
         });
 
         await this.workspaceManager.initialize();
+
+        // Initialize MCP server with workspace manager
+        this.mcpServer = createMCPServer(
+          { wsPort: 3001, keepAliveInterval: 30000 },
+          { fsManager: this.workspaceManager }
+        );
       }
 
       return {

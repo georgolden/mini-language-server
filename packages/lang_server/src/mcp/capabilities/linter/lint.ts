@@ -61,5 +61,4 @@ export const lintCommand = async (
     GetLintCommandRequest,
   );
 
-  console.log(command);
 };
