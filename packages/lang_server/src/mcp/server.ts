@@ -17,7 +17,7 @@ export interface MCPServerDependencies {
   fsManager: IFSManager;
 }
 
-export const createMCPServer = (config: MCPServerConfig, deps: MCPServerDependencies) => {
+export const createMCPServer = (config: MCPServerConfig, dependencies: MCPServerDependencies) => {
   const server = new Server(
     {
       name: 'mcp-server',
@@ -40,24 +40,26 @@ export const createMCPServer = (config: MCPServerConfig, deps: MCPServerDependen
       lintTool,
     ],
   }));
-
-  const commands = {
-    get_project_files: getProjectFilesCommand.bind(null, deps),
-    get_available_symbols: getAvailableSymbolsCommand.bind(null, deps),
-    get_file_content: getFileContentCommand.bind(null, deps),
-    insert_code: insertCodeCommand.bind(null, deps),
-    lint_file: lintCommand.bind(null, deps),
-  };
-
-  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
+  
+  // Command handlers
+  const commands: Record<string, (args: any, options: { server: any; logger: any }) => Promise<any>> =
+    {
+      get_project_files: getProjectFilesCommand.bind(null, dependencies),
+      get_available_symbols: getAvailableSymbolsCommand.bind(null, dependencies),
+      get_file_content: getFileContentCommand.bind(null, dependencies),
+      insert_code: insertCodeCommand.bind(null, dependencies),
+      lint_file: lintCommand.bind(null, dependencies),
+    };
+  
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
-    const command = commands[name as keyof typeof commands];
+    const command = commands[name];
     if (!command) throw new Error('unknown command');
     const result = await command(args, {
       server,
+      logger: console,
     });
-    console.log(result);
-    return { result };
+    return result;
   });
 
   const transport = new WebSocketServerTransport(config.wsPort);
