@@ -4,6 +4,7 @@
 //  -> ask llm to modify command for single file
 //  -> exec and output result
 
+import { ILogger } from '../../interfaces/Logger.js';
 import { IFSManager } from '../../interfaces/FSManager.js';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -27,7 +28,7 @@ export const lintTool = {
 };
 
 export const lintCommand = async (
-  { fsManager }: { fsManager: IFSManager },
+  { fsManager, logger }: { fsManager: IFSManager, logger: ILogger },
   args: unknown,
   { server }: { server: { request: (params: any, schema: any) => Promise<any> } }
 ) => {
@@ -48,7 +49,7 @@ export const lintCommand = async (
               type: 'text',
               text:
                 'Get lint/format command for the project based on the file structure:' +
-                `\n \n <content> \n ${allFIles.map((f) => f.content).join('\n')} \n </content>\n \n ` +
+                `\n \n <content> \n ${allFIles.join('\n')} \n </content>\n \n ` +
                 (packagejson
                   ? 'And the content of package.json: ' + `\n \n <content> \n ${1} \n </content>`
                   : ''),
@@ -61,4 +62,5 @@ export const lintCommand = async (
     GetLintCommandRequest,
   );
 
+  logger.log(command);
 };
