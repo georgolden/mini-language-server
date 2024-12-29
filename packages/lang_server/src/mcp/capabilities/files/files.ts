@@ -29,7 +29,7 @@ export const getProjectFilesCommand = async (
     content: [
       {
         type: 'text',
-        text: (await fsManager.getAllFiles(path)).join('\n'),
+        text: (await fsManager.getAllFiles(path)).map((f) => f.content).join('\n'),
       },
     ],
   };

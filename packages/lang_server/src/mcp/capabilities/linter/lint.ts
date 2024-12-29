@@ -35,7 +35,7 @@ export const lintCommand = async (
 
   const allFIles = await fsManager.getAllFiles('./');
   // prob wont work for multiple package.jsons lul
-  const packagejson = allFIles.find((el) => el.includes('package.json'));
+  const packagejson = allFIles.find((el) => el.fileName === 'package.json');
 
   const command = await server.request(
     {
@@ -48,7 +48,7 @@ export const lintCommand = async (
               type: 'text',
               text:
                 'Get lint/format command for the project based on the file structure:' +
-                `\n \n <content> \n ${allFIles.join('\n')} \n </content>\n \n ` +
+                `\n \n <content> \n ${allFIles.map((f) => f.content).join('\n')} \n </content>\n \n ` +
                 (packagejson
                   ? 'And the content of package.json: ' + `\n \n <content> \n ${1} \n </content>`
                   : ''),

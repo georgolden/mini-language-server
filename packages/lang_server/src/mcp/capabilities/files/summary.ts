@@ -21,19 +21,17 @@ export const summarizeFilesTool = {
 
 export const summarizeFilesCommand = async (
   { fsManager }: { fsManager: IFSManager },
-  { path = '' }: { path: string; }, { server }: any
+  { path = '' }: { path: string; },
+  { server }: any
 ) => {
   if (typeof path !== 'string') {
     throw new Error('Argument should be of type string!');
   }
 
   const files = await fsManager.getAllFiles(path);
-
-  const cache: Record<string, string> = {};
+  const summaries = new Map<string, string>();
 
   for (const file of files) {
-    const content = await fsManager.getFileContent(file, path);
-
     const summary = await server.request(
       {
         method: 'sampling/createMessage',
@@ -43,7 +41,7 @@ export const summarizeFilesCommand = async (
             {
               content: {
                 type: 'text',
-                text: `Summarize the following file content: \n \n <content> \n ${content} \n </content>`,
+                text: `Summarize the following file content: \n \n <content> \n ${file.content} \n </content>`,
               },
               role: 'user',
             },
@@ -53,9 +51,7 @@ export const summarizeFilesCommand = async (
       SummarizeRequest,
     );
 
-    //logger.debug(JSON.stringify(summary));
-
-    cache[file] = summary?.content?.text ?? '';
+    summaries.set(file.path, summary?.content?.text ?? '');
   }
 
   return {
@@ -63,8 +59,8 @@ export const summarizeFilesCommand = async (
       {
         type: 'text',
         text: `Summary of all files in project: \n
-              ${Object.entries(cache)
-                .map(([key, value]) => `${key}: ${value}`)
+              ${Array.from(summaries.entries())
+                .map(([path, summary]) => `${path}: ${summary}`)
                 .join('\n\n')}`,
       },
     ],
