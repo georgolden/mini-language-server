@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { mkdir, writeFile, access } from 'node:fs/promises';
 import path from 'node:path';
 import ignoreLib, { type Ignore } from 'ignore';
-import type { IFSManager } from './interfaces/FSManager.js';
+import type { IFSManager, FileInfo } from './interfaces/FSManager.js';
 
 const ignore = ignoreLib.default;
 
@@ -11,7 +11,7 @@ const readdirAsync = fs.promises.readdir;
 const statAsync = fs.promises.stat;
 
 export class FSManager implements IFSManager {
-  async getAllFiles(dirPath: string, baseDir: string = dirPath): Promise<string[]> {
+  async getAllFiles(dirPath: string, baseDir: string = dirPath): Promise<FileInfo[]> {
     let ig: Ignore;
     try {
       const gitignoreContent = await readFileAsync(path.join(baseDir, '.gitignore'), 'utf8');
@@ -22,8 +22,8 @@ export class FSManager implements IFSManager {
 
     ig.add('.git/**');
 
-    async function crawl(dir: string): Promise<string[]> {
-      const files: string[] = [];
+    async function crawl(dir: string): Promise<FileInfo[]> {
+      const files: FileInfo[] = [];
       const entries = await readdirAsync(dir);
 
       for (const entry of entries) {
@@ -37,7 +37,15 @@ export class FSManager implements IFSManager {
         if (stat.isDirectory()) {
           files.push(...(await crawl(fullPath)));
         } else {
-          files.push(relativePath);
+          const content = await readFileAsync(fullPath, 'utf8');
+          const parsedPath = path.parse(fullPath);
+          files.push({
+            fileName: parsedPath.name,
+            ext: parsedPath.ext,
+            fullName: parsedPath.base,
+            content,
+            path: fullPath,
+          });
         }
       }
 
@@ -47,10 +55,18 @@ export class FSManager implements IFSManager {
     return crawl(dirPath);
   }
 
-  async getFileContent(relativePath: string, dir = ''): Promise<string> {
-    const filePath = path.resolve(dir, relativePath);
-    const content = await readFileAsync(filePath, 'utf8');
-    return content;
+  async getFile(filePath: string, dir: string = ''): Promise<FileInfo> {
+    const fullPath = path.resolve(dir, filePath);
+    const content = await readFileAsync(fullPath, 'utf8');
+    const parsedPath = path.parse(fullPath);
+    
+    return {
+      fileName: parsedPath.name,
+      ext: parsedPath.ext,
+      fullName: parsedPath.base,
+      content,
+      path: fullPath,
+    };
   }
 
   async insertCode(input: {

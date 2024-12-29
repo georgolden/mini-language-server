@@ -25,7 +25,7 @@ export const getFileContentCommand = async (
     content: [
       {
         type: 'text',
-        text: await fsManager.getFileContent(file, path),
+        text: (await fsManager.getFile(file, path)).content,
       },
     ],
   };

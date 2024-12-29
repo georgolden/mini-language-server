@@ -9,19 +9,19 @@ import {
   WatchKind,
 } from 'vscode-languageserver/node.js';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { WorkspaceManager } from './server/workspace/WorkspaceManager.js';
+import { WorkspaceFSManager } from './server/workspace/WorkspaceFSManager.js';
 
 export class AnalysisServer {
   private connection = createConnection(ProposedFeatures.all);
   private documents = new TextDocuments(TextDocument);
-  private workspaceManager: WorkspaceManager | undefined;
+  private workspaceManager: WorkspaceFSManager | undefined;
 
   constructor() {
     this.connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
       this.connection.console.info('Server initializing...');
 
       if (params.workspaceFolders) {
-        this.workspaceManager = new WorkspaceManager({
+        this.workspaceManager = new WorkspaceFSManager({
           connection: this.connection,
           workspaceFolders: params.workspaceFolders,
         });
