@@ -8,6 +8,7 @@ const config = {
 
 const dependencies = {
   fsManager: new FSManager(),
+  logger: console,
 };
 
 const server = createMCPServer(config, dependencies);

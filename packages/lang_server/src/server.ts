@@ -33,7 +33,10 @@ export class AnalysisServer {
         // Initialize MCP server with workspace manager
         this.mcpServer = createMCPServer(
           { wsPort: 3001, keepAliveInterval: 30000 },
-          { fsManager: this.workspaceManager }
+          { 
+            fsManager: this.workspaceManager,
+            logger: this.connection.console,
+          }
         );
       }
 

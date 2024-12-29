@@ -7,6 +7,7 @@ import { getProjectFilesCommand, getProjectFilesTool } from './capabilities/file
 import { getAvailableSymbolsCommand, getAvailableSymbolsTool } from './capabilities/ast/astCommand.js';
 import { lintCommand, lintTool } from './capabilities/linter/lint.js';
 import type { IFSManager } from './interfaces/FSManager.js';
+import type { ILogger } from './interfaces/Logger.js';
 
 export interface MCPServerConfig {
   wsPort: number;
@@ -15,6 +16,7 @@ export interface MCPServerConfig {
 
 export interface MCPServerDependencies {
   fsManager: IFSManager;
+  logger: ILogger;
 }
 
 export const createMCPServer = (config: MCPServerConfig, dependencies: MCPServerDependencies) => {
@@ -57,7 +59,7 @@ export const createMCPServer = (config: MCPServerConfig, dependencies: MCPServer
     if (!command) throw new Error('unknown command');
     const result = await command(args, {
       server,
-      logger: console,
+      logger: dependencies.logger,
     });
     return result;
   });
