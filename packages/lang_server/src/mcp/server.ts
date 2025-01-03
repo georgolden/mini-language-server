@@ -4,8 +4,12 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { insertCodeCommand, insertCodeTool } from './capabilities/files/insert.js';
 import { getFileContentCommand, getFileContentTool } from './capabilities/files/content.js';
 import { getProjectFilesCommand, getProjectFilesTool } from './capabilities/files/files.js';
-import { getAvailableSymbolsCommand, getAvailableSymbolsTool } from './capabilities/ast/astCommand.js';
+import {
+  getAvailableSymbolsCommand,
+  getAvailableSymbolsTool,
+} from './capabilities/ast/astCommand.js';
 import { lintCommand, lintTool } from './capabilities/linter/lint.js';
+import { runCodeSnippetCommand, runCodeSnippetTool } from './capabilities/code-exec/code.js';
 import type { IFSManager } from './interfaces/FSManager.js';
 import type { ILogger } from './interfaces/Logger.js';
 
@@ -40,19 +44,23 @@ export const createMCPServer = (config: MCPServerConfig, dependencies: MCPServer
       getFileContentTool,
       insertCodeTool,
       lintTool,
+      runCodeSnippetTool,
     ],
   }));
-  
+
   // Command handlers
-  const commands: Record<string, (args: any, options: { server: any; logger: any }) => Promise<any>> =
-    {
-      get_project_files: getProjectFilesCommand.bind(null, dependencies),
-      get_available_symbols: getAvailableSymbolsCommand.bind(null, dependencies),
-      get_file_content: getFileContentCommand.bind(null, dependencies),
-      insert_code: insertCodeCommand.bind(null, dependencies),
-      lint_file: lintCommand.bind(null, dependencies),
-    };
-  
+  const commands: Record<
+    string,
+    (args: any, options: { server: any; logger: any }) => Promise<any>
+  > = {
+    get_project_files: getProjectFilesCommand.bind(null, dependencies),
+    get_available_symbols: getAvailableSymbolsCommand.bind(null, dependencies),
+    get_file_content: getFileContentCommand.bind(null, dependencies),
+    insert_code: insertCodeCommand.bind(null, dependencies),
+    lint_file: lintCommand.bind(null, dependencies),
+    run_code_snippet: runCodeSnippetCommand,
+  };
+
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
     const command = commands[name];
@@ -68,4 +76,4 @@ export const createMCPServer = (config: MCPServerConfig, dependencies: MCPServer
   server.connect(transport);
 
   return server;
-}
+};
