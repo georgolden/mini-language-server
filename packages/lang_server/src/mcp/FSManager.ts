@@ -59,7 +59,7 @@ export class FSManager implements IFSManager {
     const fullPath = path.resolve(dir, filePath);
     const content = await readFileAsync(fullPath, 'utf8');
     const parsedPath = path.parse(fullPath);
-    
+
     return {
       fileName: parsedPath.name,
       ext: parsedPath.ext,
@@ -137,6 +137,24 @@ export class FSManager implements IFSManager {
     }
 
     await writeFile(input.filePath, lines.join('\n'));
+  }
+
+  async createFile(filePath: string) {
+    try {
+      await fs.promises.writeFile(filePath, '');
+
+      const parsedPath = path.parse(filePath);
+
+      return {
+        fileName: parsedPath.name,
+        ext: parsedPath.ext,
+        fullName: parsedPath.base,
+        content: '',
+        path: filePath,
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to create file: ${error?.message}`);
+    }
   }
 
   private getLineIndentation(line: string): number {
