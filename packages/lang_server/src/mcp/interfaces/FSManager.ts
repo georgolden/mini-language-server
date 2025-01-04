@@ -9,6 +9,7 @@ export interface FileInfo {
 export interface IFSManager {
   getAllFiles(dirPath?: string, baseDir?: string): Promise<FileInfo[]>;
   getFile(path: string, dir?: string): Promise<FileInfo>;
+  createFile(path: string): Promise<FileInfo>;
   insertCode(input: {
     replace: boolean;
     code: string;
