@@ -7,6 +7,8 @@ import { InputBoxService } from '../services/InputBoxService';
 import { createFileCommands } from '../commands/fileCommands';
 import { createInputBoxCommands } from '../commands/inputBoxCommands';
 import { IService } from '../services/types';
+import { ChatService } from '../services/ChatService';
+import { createChatCommands } from '../commands/chatCommands';
 
 interface CompositionRootDeps {
   logger: ILogger;
@@ -55,16 +57,23 @@ export class CompositionRoot {
         commandService,
       });
 
+      const chatService = new ChatService({
+        logger: this.logger,
+        context: this.context
+      });
+
       // Initialize remaining services
       await fileWatcherService.initialize();
       await languageClientService.initialize();
       await inputBoxService.initialize();
+      await chatService.initialize();
 
       // Register all commands after services are initialized
       const fileCommands = createFileCommands(fileWatcherService);
       const inputBoxCommands = createInputBoxCommands(inputBoxService);
+      const chatCommands = createChatCommands(chatService);
 
-      [...fileCommands, ...inputBoxCommands].forEach((command) => {
+      [...fileCommands, ...inputBoxCommands, ...chatCommands].forEach((command) => {
         commandService.registerCommand(command);
       });
 
@@ -74,6 +83,7 @@ export class CompositionRoot {
         fileWatcherService,
         languageClientService,
         inputBoxService,
+        chatService
       );
     } catch (error) {
       this.logger.error(

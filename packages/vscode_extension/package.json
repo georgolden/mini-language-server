@@ -50,6 +50,16 @@
         "command": "miniLanguageServer.showInputBox",
         "title": "Mini Language Server: Show Input Box",
         "category": "Mini Language Server"
+      },
+      {
+        "command": "miniLanguageServer.openChat",
+        "title": "Open Chat",
+        "category": "Mini Language Server"
+      },
+      {
+        "command": "miniLanguageServer.openMenu",
+        "title": "Open Menu",
+        "category": "Mini Language Server"
       }
     ],
     "keybindings": [
@@ -57,6 +67,11 @@
         "command": "miniLanguageServer.showInputBox",
         "key": "ctrl+shift+i",
         "mac": "cmd+shift+i"
+      },
+      {
+        "command": "miniLanguageServer.openChat",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c"
       }
     ]
   },
