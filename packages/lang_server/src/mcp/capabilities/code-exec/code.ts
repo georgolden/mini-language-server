@@ -1,5 +1,4 @@
 import { spawn } from 'node:child_process';
-import { json } from 'node:stream/consumers';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 

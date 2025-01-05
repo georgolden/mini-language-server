@@ -25,8 +25,8 @@ const renderContent = (content) => {
         return <div key={index}>{item.text}</div>;
       case 'tool_use':
         return (
-          <div key={index} className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg my-1">
-            <div className="text-xs text-purple-600 dark:text-purple-300">
+          <div key={index} className="bg-pink-100 dark:bg-pink-900 p-2 rounded-lg my-1">
+            <div className="text-xs text-pink-600 dark:text-pink-300">
               Using tool: {item.name}
             </div>
             <pre className="text-xs overflow-x-auto">{JSON.stringify(item.input, null, 2)}</pre>
@@ -76,7 +76,7 @@ const KawaiiChat = ({ onSendMessage, messages, connected }: KawaiiChatProps) => 
   return (
     <div className="flex flex-col dark:text-white rounded-2xl overflow-hidden h-full w-full bg-pink-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-pink-200  dark:bg-purple-800 p-4 text-center shadow-md">
+      <div className="bg-pink-200  dark:bg-pink-800 p-4 text-center shadow-md">
         <h1 className="text-2xl font-bold text-pink-700 dark:text-pink-100">
           Mochi-chan's Chatroom ٩(◕‿◕｡)۶
         </h1>
@@ -92,7 +92,7 @@ const KawaiiChat = ({ onSendMessage, messages, connected }: KawaiiChatProps) => 
             <div
               className={`max-w-[80%] flex flex-col gap-2 px-4 py-2 rounded-2xl ${
                 message.role === 'user'
-                  ? 'bg-pink-200 dark:bg-purple-800 rounded-tr-sm'
+                  ? 'bg-pink-200 dark:bg-pink-800 rounded-tr-sm'
                   : 'bg-white dark:bg-gray-700 rounded-tl-sm'
               }`}
             >
@@ -122,14 +122,14 @@ const KawaiiChat = ({ onSendMessage, messages, connected }: KawaiiChatProps) => 
             onChange={(e) => setInputText(e.target.value)}
             placeholder="Type your message here, onii-chan! (◕‿◕✿)"
             className="flex-1 px-4 py-2 rounded-full border-2 border-pink-200 
-                     dark:border-purple-700 dark:bg-gray-900 dark:text-red
-                     focus:outline-none focus:border-pink-400 dark:focus:border-purple-500
+                     dark:border-pink-700 dark:bg-gray-900 dark:text-red
+                     focus:outline-none focus:border-pink-400 dark:focus:border-pink-500
                      transition-colors dark:disabled:placeholder-gray-600"
           />
           <button
             type="submit"
-            className="bg-pink-400 dark:bg-purple-600 text-white p-2 rounded-full
-                     hover:bg-pink-500 dark:hover:bg-purple-700 transition-colors
+            className="bg-pink-400 dark:bg-pink-600 text-white p-2 rounded-full
+                     hover:bg-pink-500 dark:hover:bg-pink-700 transition-colors
                      disabled:opacity-50"
             disabled={!inputText.trim()}
           >
