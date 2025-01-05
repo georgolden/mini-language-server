@@ -2,6 +2,7 @@ import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { ThemeProvider, ThemeToggle } from '../components/theme';
 import { Heart } from 'lucide-react';
+import { AuthButtons } from '../components/AuthButtons';
 
 export const Route = createRootRoute({
   component: () => (
@@ -45,6 +46,7 @@ export const Route = createRootRoute({
 
             {/* Theme Toggle */}
             <div className="ml-auto">
+              <AuthButtons />
               <ThemeToggle />
             </div>
           </div>

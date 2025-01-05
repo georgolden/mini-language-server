@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Loader2 } from 'lucide-react';
 import KawaiiChat from './chat';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const KawaiiChatManager = () => {
   const [chats, setChats] = useState([]);
@@ -57,8 +58,15 @@ const KawaiiChatManager = () => {
     };
   }, []);
 
+  const { getAccessTokenSilently } = useAuth0();
+
   const fetchChats = async () => {
-    const response = await fetch('/api/chats');
+    const token = await getAccessTokenSilently();
+    const response = await fetch('/api/chats', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     const data = await response.json();
     setChats(data);
   };
