@@ -11,7 +11,7 @@ const JSONViewer = ({ data, level = 0 }) => {
         className={`
         ${typeof data === 'string' ? 'text-green-600 dark:text-green-400' : ''}
         ${typeof data === 'number' ? 'text-blue-600 dark:text-blue-400' : ''}
-        ${typeof data === 'boolean' ? 'text-purple-600 dark:text-purple-400' : ''}
+        ${typeof data === 'boolean' ? 'text-pink-600 dark:text-pink-400' : ''}
         ${data === null ? 'text-gray-600 dark:text-gray-400' : ''}
       `}
       >
@@ -122,7 +122,7 @@ const KawaiiLogger = () => {
       <div
         className={`
         inline-block px-4 py-2 rounded-2xl text-sm font-bold mb-5
-        ${connectionStatus === 'connected' ? 'bg-green-200' : 'bg-red-200'}
+        ${connectionStatus === 'connected' ? 'bg-green-200 dark:bg-green-700' : 'bg-red-200 dark:bg-red-700'}
       `}
       >
         {connectionStatus === 'connected'
@@ -133,7 +133,7 @@ const KawaiiLogger = () => {
       <div
         ref={logsContainerRef}
         className="bg-white dark:bg-gray-800 border-2 border-dashed border-pink-300 
-                 dark:border-purple-400 p-4 rounded-2xl h-[70vh] overflow-auto mb-5 
+                 dark:border-pink-700 p-4 rounded-2xl h-[70vh] overflow-auto mb-5 
                  text-base leading-relaxed shadow-lg"
       >
         {logs.length === 0 ? (
@@ -167,7 +167,7 @@ const KawaiiLogger = () => {
       <button
         type="button"
         onClick={clearLogs}
-        className="bg-pink-300 dark:bg-purple-500 text-white px-6 py-3 
+        className="bg-pink-300 dark:bg-pink-700 text-white px-6 py-3 
                  rounded-full text-sm font-bold shadow-lg hover:scale-110 
                  transition-transform duration-200 focus:outline-none"
       >

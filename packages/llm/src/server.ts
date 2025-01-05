@@ -19,6 +19,8 @@ const initDB = async () => {
     CREATE TABLE IF NOT EXISTS chats (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
+      type TEXT NOT NULL,
+      metadata TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
