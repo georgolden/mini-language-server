@@ -6,6 +6,9 @@ import dotenv from 'dotenv';
 import { getTools, initializeMCPClient } from './mcp/ast.js';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
+import { initTRPC } from '@trpc/server';
+import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
+import { z } from 'zod';
 
 dotenv.config();
 
@@ -39,21 +42,55 @@ const initDB = async () => {
 
 const db = await initDB();
 
+type Context = {
+  db: Awaited<ReturnType<typeof initDB>>;
+  agents: Map<number, ClaudeEnhancedAgent>;
+};
+
+const t = initTRPC.context<Context>().create();
+
 const server = fastify({ logger: true, disableRequestLogging: true });
 server.register(websocketPlugin);
 
-server.post('/chats', async (request, reply) => {
-  const { title } = request.body as { title: string };
-  const result = await db.run('INSERT INTO chats (title) VALUES (?)', title);
-  return { id: result.lastID, title };
+const appRouter = t.router({
+  createChat: t.procedure
+    .input(
+      z.object({
+        title: z.string(),
+        type: z.string(),
+        description: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const metadata = JSON.stringify({ description: input.description });
+      const result = await ctx.db.run(
+        'INSERT INTO chats (title, type, metadata) VALUES (?)',
+        input.title,
+        input.type,
+        metadata,
+      );
+      return { id: result.lastID, title: input.title };
+    }),
+  getChats: t.procedure.query(async ({ ctx }) => {
+    return ctx.db.all('SELECT * FROM chats ORDER BY created_at DESC');
+  }),
 });
-server.get('/chats', async () => {
-  return db.all('SELECT * FROM chats ORDER BY created_at DESC');
-});
-server.get('/chats/:id/messages', async (request) => {
-  const { id } = request.params as { id: string };
-  return db.all('SELECT * FROM messages WHERE chat_id = ? ORDER BY timestamp', id);
-});
+
+export type AppRouter = typeof appRouter;
+
+//server.post('/chats', async (request, reply) => {
+//  const { title, type, description } = request.body as any;
+//  const metadata = JSON.stringify({ description });
+//  const result = await db.run('INSERT INTO chats (title, type) VALUES (?)', title, type, metadata);
+//  return { id: result.lastID, title };
+//});
+//server.get('/chats', async () => {
+//  return db.all('SELECT * FROM chats ORDER BY created_at DESC');
+//});
+//server.get('/chats/:id/messages', async (request) => {
+//  const { id } = request.params as { id: string };
+//  return db.all('SELECT * FROM messages WHERE chat_id = ? ORDER BY timestamp', id);
+//});
 
 const agents = new Map<number, ClaudeEnhancedAgent>();
 
@@ -155,6 +192,21 @@ server.register(async (fastify) => {
       }
     });
   });
+});
+
+server.register(fastifyTRPCPlugin, {
+  prefix: '/trpc',
+  useWSS: true,
+  trpcOptions: {
+    router: appRouter,
+    createContext: async () => {
+      const db = await initDB();
+      return {
+        db,
+        agents: new Map<number, ClaudeEnhancedAgent>(),
+      };
+    },
+  },
 });
 
 // Start server
