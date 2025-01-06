@@ -42,7 +42,6 @@ export const Route = createRootRoute({
                 Chat ♥
               </Link>
             </div>
-
             {/* Theme Toggle */}
             <div className="ml-auto">
               <ThemeToggle />
