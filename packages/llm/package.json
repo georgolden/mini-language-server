@@ -8,7 +8,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "compile": "tsc -b",
-    "dev": "tsx --watch src/server.ts",
+    "dev": "bun --watch src/server/index.ts",
     "watch": "tsc -b -w",
     "build": "npm run clean && npm run compile",
     "lint": "biome lint .",
@@ -17,6 +17,9 @@
   },
   "exports": {
     "default": "./src/index.ts"
+  },
+  "prisma": {
+    "schema": "src/server/prisma/schema.prisma"
   },
   "keywords": [],
   "author": "",
