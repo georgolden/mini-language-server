@@ -1,131 +1,69 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Plus, Loader2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import KawaiiChat from './chat';
 import Modal from './modal';
+import { trpc } from '../trpc';
 
 const KawaiiChatManager = () => {
-  const [chats, setChats] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState('');
   const [newChatDescription, setNewChatDescription] = useState('');
-  const [workspaceType, setWorkspaceType] = useState('');
+  const [workspaceType, setWorkspaceType] = useState('default');
   const [messages, setMessages] = useState([]);
   const [connected, setConnected] = useState(false);
   const [isModalOpen, setModalOpen] = useState(false);
-  const wsRef = React.useRef<WebSocket>(null!);
 
-  React.useEffect(() => {
-    const ws = new WebSocket('ws://localhost:3002/ws');
-    console.log(ws);
-    wsRef.current = ws;
+  const queryClient = useQueryClient();
 
-    ws.onopen = () => {
-      console.log('Connected to server nya~! ٩(◕‿◕｡)۶');
-      fetchChats();
-    };
+  const { data: chats = [] } = trpc.getChats.useQuery();
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      switch (data.type) {
-        case 'message':
-          setMessages((prev) => [
-            ...prev,
-            ...data.messages.map((el) => ({
-              role: el.role,
-              content:
-                typeof el.content === 'string'
-                  ? el.content
-                  : Array.isArray(el.content)
-                    ? el.content.map((arr) => (arr.text ? arr.text : arr.content)).join('\n')
-                    : '',
-              timestamp: new Date(data.timestamp),
-            })),
-          ]);
-          break;
-        case 'mcp-connect':
-          setConnected(data.connected);
-          break;
-        case 'chat-history':
-          setMessages(
-            data.messages.map((msg) => ({
-              ...msg,
-              timestamp: new Date(msg.timestamp),
-            })),
-          );
-          break;
-      }
-    };
+  const createChatMutation = trpc.createChat.useMutation({
+    onSuccess: (newChat) => {
+      setSelectedChatId(newChat.id);
+      handleSelectChat(newChat.id);
+      setModalOpen(false);
+      // Invalidate chats query to refetch
+      queryClient.invalidateQueries(['getChats']);
+    },
+  });
 
-    return () => {
-      ws.close();
-    };
-  }, []);
+  const selectChatMutation = trpc.selectChat.useMutation({
+    onSuccess: () => setConnected(true),
+  });
 
-  const fetchChats = async () => {
-    const response = await fetch('/api/chats');
-    const data = await response.json();
-    setChats(data);
-  };
+  const sendMessageMutation = trpc.sendMessage.useMutation();
 
   const handleCreateChat = async (e) => {
     e.preventDefault();
     if (!newChatTitle.trim()) return;
 
-    setIsCreatingChat(true);
-    try {
-      const response = await fetch('/api/chats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: newChatTitle,
-          type: workspaceType,
-          description: newChatDescription,
-        }),
-      });
-      const newChat = await response.json();
-      setChats((prev) => [newChat, ...prev]);
-      setNewChatTitle('');
-      setSelectedChatId(newChat.id);
-      wsRef.current.send(
-        JSON.stringify({
-          type: 'select-chat',
-          chatId: newChat.id,
-        }),
-      );
-    } finally {
-      setIsCreatingChat(false);
-    }
+    createChatMutation.mutate({
+      title: newChatTitle,
+      type: workspaceType,
+      description: newChatDescription,
+    });
+    setNewChatTitle('');
   };
 
   const handleSelectChat = (chatId) => {
     setSelectedChatId(chatId);
-    wsRef.current.send(
-      JSON.stringify({
-        type: 'select-chat',
-        chatId,
-      }),
-    );
+    selectChatMutation.mutate(chatId);
   };
 
   const handleConnect = () => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(
-        JSON.stringify({
-          type: 'mcp-connect',
-        }),
-      );
+    if (selectedChatId) {
+      selectChatMutation.mutate(selectedChatId);
     }
   };
 
   const handleSendMessage = (content) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN && selectedChatId) {
-      wsRef.current.send(
-        JSON.stringify({
-          type: 'message',
-          message: content,
-        }),
-      );
+    if (selectedChatId && connected) {
+      sendMessageMutation.mutate({
+        chatId: selectedChatId,
+        content,
+      });
     }
   };
 
