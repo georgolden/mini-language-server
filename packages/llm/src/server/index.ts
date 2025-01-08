@@ -42,24 +42,25 @@ const appRouter = t.router({
     });
   }),
 
-  wsConnect: t.procedure.input(z.object({ chatId: z.number() })).subscription(async ({ input }) => {
-    const { chatId } = input;
+  wsConnect: t.procedure.input(z.object({ chatId: z.number() }))
+  .subscription(async function*({ input: { chatId } }) {
     const messages = await prisma.message.findMany({
       where: { chatId },
       orderBy: { timestamp: 'asc' },
     });
 
     // Handle MCP connection
-    const claudeClient = createClaudeClient(process.env.ANTHROPIC_API!);
+    const claudeClient = createClaudeClient(process.env['ANTHROPIC_API']!);
     const mcpClient = await initializeMCPClient();
     const agent = await createASTAgent(claudeClient, await getTools(mcpClient), mcpClient);
     agents.set(chatId, agent);
 
-    return {
+    const res = {
       messages,
       agent,
       mcpClient,
     };
+    yield res;
   }),
 
   sendMessage: t.procedure
