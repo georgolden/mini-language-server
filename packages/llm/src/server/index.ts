@@ -1,23 +1,24 @@
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
-import { initTRPC } from '@trpc/server';
+import { t } from './trpc.js';
 import { z } from 'zod';
 import { prisma } from './db.js';
 import { type ClaudeEnhancedAgent, createClaudeClient } from '../llms/claude.js';
 import { createASTAgent } from '../astAgent/ast.js';
 import { getTools, initializeMCPClient } from '../mcp/ast.js';
 import dotenv from 'dotenv';
+import { createContext } from './context.js';
+import { isAuthed } from './middleware/auth.js';
 
 dotenv.config();
 
 // Initialize tRPC
-const t = initTRPC.create();
-
 const agents = new Map<number, ClaudeEnhancedAgent>();
 
-// Define router
+const protectedProcedure = t.procedure.use(isAuthed);
+// Define router using imported utilities
 const appRouter = t.router({
-  createChat: t.procedure
+  createChat: protectedProcedure
     .input(
       z.object({
         title: z.string(),
@@ -36,13 +37,13 @@ const appRouter = t.router({
       return chat;
     }),
 
-  getChats: t.procedure.query(async () => {
+  getChats: protectedProcedure.query(async () => {
     return prisma.chat.findMany({
       orderBy: { createdAt: 'desc' },
     });
   }),
 
-  wsConnect: t.procedure.input(z.object({ chatId: z.number() }))
+  wsConnect: protectedProcedure.input(z.object({ chatId: z.number() }))
   .subscription(async function*({ input: { chatId } }) {
     const messages = await prisma.message.findMany({
       where: { chatId },
@@ -109,11 +110,16 @@ const appRouter = t.router({
       };
     }),
 });
-
 // Create HTTP server
 // Create WebSocket server
 const wss = new WebSocketServer({ port: 3002 });
-const handler = applyWSSHandler({ wss, router: appRouter });
+
+// Add createContext to the handler config
+const handler = applyWSSHandler({ 
+  wss, 
+  router: appRouter,
+  createContext 
+});
 
 // Start server
 wss.on('listening', () => {
