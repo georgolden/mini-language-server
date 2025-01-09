@@ -26,7 +26,9 @@ export class ClaudeEnhancedAgent extends Agent {
     simpleModel?: boolean;
   }) {
     super({ systemPrompt, tools, memoryWindow });
-    this.model = simpleModel ? 'claude-3-5-haiku-latest' : 'claude-3-5-sonnet-latest';
+    this.model = simpleModel
+      ? 'claude-3-5-haiku-latest'
+      : 'claude-3-5-sonnet-latest';
     this.client = client;
   }
 
@@ -34,7 +36,9 @@ export class ClaudeEnhancedAgent extends Agent {
     return this.history;
   }
 
-  formatMessages(messages: Message[]): Anthropic.MessageCreateParamsNonStreaming {
+  formatMessages(
+    messages: Message[],
+  ): Anthropic.MessageCreateParamsNonStreaming {
     return {
       model: this.model,
       max_tokens: 1024,

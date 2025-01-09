@@ -1,6 +1,7 @@
 {
-  "name": "graphql-prisma-ws-boilerplate",
+  "name": "@almighty/llm",
   "version": "0.0.1",
+  "type": "commonjs",
   "description": "",
   "author": "",
   "private": true,

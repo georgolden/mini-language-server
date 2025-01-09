@@ -35,12 +35,16 @@ export class ChatResolver {
   @Mutation(() => Chat)
   async createChat(@Args('title') title: string, @Args('type') type: string) {
     const chat = await this.chatService.create({ title, type });
-    
+
     const claudeClient = createClaudeClient(process.env.ANTHROPIC_API);
     const mcpClient = await initializeMCPClient();
-    const agent = await createASTAgent(claudeClient, await getTools(mcpClient), mcpClient);
+    const agent = await createASTAgent(
+      claudeClient,
+      await getTools(mcpClient),
+      mcpClient,
+    );
     agents.set(chat.id, agent);
-    
+
     pubSub.publish('chatCreated', { chatCreated: chat });
     return chat;
   }
@@ -57,7 +61,10 @@ export class ChatResolver {
     }
 
     // Save user message
-    const userMessage = await this.chatService.addMessage(chatId, { content, role });
+    const userMessage = await this.chatService.addMessage(chatId, {
+      content,
+      role,
+    });
     pubSub.publish('messageCreated', { messageCreated: userMessage, chatId });
 
     // Get agent response
@@ -68,9 +75,12 @@ export class ChatResolver {
     if (lastMessage) {
       const assistantMessage = await this.chatService.addMessage(chatId, {
         content: lastMessage.content as string,
-        role: 'assistant'
+        role: 'assistant',
       });
-      pubSub.publish('messageCreated', { messageCreated: assistantMessage, chatId });
+      pubSub.publish('messageCreated', {
+        messageCreated: assistantMessage,
+        chatId,
+      });
       return assistantMessage;
     }
 
