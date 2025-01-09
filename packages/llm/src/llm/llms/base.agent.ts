@@ -73,7 +73,9 @@ export abstract class Agent {
   }
 
   async sendMessage(
-    prompt: string | { type: 'tool_result'; tool_use_id: string; content: string },
+    prompt:
+      | string
+      | { type: 'tool_result'; tool_use_id: string; content: string },
     withHistory = true,
   ): Promise<string> {
     const context = this.history.slice(-this.memoryWindow);
@@ -89,7 +91,10 @@ export abstract class Agent {
             },
           ]);
 
-    const formattedMessages = this.formatMessages([...(withHistory ? context : []), userMessage]);
+    const formattedMessages = this.formatMessages([
+      ...(withHistory ? context : []),
+      userMessage,
+    ]);
     const response = await this.sendToLLM(formattedMessages);
 
     const contentArray: ContentItem[] = [];
@@ -128,7 +133,9 @@ export abstract class Agent {
 
     if (!hasToolCall && contentArray.length > 0) {
       this.composeMessage(contentArray, 'assistant');
-      const lastText = contentArray.filter((item) => item.type === 'text').pop();
+      const lastText = contentArray
+        .filter((item) => item.type === 'text')
+        .pop();
       return lastText?.text || '';
     }
 
@@ -143,7 +150,12 @@ export abstract class Agent {
     this.systemPrompt = newPrompt;
   }
 
-  abstract formatMessages(messages: Message[], enhancedSystemPrompt?: string): unknown;
+  abstract formatMessages(
+    messages: Message[],
+    enhancedSystemPrompt?: string,
+  ): unknown;
 
-  protected abstract sendToLLM(formattedMessages: unknown): Promise<ModelResponse[]>;
+  protected abstract sendToLLM(
+    formattedMessages: unknown,
+  ): Promise<ModelResponse[]>;
 }

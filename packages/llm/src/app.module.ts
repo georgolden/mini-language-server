@@ -1,7 +1,7 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 import { IdentityModule } from './identity/identity.module';
 import { AuthMiddleware } from './identity/middleware/auth.middleware';
 import { ChatModule } from './chat/chat.module';

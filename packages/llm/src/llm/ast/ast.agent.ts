@@ -24,7 +24,8 @@ export const createASTAgent = async (client, tools, mcpClient) => {
 
   registerSamplings(
     new ClaudeEnhancedAgent({
-      systemPrompt: 'You are assistant that helps summarize code snippets ant other file content',
+      systemPrompt:
+        'You are assistant that helps summarize code snippets ant other file content',
       client,
       simpleModel: true,
     }),

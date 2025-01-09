@@ -1,24 +1,34 @@
-import { Client } from '@modelcontextprotocol/sdk/client/index';
-import { WebSocketClientTransport } from '@modelcontextprotocol/sdk/client/websocket';
-import { CallToolResultSchema, ListToolsResultSchema, CreateMessageRequestSchema } from '@modelcontextprotocol/sdk/types';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { WebSocketClientTransport } from '@modelcontextprotocol/sdk/client/websocket.js';
+import {
+  CallToolResultSchema,
+  ListToolsResultSchema,
+  CreateMessageRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
 import type { Tool, Agent } from '../llms/base.agent';
 
 export const registerSamplings = (agent: Agent, client: Client) => {
-  client.setRequestHandler(CreateMessageRequestSchema, async ({ method, params }) => {
-    if (method === 'sampling/createMessage') {
-      const response = await agent.sendMessage(params.messages[0]?.content.text as string, false);
-      return {
-        content: {
-          type: 'text',
-          text: response,
-        },
-        role: 'assistant',
-        model: 'claude',
-        _meta: {},
-      };
-    }
-    throw new Error('Unsupported method');
-  });
+  client.setRequestHandler(
+    CreateMessageRequestSchema,
+    async ({ method, params }) => {
+      if (method === 'sampling/createMessage') {
+        const response = await agent.sendMessage(
+          params.messages[0]?.content.text as string,
+          false,
+        );
+        return {
+          content: {
+            type: 'text',
+            text: response,
+          },
+          role: 'assistant',
+          model: 'claude',
+          _meta: {},
+        };
+      }
+      throw new Error('Unsupported method');
+    },
+  );
 };
 
 export const getTools = async (client: Client): Promise<Tool[]> => {
@@ -60,7 +70,7 @@ export const getTools = async (client: Client): Promise<Tool[]> => {
 export const initializeMCPClient = async () => {
   const wsUrl = new URL('ws://localhost:3001');
   const transport = new WebSocketClientTransport(wsUrl);
-  
+
   const client = new Client(
     {
       name: 'mcp-client',
