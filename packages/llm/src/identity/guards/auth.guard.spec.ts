@@ -1,9 +1,9 @@
 import { ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext, GqlContextType } from '@nestjs/graphql';
-import { AuthGuard } from './auth.guard';
-import { SessionService } from '../services/session.service';
+import { AuthGuard } from './auth.guard.js';
+import { SessionService } from '../services/session.service.js';
 import { Test } from '@nestjs/testing';
-import { ExecutionContextHost } from '@nestjs/core/helpers/execution-context-host';
+import { ExecutionContextHost } from '@nestjs/core/helpers/execution-context-host.js';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;

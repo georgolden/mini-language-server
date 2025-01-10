@@ -1,7 +1,7 @@
 {
   "name": "@almighty/llm",
   "version": "0.0.1",
-  "type": "commonjs",
+  "type": "module",
   "description": "",
   "author": "",
   "private": true,

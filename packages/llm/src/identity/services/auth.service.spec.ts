@@ -1,13 +1,13 @@
 import { Test } from '@nestjs/testing';
-import { AuthService } from './auth.service';
-import { OAuthService } from './oauth.service';
-import { SessionService } from './session.service';
-import { UserService } from './user.service';
+import { AuthService } from './auth.service.js';
+import { OAuthService } from './oauth.service.js';
+import { SessionService } from './session.service.js';
+import { UserService } from './user.service.js';
 import { Role, User as PrismaUser } from '@prisma/client';
-import { GitHubUser, GoogleUser } from '../types/oauth.types';
-import { User as GraphQLUser } from '../dto/user.types';
-import { Context } from '../types/context.types';
-import { hashPassword } from '../utils/crypto';
+import { GitHubUser, GoogleUser } from '../types/oauth.types.js';
+import { User as GraphQLUser } from '../dto/user.types.js';
+import { Context } from '../types/context.types.js';
+import { hashPassword } from '../utils/crypto.js';
 
 describe('AuthService', () => {
   let authService: AuthService;

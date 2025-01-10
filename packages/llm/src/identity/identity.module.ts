@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './services/auth.service';
-import { UserService } from './services/user.service';
-import { OAuthService } from './services/oauth.service';
-import { SessionService } from './services/session.service';
-import { AuthResolver } from './resolvers/auth.resolver';
-import { UserResolver } from './resolvers/user.resolver';
-import { PrismaModule } from '../prisma/prisma.module';
+import { AuthService } from './services/auth.service.js';
+import { UserService } from './services/user.service.js';
+import { OAuthService } from './services/oauth.service.js';
+import { SessionService } from './services/session.service.js';
+import { AuthResolver } from './resolvers/auth.resolver.js';
+import { UserResolver } from './resolvers/user.resolver.js';
+import { PrismaModule } from '../prisma/prisma.module.js';
 
 @Module({
   imports: [PrismaModule],

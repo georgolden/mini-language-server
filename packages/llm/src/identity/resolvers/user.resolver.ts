@@ -1,10 +1,10 @@
 import { Resolver, Query, Context, Args, Mutation } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
-import { UserService } from '../services/user.service';
-import { User } from '../dto/user.types';
-import { AuthGuard } from '../guards/auth.guard';
-import { GetUserInput, UpdateUserInput } from '../dto/user.input';
-import { Context as RequestContext } from '../types/context.types';
+import { UserService } from '../services/user.service.js';
+import { User } from '../dto/user.types.js';
+import { AuthGuard } from '../guards/auth.guard.js';
+import { GetUserInput, UpdateUserInput } from '../dto/user.input.js';
+import { Context as RequestContext } from '../types/context.types.js';
 
 @Resolver(() => User)
 export class UserResolver {

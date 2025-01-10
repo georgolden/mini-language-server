@@ -1,8 +1,8 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { PrismaService } from '../prisma/prisma.service';
-import { ChatService } from './chat.service';
-import { Chat, Message } from './dto/chat.types';
-import { ClaudeEnhancedAgent } from '../llm/llms/claude.agent';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { ChatService } from './chat.service.js';
+import { Chat, Message } from './dto/chat.types.js';
+import { ClaudeEnhancedAgent } from '../llm/llms/claude.agent.js';
 
 describe('ChatService', () => {
   let service: ChatService;

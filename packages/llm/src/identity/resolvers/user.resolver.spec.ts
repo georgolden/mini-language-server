@@ -1,10 +1,10 @@
 import { Test } from '@nestjs/testing';
-import { UserResolver } from './user.resolver';
-import { UserService } from '../services/user.service';
+import { UserResolver } from './user.resolver.js';
+import { UserService } from '../services/user.service.js';
 import { Role } from '@prisma/client';
-import { Context } from '../types/context.types';
-import { AuthGuard } from '../guards/auth.guard';
-import { SessionService } from '../services/session.service';
+import { Context } from '../types/context.types.js';
+import { AuthGuard } from '../guards/auth.guard.js';
+import { SessionService } from '../services/session.service.js';
 
 describe('UserResolver', () => {
   let userResolver: UserResolver;

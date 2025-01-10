@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
-import { OAuthService } from './oauth.service';
-import { GitHubUser, GoogleUser } from '../types/oauth.types';
+import { OAuthService } from './oauth.service.js';
+import { GitHubUser, GoogleUser } from '../types/oauth.types.js';
 
 describe('OAuthService', () => {
   let oauthService: OAuthService;

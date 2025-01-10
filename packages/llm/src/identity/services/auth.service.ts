@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { OAuthService } from './oauth.service';
-import { SessionService } from './session.service';
-import { UserService } from './user.service';
-import { Context } from '../types/context.types';
+import { OAuthService } from './oauth.service.js';
+import { SessionService } from './session.service.js';
+import { UserService } from './user.service.js';
+import { Context } from '../types/context.types.js';
 import {
   hashPassword,
   verifyPassword,
   generateRandomString,
   generatePermalink,
-} from '../utils/crypto';
-import { COOKIE_MAX_AGE, SECURE_COOKIE } from '../config/identity.config';
+} from '../utils/crypto.js';
+import { COOKIE_MAX_AGE, SECURE_COOKIE } from '../config/identity.config.js';
 
 @Injectable()
 export class AuthService {

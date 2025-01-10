@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing';
-import { AuthResolver } from './auth.resolver';
-import { AuthService } from '../services/auth.service';
+import { AuthResolver } from './auth.resolver.js';
+import { AuthService } from '../services/auth.service.js';
 import { Role } from '@prisma/client';
-import { Context } from '../types/context.types';
+import { Context } from '../types/context.types.js';
 
 describe('AuthResolver', () => {
   let authResolver: AuthResolver;

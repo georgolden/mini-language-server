@@ -8,12 +8,12 @@ import {
 } from '@nestjs/graphql';
 import { PubSub } from 'graphql-subscriptions';
 import type { PubSubEngine } from 'graphql-subscriptions';
-import { ChatService } from './chat.service';
-import { Chat, Message } from './dto/chat.types';
-import { ClaudeEnhancedAgent } from '../llm/llms/claude.agent';
-import { createASTAgent } from '../llm/ast/ast.agent';
-import { getTools, initializeMCPClient } from '../llm/mcp/client';
-import { createClaudeClient } from '../llm/llms/claude.agent';
+import { ChatService } from './chat.service.js';
+import { Chat, Message } from './dto/chat.types.js';
+import { ClaudeEnhancedAgent } from '../llm/llms/claude.agent.js';
+import { createASTAgent } from '../llm/ast/ast.agent.js';
+import { getTools, initializeMCPClient } from '../llm/mcp/client.js';
+import { createClaudeClient } from '../llm/llms/claude.agent.js';
 
 const pubSub: PubSubEngine = new PubSub();
 const agents = new Map<number, ClaudeEnhancedAgent>();

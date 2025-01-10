@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { sign, verify } from 'jsonwebtoken';
-import { SIGNING_KEY } from '../config/identity.config';
-import { PrismaService } from '../../prisma/prisma.service';
-import { SessionJwtPayload } from '../types/jwt.types';
-import { generateRandomString } from '../utils/crypto';
-import { User } from '../dto/user.types';
+import jsonwebtoken from 'jsonwebtoken';
+import { SIGNING_KEY } from '../config/identity.config.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
+import { SessionJwtPayload } from '../types/jwt.types.js';
+import { generateRandomString } from '../utils/crypto.js';
+import { User } from '../dto/user.types.js';
+
+console.log(jsonwebtoken);
 
 @Injectable()
 export class SessionService {
@@ -20,14 +22,14 @@ export class SessionService {
       },
     });
 
-    return sign({ user: input.user, sessionId: session.id }, SIGNING_KEY, {
+    return jsonwebtoken.sign({ user: input.user, sessionId: session.id }, SIGNING_KEY, {
       expiresIn: '1y',
     });
   }
 
   async verify(token: string) {
     try {
-      const decoded = verify(token, SIGNING_KEY) as SessionJwtPayload;
+      const decoded = jsonwebtoken.verify(token, SIGNING_KEY) as SessionJwtPayload;
       const session = await this.prisma.session.findUnique({
         where: { id: decoded.sessionId },
         include: { user: true },

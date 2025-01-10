@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing';
-import { SessionService } from './session.service';
-import { PrismaService } from '../../prisma/prisma.service';
+import { SessionService } from './session.service.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
 import { Role, User as PrismaUser } from '@prisma/client';
-import { SessionJwtPayload } from '../types/jwt.types';
+import { SessionJwtPayload } from '../types/jwt.types.js';
 
 describe('SessionService', () => {
   let sessionService: SessionService;

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { ClaudeEnhancedAgent } from '../llm/llms/claude.agent';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { ClaudeEnhancedAgent } from '../llm/llms/claude.agent.js';
 
 @Injectable()
 export class ChatService {

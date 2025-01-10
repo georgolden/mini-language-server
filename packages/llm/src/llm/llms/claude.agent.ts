@@ -6,7 +6,7 @@ import {
   type TextResponse,
   type Message,
   type Tool,
-} from './base.agent';
+} from './base.agent.js';
 
 export class ClaudeEnhancedAgent extends Agent {
   private client: Anthropic;

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
-import { PrismaService } from '../../prisma/prisma.service';
-import { UserService } from './user.service';
-import { User } from '../dto/user.types';
+import { PrismaService } from '../../prisma/prisma.service.js';
+import { UserService } from './user.service.js';
+import { User } from '../dto/user.types.js';
 import { Role } from '@prisma/client';
 
 describe('UserService', () => {

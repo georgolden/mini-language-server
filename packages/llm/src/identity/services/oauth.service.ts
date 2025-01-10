@@ -5,7 +5,7 @@ import {
   GITHUB_CLIENT_SECRET,
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
-} from '../config/identity.config';
+} from '../config/identity.config.js';
 
 @Injectable()
 export class OAuthService {

@@ -1,5 +1,5 @@
-import { ClaudeEnhancedAgent } from '../llms/claude.agent';
-import { registerSamplings } from '../mcp/client';
+import { ClaudeEnhancedAgent } from '../llms/claude.agent.js';
+import { registerSamplings } from '../mcp/client.js';
 
 export const createASTAgent = async (client, tools, mcpClient) => {
   const agent = new ClaudeEnhancedAgent({

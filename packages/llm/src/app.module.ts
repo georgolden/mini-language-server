@@ -2,11 +2,11 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import cookieParser from 'cookie-parser';
-import { IdentityModule } from './identity/identity.module';
-import { AuthMiddleware } from './identity/middleware/auth.middleware';
-import { ChatModule } from './chat/chat.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { AppController } from './app.controller';
+import { IdentityModule } from './identity/identity.module.js';
+import { AuthMiddleware } from './identity/middleware/auth.middleware.js';
+import { ChatModule } from './chat/chat.module.js';
+import { PrismaModule } from './prisma/prisma.module.js';
+import { AppController } from './app.controller.js';
 
 @Module({
   imports: [

@@ -5,7 +5,7 @@ import {
   ListToolsResultSchema,
   CreateMessageRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import type { Tool, Agent } from '../llms/base.agent';
+import type { Tool, Agent } from '../llms/base.agent.js';
 
 export const registerSamplings = (agent: Agent, client: Client) => {
   client.setRequestHandler(

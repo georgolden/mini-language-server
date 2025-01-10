@@ -1,4 +1,4 @@
-import { hashPassword, verifyPassword } from './crypto';
+import { hashPassword, verifyPassword } from './crypto.js';
 
 describe('Crypto Utils', () => {
   it('should hash password and verify it correctly', async () => {

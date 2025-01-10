@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../prisma/prisma.module';
-import { ChatResolver } from './chat.resolver';
-import { ChatService } from './chat.service';
+import { PrismaModule } from '../prisma/prisma.module.js';
+import { ChatResolver } from './chat.resolver.js';
+import { ChatService } from './chat.service.js';
 
 @Module({
   imports: [PrismaModule],

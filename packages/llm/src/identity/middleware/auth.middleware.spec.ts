@@ -1,8 +1,8 @@
-import { AuthMiddleware } from './auth.middleware';
-import { SessionService } from '../services/session.service';
+import { AuthMiddleware } from './auth.middleware.js';
+import { SessionService } from '../services/session.service.js';
 import { Test } from '@nestjs/testing';
 import { Role } from '@prisma/client';
-import { AuthenticatedRequest } from '../types/context.types';
+import { AuthenticatedRequest } from '../types/context.types.js';
 import { Response } from 'express';
 
 describe('AuthMiddleware', () => {
