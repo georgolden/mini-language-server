@@ -12,6 +12,10 @@ export class CustomLogger extends Logger implements LoggerService {
     super();
   }
 
+  setContext(context: string) {
+    this.defaultContext = context;
+  }
+
   log(
     message: string | LogObject,
     context: string = this.defaultContext,

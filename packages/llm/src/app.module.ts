@@ -17,6 +17,11 @@ import { LoggerMiddleware } from './logger/logger.middleware.js';
       driver: ApolloDriver,
       autoSchemaFile: 'graphql/schema.graphql',
       sortSchema: true,
+      playground: true,
+      subscriptions: {
+        'graphql-ws': true,
+        'subscriptions-transport-ws': true
+      },
       context: ({ req, res }) => ({ req, res }),
     }),
     PrismaModule,
