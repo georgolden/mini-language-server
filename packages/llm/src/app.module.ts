@@ -7,9 +7,12 @@ import { AuthMiddleware } from './identity/middleware/auth.middleware.js';
 import { ChatModule } from './chat/chat.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AppController } from './app.controller.js';
+import { LoggerModule } from './logger/logger.module.js';
+import { LoggerMiddleware } from './logger/logger.middleware.js';
 
 @Module({
   imports: [
+    LoggerModule,
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: 'graphql/schema.graphql',
@@ -24,6 +27,8 @@ import { AppController } from './app.controller.js';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(cookieParser(), AuthMiddleware).forRoutes('*');
+    consumer
+      .apply(cookieParser(), LoggerMiddleware, AuthMiddleware)
+      .forRoutes('*');
   }
 }

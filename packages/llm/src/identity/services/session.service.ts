@@ -5,12 +5,14 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { SessionJwtPayload } from '../types/jwt.types.js';
 import { generateRandomString } from '../utils/crypto.js';
 import { User } from '../dto/user.types.js';
-
-console.log(jsonwebtoken);
+import { CustomLogger } from '../../logger/logger.service.js';
 
 @Injectable()
 export class SessionService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private logger: CustomLogger,
+  ) {}
 
   async create(input: { ip?: string; userAgent?: string; user: User }) {
     const session = await this.prisma.session.create({
@@ -43,7 +45,11 @@ export class SessionService {
       });
 
       return session ? decoded : null;
-    } catch (e) {
+    } catch (error) {
+      this.logger.error({
+        message: 'Session verification failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
       return null;
     }
   }

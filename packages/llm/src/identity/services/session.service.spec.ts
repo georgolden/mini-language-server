@@ -3,10 +3,12 @@ import { SessionService } from './session.service.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { Role, User as PrismaUser } from '@prisma/client';
 import { SessionJwtPayload } from '../types/jwt.types.js';
+import { CustomLogger } from '../../logger/logger.service.js';
 
 describe('SessionService', () => {
   let sessionService: SessionService;
   let prismaService: PrismaService;
+  let logger: CustomLogger;
 
   const mockPrismaUser: PrismaUser = {
     id: 1,
@@ -48,11 +50,21 @@ describe('SessionService', () => {
             },
           },
         },
+        {
+          provide: CustomLogger,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+            debug: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     sessionService = moduleRef.get<SessionService>(SessionService);
     prismaService = moduleRef.get<PrismaService>(PrismaService);
+    logger = moduleRef.get<CustomLogger>(CustomLogger);
   });
 
   describe('create', () => {
@@ -103,12 +115,14 @@ describe('SessionService', () => {
       const result = await sessionService.verify('invalid-token');
 
       expect(result).toBeNull();
+      expect(logger.error).toHaveBeenCalled();
     });
 
     it('should return null for expired token', async () => {
       const result = await sessionService.verify('expired-token');
 
       expect(result).toBeNull();
+      expect(logger.error).toHaveBeenCalled();
     });
   });
 });

@@ -6,9 +6,10 @@ import { SessionService } from './services/session.service.js';
 import { AuthResolver } from './resolvers/auth.resolver.js';
 import { UserResolver } from './resolvers/user.resolver.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
+import { LoggerModule } from '../logger/logger.module.js';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, LoggerModule],
   providers: [
     AuthService,
     UserService,
