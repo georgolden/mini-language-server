@@ -21,9 +21,9 @@ export class ChatService {
     });
   }
 
-  async create(data: { title: string; type: string }) {
+  async create(data: { title: string; type: string; metadata: string }) {
     return this.prisma.chat.create({
-      data,
+      data: { title: data.title, metadata: data.metadata, type: data.type },
       include: { messages: true },
     });
   }

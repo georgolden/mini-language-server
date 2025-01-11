@@ -14,6 +14,7 @@ import { ClaudeEnhancedAgent } from '../llm/llms/claude.agent.js';
 import { createASTAgent } from '../llm/ast/ast.agent.js';
 import { getTools, initializeMCPClient } from '../llm/mcp/client.js';
 import { createClaudeClient } from '../llm/llms/claude.agent.js';
+import { ANTHROPIC_API } from 'src/config/app.config.js';
 
 const pubSub: PubSubEngine = new PubSub();
 const agents = new Map<number, ClaudeEnhancedAgent>();
@@ -33,10 +34,15 @@ export class ChatResolver {
   }
 
   @Mutation(() => Chat)
-  async createChat(@Args('title') title: string, @Args('type') type: string) {
-    const chat = await this.chatService.create({ title, type });
+  async createChat(
+    @Args('title') title: string,
+    @Args('type') type: string,
+    @Args('metadata') metadata: string,
+  ) {
+    if (!ANTHROPIC_API) throw new Error('API key for anthropic is missing');
+    const chat = await this.chatService.create({ title, type, metadata });
 
-    const claudeClient = createClaudeClient(process.env.ANTHROPIC_API);
+    const claudeClient = createClaudeClient(ANTHROPIC_API);
     const mcpClient = await initializeMCPClient();
     const agent = await createASTAgent(
       claudeClient,
