@@ -22,14 +22,21 @@ export class SessionService {
       },
     });
 
-    return jsonwebtoken.sign({ user: input.user, sessionId: session.id }, SIGNING_KEY, {
-      expiresIn: '1y',
-    });
+    return jsonwebtoken.sign(
+      { user: input.user, sessionId: session.id },
+      SIGNING_KEY,
+      {
+        expiresIn: '1y',
+      },
+    );
   }
 
   async verify(token: string) {
     try {
-      const decoded = jsonwebtoken.verify(token, SIGNING_KEY) as SessionJwtPayload;
+      const decoded = jsonwebtoken.verify(
+        token,
+        SIGNING_KEY,
+      ) as SessionJwtPayload;
       const session = await this.prisma.session.findUnique({
         where: { id: decoded.sessionId },
         include: { user: true },
