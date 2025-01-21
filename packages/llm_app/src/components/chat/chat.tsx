@@ -1,18 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import type React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { type QueryRef, useReadQuery } from '@apollo/client';
 import type { GetChatWithMessagesQuery } from 'src/__generated__/graphql';
 import { useSubscribeChat } from '@hooks/apollo/chat';
-
-export interface Message {
-  role: 'user' | 'assistant';
-  content: string | any[];
-  timestamp: Date;
-}
+import { formatTimestamp } from '@utils/datetime';
 
 interface KawaiiChatProps {
-  connected: boolean;
-  onSendMessage: (message: string) => void;
   queryRef: QueryRef<GetChatWithMessagesQuery>;
 }
 
@@ -60,13 +54,6 @@ const KawaiiChat = ({ queryRef }: KawaiiChatProps) => {
     onCompleted: () => setInputText(''),
     chatId: chat.id,
   });
-
-  const formatTimestamp = (date: number) => {
-    return new Date(date).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
