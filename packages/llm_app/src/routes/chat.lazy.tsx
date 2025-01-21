@@ -1,7 +1,7 @@
-import { createLazyFileRoute } from '@tanstack/react-router';
-import KawaiiChatManager from '../components/chat_manager';
+import { createLazyFileRoute } from "@tanstack/react-router";
+import KawaiiChatManager from "@components/chat/chat_manager";
 
-export const Route = createLazyFileRoute('/chat')({
+export const Route = createLazyFileRoute("/chat")({
   component: ChatRoute,
 });
 

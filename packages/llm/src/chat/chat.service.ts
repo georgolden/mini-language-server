@@ -9,7 +9,7 @@ export class ChatService {
 
   constructor(
     private prisma: PrismaService,
-    private readonly logger: CustomLogger
+    private readonly logger: CustomLogger,
   ) {
     this.logger.setContext('ChatService');
   }
@@ -32,7 +32,7 @@ export class ChatService {
   async create(data: { title: string; type: string }) {
     this.logger.log({ message: 'Creating new chat', data });
     return this.prisma.chat.create({
-      data: { title: data.title, metadata: data.metadata, type: data.type },
+      data: { title: data.title, type: data.type },
       include: { messages: true },
     });
   }

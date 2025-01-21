@@ -65,8 +65,10 @@ export class ChatResolver {
     this.logger.log({ message: 'Sending message', chatId, role });
     const agent = agents.get(chatId);
     if (!agent) {
-      this.logger.error({ message: 'No active agent found', chatId });
-      throw new Error('No active agent');
+      const claudeClient = createClaudeClient(ANTHROPIC_API);
+      const mcpClient = await initializeMCPClient();
+      const agent = await createASTAgent(claudeClient, await getTools(mcpClient), mcpClient);
+      agents.set(chatId, agent);
     }
 
     const userMessage = await this.chatService.addMessage(chatId, { content, role });
@@ -105,7 +107,8 @@ export class ChatResolver {
         actualChatId: payload.messageCreated.chatId
       });
       return payload.messageCreated.chatId === variables.chatId;
-    }
+    },
+    resolve: (payload: { messageCreated: Message }) => payload.messageCreated,
   })
   messageCreated(@Args('chatId', { type: () => Int }) chatId: number) {
     this.logger.log({ message: 'Message subscription initiated', chatId });

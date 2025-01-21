@@ -7,18 +7,26 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "gql:compile": "graphql-codegen",
+    "gql:watch": "graphql-codegen -w"
   },
   "dependencies": {
+    "@almighty/llm": "0.0.1",
+    "@parcel/watcher": "^2.5.0",
     "@tanstack/react-router": "^1.91.3",
     "lucide-react": "^0.469.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "@almighty/llm": "0.0.1"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@almighty/llm": "*",
     "@eslint/js": "^9.17.0",
+    "@graphql-codegen/cli": "^5.0.3",
+    "@graphql-codegen/client-preset": "^4.5.1",
+    "@graphql-codegen/typescript": "^4.1.2",
+    "@graphql-codegen/typescript-operations": "^4.4.0",
+    "@graphql-typed-document-node/core": "^3.2.0",
     "@tanstack/router-devtools": "^1.91.3",
     "@tanstack/router-plugin": "^1.91.1",
     "@types/react": "^18.3.17",
@@ -29,9 +37,10 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.13.0",
+    "graphql": "^16.10.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
-    "typescript": "~5.6.2",
+    "typescript": "^5.7.3",
     "typescript-eslint": "^8.18.1",
     "vite": "^6.0.3"
   }

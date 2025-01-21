@@ -29,7 +29,7 @@ type Message {
 }
 
 type Mutation {
-  createChat(metadata: String!, title: String!, type: String!): Chat!
+  createChat(title: String!, type: String!): Chat!
   logout: Boolean!
   sendMessage(chatId: Int!, content: String!, role: String!): Message!
   signIn(email: String!, password: String!): User!

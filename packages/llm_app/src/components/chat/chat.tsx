@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
+import { type QueryRef, useReadQuery } from '@apollo/client';
+import type { GetChatWithMessagesQuery } from 'src/__generated__/graphql';
+import { useSubscribeChat } from '@hooks/apollo/chat';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -8,9 +11,9 @@ export interface Message {
 }
 
 interface KawaiiChatProps {
-  messages: Message[];
   connected: boolean;
   onSendMessage: (message: string) => void;
+  queryRef: QueryRef<GetChatWithMessagesQuery>;
 }
 
 const renderContent = (content) => {
@@ -26,9 +29,7 @@ const renderContent = (content) => {
       case 'tool_use':
         return (
           <div key={index} className="bg-pink-100 dark:bg-pink-900 p-2 rounded-lg my-1">
-            <div className="text-xs text-pink-600 dark:text-pink-300">
-              Using tool: {item.name}
-            </div>
+            <div className="text-xs text-pink-600 dark:text-pink-300">Using tool: {item.name}</div>
             <pre className="text-xs overflow-x-auto">{JSON.stringify(item.input, null, 2)}</pre>
           </div>
         );
@@ -45,12 +46,22 @@ const renderContent = (content) => {
   });
 };
 
-const KawaiiChat = ({ onSendMessage, messages, connected }: KawaiiChatProps) => {
+const KawaiiChat = ({ queryRef }: KawaiiChatProps) => {
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const formatTimestamp = (date) => {
+  const {
+    data: { chat },
+  } = useReadQuery(queryRef);
+
+  const { messages, sendMessage } = useSubscribeChat({
+    defaultMessages: chat.messages,
+    onCompleted: () => setInputText(''),
+    chatId: chat.id,
+  });
+
+  const formatTimestamp = (date: number) => {
     return new Date(date).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
@@ -69,7 +80,7 @@ const KawaiiChat = ({ onSendMessage, messages, connected }: KawaiiChatProps) => 
     e.preventDefault();
     if (!inputText.trim()) return;
 
-    onSendMessage(inputText);
+    sendMessage({ variables: { chatId: chat.id, content: inputText, role: 'user' } });
     setInputText('');
   };
 
@@ -84,9 +95,9 @@ const KawaiiChat = ({ onSendMessage, messages, connected }: KawaiiChatProps) => 
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message, index) => (
+        {messages?.map((message) => (
           <div
-            key={index}
+            key={message.id}
             className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}
           >
             <div
@@ -115,7 +126,6 @@ const KawaiiChat = ({ onSendMessage, messages, connected }: KawaiiChatProps) => 
       <form onSubmit={handleSubmit} className="p-4 bg-pink-200 dark:bg-gray-800 shadow-lg">
         <div className="flex items-center gap-2">
           <input
-            disabled={!connected}
             ref={inputRef}
             type="text"
             value={inputText}

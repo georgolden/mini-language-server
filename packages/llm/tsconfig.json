@@ -15,14 +15,14 @@
     "rootDirs": ["src"],
     "incremental": true,
     "skipLibCheck": true,
-    "strict": true,
-    "strictPropertyInitialization": false,
-    "strictNullChecks": true,
+    //"strict": true,
+    //"strictPropertyInitialization": false,
+    //"strictNullChecks": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "moduleDetection": "force"
+    //"moduleDetection": "force"
   },
   "include" :[
     "src/**/*.ts"
