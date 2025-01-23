@@ -2,16 +2,16 @@ import type { zodToJsonSchema } from 'zod-to-json-schema';
 
 export interface Message {
   role: 'user' | 'assistant';
-  content: string | ContentItem[];
+  content: ContentItem[];
   timestamp: Date;
 }
 
-interface ContentItem {
+export interface ContentItem {
   type: 'text' | 'tool_use' | 'tool_result';
   text?: string;
   id?: string;
   name?: string;
-  input?: Record<string, any>;
+  input?: string;
   content?: string;
 }
 
@@ -72,24 +72,10 @@ export abstract class Agent {
     return message;
   }
 
-  async sendMessage(
-    prompt:
-      | string
-      | { type: 'tool_result'; tool_use_id: string; content: string },
-    withHistory = true,
-  ): Promise<string> {
+  async sendMessage(prompt: ContentItem, withHistory = true): Promise<string> {
     const context = this.history.slice(-this.memoryWindow);
 
-    const userMessage =
-      typeof prompt === 'string'
-        ? this.composeMessage(prompt)
-        : this.composeMessage([
-            {
-              type: 'tool_result',
-              id: prompt.tool_use_id,
-              content: prompt.content,
-            },
-          ]);
+    const userMessage: Message = this.composeMessage([prompt]);
 
     const formattedMessages = this.formatMessages([
       ...(withHistory ? context : []),
@@ -113,7 +99,7 @@ export abstract class Agent {
           type: 'tool_use',
           id: message.toolUseId,
           name: message.toolName,
-          input: message.args,
+          input: JSON.stringify(message.args),
         });
 
         const tool = this.tools.find((tool) => tool.name === message.toolName);
@@ -125,7 +111,7 @@ export abstract class Agent {
 
         return await this.sendMessage({
           type: 'tool_result',
-          tool_use_id: message.toolUseId,
+          id: message.toolUseId,
           content: toolResult.content[0]?.text,
         });
       }

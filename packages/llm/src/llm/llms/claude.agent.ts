@@ -7,6 +7,20 @@ import {
   type Message,
   type Tool,
 } from './base.agent.js';
+import { ANTHROPIC_API } from '../../config/app.config.js';
+
+export class AnthropicClient {
+  private static instance: Anthropic;
+
+  private constructor() {}
+
+  public static getInstance(apiKey: string): Anthropic {
+    if (!AnthropicClient.instance) {
+      AnthropicClient.instance = new Anthropic({ apiKey });
+    }
+    return AnthropicClient.instance;
+  }
+}
 
 export class ClaudeEnhancedAgent extends Agent {
   private client: Anthropic;
@@ -14,13 +28,11 @@ export class ClaudeEnhancedAgent extends Agent {
 
   constructor({
     systemPrompt,
-    client,
     tools = [],
     memoryWindow = 100,
     simpleModel = false,
   }: {
     systemPrompt?: string;
-    client: Anthropic;
     tools?: Tool[];
     memoryWindow?: number;
     simpleModel?: boolean;
@@ -29,7 +41,7 @@ export class ClaudeEnhancedAgent extends Agent {
     this.model = simpleModel
       ? 'claude-3-5-haiku-latest'
       : 'claude-3-5-sonnet-latest';
-    this.client = client;
+    this.client = AnthropicClient.getInstance(ANTHROPIC_API);
   }
 
   getMessages() {
@@ -65,6 +77,13 @@ export class ClaudeEnhancedAgent extends Agent {
                   content: item.content,
                 };
               }
+              if (item.type === 'tool_use') {
+                return {
+                  type: 'tool_use',
+                  id: item.id,
+
+                }
+              } 
               return item;
             }),
           };
@@ -99,8 +118,3 @@ export class ClaudeEnhancedAgent extends Agent {
     return output;
   }
 }
-
-export const createClaudeClient = (apiKey: string) =>
-  new Anthropic({
-    apiKey,
-  });

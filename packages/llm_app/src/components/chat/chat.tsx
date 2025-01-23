@@ -2,7 +2,7 @@ import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { type QueryRef, useReadQuery } from '@apollo/client';
-import type { GetChatWithMessagesQuery } from 'src/__generated__/graphql';
+import { ContentItemType, type GetChatWithMessagesQuery } from '../../__generated__/graphql';
 import { useSubscribeChat } from '@hooks/apollo/chat';
 import { formatTimestamp } from '@utils/datetime';
 
@@ -67,7 +67,13 @@ const KawaiiChat = ({ queryRef }: KawaiiChatProps) => {
     e.preventDefault();
     if (!inputText.trim()) return;
 
-    sendMessage({ variables: { chatId: chat.id, content: inputText, role: 'user' } });
+    sendMessage({
+      variables: {
+        chatId: chat.id,
+        content: { type: ContentItemType.Text, text: inputText },
+        role: 'user',
+      },
+    });
     setInputText('');
   };
 

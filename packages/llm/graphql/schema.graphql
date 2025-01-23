@@ -11,6 +11,30 @@ type Chat {
   type: String!
 }
 
+type ContentItem {
+  content: String
+  id: String
+  input: String
+  name: String
+  text: String
+  type: ContentItemType!
+}
+
+input ContentItemInput {
+  content: String
+  id: String
+  input: String
+  name: String
+  text: String
+  type: ContentItemType!
+}
+
+enum ContentItemType {
+  TEXT
+  TOOL_RESULT
+  TOOL_USE
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -22,7 +46,7 @@ input GetUserInput {
 
 type Message {
   chatId: Int!
-  content: String!
+  content: [ContentItem!]!
   id: Int!
   role: String!
   timestamp: DateTime!
@@ -31,7 +55,7 @@ type Message {
 type Mutation {
   createChat(title: String!, type: String!): Chat!
   logout: Boolean!
-  sendMessage(chatId: Int!, content: String!, role: String!): Message!
+  sendMessage(chatId: Int!, content: ContentItemInput!, role: String!): Message!
   signIn(email: String!, password: String!): User!
   signUp(email: String!, name: String!, password: String!): User!
   updateUser(input: UpdateUserInput!): User!

@@ -55,7 +55,28 @@ model Message {
   id        Int      @id @default(autoincrement())
   chat      Chat     @relation(fields: [chatId], references: [id])
   chatId    Int
-  content   String
+  content   ContentItem[] @relation("MessageToContent")
   role      String
   timestamp DateTime @default(now())
+}
+
+enum ContentType {
+  text
+  tool_use
+  tool_result
+}
+
+model ContentItem {
+  id        String      @id @default(cuid())
+  type      ContentType
+  text      String?
+  name      String?
+  input     String?
+  content   String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  message   Message     @relation("MessageToContent", fields: [messageId], references: [id])
+  messageId Int
+
+  @@map("content_items")
 }

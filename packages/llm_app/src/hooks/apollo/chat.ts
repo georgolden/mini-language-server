@@ -1,8 +1,6 @@
 import { useLoadableQuery, useMutation, useSubscription, useSuspenseQuery } from '@apollo/client';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 import { gql } from '../../__generated__/gql';
-import type { GetChatWithMessagesQuery } from 'src/__generated__/graphql';
 import { useState } from 'react';
 
 const READ_CHATS = gql(/* GraphQL */ `query GetAllChats { 
@@ -13,21 +11,28 @@ const READ_CHATS = gql(/* GraphQL */ `query GetAllChats {
 }`);
 
 export const SELECT_CHAT = gql(/* GraphQL */ `
-query GetChatWithMessages($chatId: Int!) {
-  chat(id: $chatId) {
-    id
-    title
-    type
-    createdAt
-    messages {
+  query GetChatWithMessages($chatId: Int!) {
+    chat(id: $chatId) {
       id
-      content
-      role
-      timestamp
+      title
+      type
+      createdAt
+      messages {
+        id
+        content {
+          type
+          text
+          content
+          input
+          name
+          id
+        }
+        role
+        timestamp
+      }
     }
   }
-}
-`) as TypedDocumentNode<GetChatWithMessagesQuery>;
+`);
 
 const CREATE_CHAT = gql(/* GraphQL */ `
 mutation CreateChat($title: String!, $type: String!) {
@@ -45,7 +50,14 @@ const MESSAGE_SUBSCRIPTION = gql(/* GraphQL */ `
   subscription OnMessageCreated($chatId: Int!) {
     messageCreated(chatId: $chatId) {
       id
-      content
+      content {
+        type
+        text
+        content
+        input
+        name
+        id
+      }
       role
       timestamp
       chatId
@@ -54,10 +66,17 @@ const MESSAGE_SUBSCRIPTION = gql(/* GraphQL */ `
 `);
 
 const SEND_MESSAGE_MUTATION = gql(/* GraphQL */ `
-  mutation SendMessage($chatId: Int!, $content: String!, $role: String!) {
+  mutation SendMessage($chatId: Int!, $content: ContentItemInput!, $role: String!) {
     sendMessage(chatId: $chatId, content: $content, role: $role) {
       id
-      content
+      content {
+        type
+        text
+        content
+        input
+        name
+        id
+      }
       role
       timestamp
       chatId

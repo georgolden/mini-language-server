@@ -15,10 +15,10 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 const documents = {
     "query GetAllChats { \n  chats {\n    id\n    title\n  }\n}": types.GetAllChatsDocument,
-    "\nquery GetChatWithMessages($chatId: Int!) {\n  chat(id: $chatId) {\n    id\n    title\n    type\n    createdAt\n    messages {\n      id\n      content\n      role\n      timestamp\n    }\n  }\n}\n": types.GetChatWithMessagesDocument,
+    "\n  query GetChatWithMessages($chatId: Int!) {\n    chat(id: $chatId) {\n      id\n      title\n      type\n      createdAt\n      messages {\n        id\n        content {\n          type\n          text\n          content\n          input\n          name\n          id\n        }\n        role\n        timestamp\n      }\n    }\n  }\n": types.GetChatWithMessagesDocument,
     "\nmutation CreateChat($title: String!, $type: String!) {\n  createChat(title: $title, type: $type) {\n    id\n    title\n    type\n    createdAt\n    metadata\n  }\n}\n": types.CreateChatDocument,
-    "\n  subscription OnMessageCreated($chatId: Int!) {\n    messageCreated(chatId: $chatId) {\n      id\n      content\n      role\n      timestamp\n      chatId\n    }\n  }\n": types.OnMessageCreatedDocument,
-    "\n  mutation SendMessage($chatId: Int!, $content: String!, $role: String!) {\n    sendMessage(chatId: $chatId, content: $content, role: $role) {\n      id\n      content\n      role\n      timestamp\n      chatId\n    }\n  }\n": types.SendMessageDocument,
+    "\n  subscription OnMessageCreated($chatId: Int!) {\n    messageCreated(chatId: $chatId) {\n      id\n      content {\n        type\n        text\n        content\n        input\n        name\n        id\n      }\n      role\n      timestamp\n      chatId\n    }\n  }\n": types.OnMessageCreatedDocument,
+    "\n  mutation SendMessage($chatId: Int!, $content: ContentItemInput!, $role: String!) {\n    sendMessage(chatId: $chatId, content: $content, role: $role) {\n      id\n      content {\n        type\n        text\n        content\n        input\n        name\n        id\n      }\n      role\n      timestamp\n      chatId\n    }\n  }\n": types.SendMessageDocument,
 };
 
 /**
@@ -42,7 +42,7 @@ export function gql(source: "query GetAllChats { \n  chats {\n    id\n    title\
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function gql(source: "\nquery GetChatWithMessages($chatId: Int!) {\n  chat(id: $chatId) {\n    id\n    title\n    type\n    createdAt\n    messages {\n      id\n      content\n      role\n      timestamp\n    }\n  }\n}\n"): (typeof documents)["\nquery GetChatWithMessages($chatId: Int!) {\n  chat(id: $chatId) {\n    id\n    title\n    type\n    createdAt\n    messages {\n      id\n      content\n      role\n      timestamp\n    }\n  }\n}\n"];
+export function gql(source: "\n  query GetChatWithMessages($chatId: Int!) {\n    chat(id: $chatId) {\n      id\n      title\n      type\n      createdAt\n      messages {\n        id\n        content {\n          type\n          text\n          content\n          input\n          name\n          id\n        }\n        role\n        timestamp\n      }\n    }\n  }\n"): (typeof documents)["\n  query GetChatWithMessages($chatId: Int!) {\n    chat(id: $chatId) {\n      id\n      title\n      type\n      createdAt\n      messages {\n        id\n        content {\n          type\n          text\n          content\n          input\n          name\n          id\n        }\n        role\n        timestamp\n      }\n    }\n  }\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -50,11 +50,11 @@ export function gql(source: "\nmutation CreateChat($title: String!, $type: Strin
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function gql(source: "\n  subscription OnMessageCreated($chatId: Int!) {\n    messageCreated(chatId: $chatId) {\n      id\n      content\n      role\n      timestamp\n      chatId\n    }\n  }\n"): (typeof documents)["\n  subscription OnMessageCreated($chatId: Int!) {\n    messageCreated(chatId: $chatId) {\n      id\n      content\n      role\n      timestamp\n      chatId\n    }\n  }\n"];
+export function gql(source: "\n  subscription OnMessageCreated($chatId: Int!) {\n    messageCreated(chatId: $chatId) {\n      id\n      content {\n        type\n        text\n        content\n        input\n        name\n        id\n      }\n      role\n      timestamp\n      chatId\n    }\n  }\n"): (typeof documents)["\n  subscription OnMessageCreated($chatId: Int!) {\n    messageCreated(chatId: $chatId) {\n      id\n      content {\n        type\n        text\n        content\n        input\n        name\n        id\n      }\n      role\n      timestamp\n      chatId\n    }\n  }\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function gql(source: "\n  mutation SendMessage($chatId: Int!, $content: String!, $role: String!) {\n    sendMessage(chatId: $chatId, content: $content, role: $role) {\n      id\n      content\n      role\n      timestamp\n      chatId\n    }\n  }\n"): (typeof documents)["\n  mutation SendMessage($chatId: Int!, $content: String!, $role: String!) {\n    sendMessage(chatId: $chatId, content: $content, role: $role) {\n      id\n      content\n      role\n      timestamp\n      chatId\n    }\n  }\n"];
+export function gql(source: "\n  mutation SendMessage($chatId: Int!, $content: ContentItemInput!, $role: String!) {\n    sendMessage(chatId: $chatId, content: $content, role: $role) {\n      id\n      content {\n        type\n        text\n        content\n        input\n        name\n        id\n      }\n      role\n      timestamp\n      chatId\n    }\n  }\n"): (typeof documents)["\n  mutation SendMessage($chatId: Int!, $content: ContentItemInput!, $role: String!) {\n    sendMessage(chatId: $chatId, content: $content, role: $role) {\n      id\n      content {\n        type\n        text\n        content\n        input\n        name\n        id\n      }\n      role\n      timestamp\n      chatId\n    }\n  }\n"];
 
 export function gql(source: string) {
   return (documents as any)[source] ?? {};

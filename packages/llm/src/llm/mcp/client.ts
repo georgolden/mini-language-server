@@ -13,7 +13,10 @@ export const registerSamplings = (agent: Agent, client: Client) => {
     async ({ method, params }) => {
       if (method === 'sampling/createMessage') {
         const response = await agent.sendMessage(
-          params.messages[0]?.content.text as string,
+          {
+            type: 'text',
+            text: (params.messages[0].content.text as string) ?? '',
+          },
           false,
         );
         return {
