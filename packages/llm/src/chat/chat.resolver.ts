@@ -19,6 +19,7 @@ import { ClaudeEnhancedAgent } from '../llm/llms/claude.agent.js';
 import { createASTAgent } from '../llm/ast/ast.agent.js';
 import { getTools, initializeMCPClient } from '../llm/mcp/client.js';
 import { CustomLogger } from '../logger/logger.service.js';
+import { AgentService } from '../agent/agent.service.js';
 
 const pubSub: PubSubEngine = new PubSub();
 const agents = new Map<number, ClaudeEnhancedAgent>();
@@ -27,6 +28,7 @@ const agents = new Map<number, ClaudeEnhancedAgent>();
 export class ChatResolver {
   constructor(
     private chatService: ChatService,
+    private agentService: AgentService,
     private readonly logger: CustomLogger,
   ) {
     this.logger.setContext('ChatResolver');
@@ -44,14 +46,15 @@ export class ChatResolver {
     return this.chatService.findOne(id);
   }
 
+  @Query(() => String)
+  async availableAgents() {
+    return this.agentService.getAvailableAgentTypes();
+  }
+
   @Mutation(() => Chat)
   async createChat(@Args('title') title: string, @Args('type') type: string) {
     this.logger.log({ message: 'Creating new chat', title, type });
     const chat = await this.chatService.create({ title, type });
-
-    const mcpClient = await initializeMCPClient();
-    const agent = await createASTAgent(await getTools(mcpClient), mcpClient);
-    agents.set(chat.id, agent);
 
     this.logger.log({
       message: 'Publishing chatCreated event',
@@ -61,7 +64,7 @@ export class ChatResolver {
     return chat;
   }
 
-  @Mutation(() => Message)
+  @Mutation(() => Boolean)
   async sendMessage(
     @Args('chatId', { type: () => Int }) chatId: number,
     @Args('content', { type: () => ContentItemInput })
@@ -69,46 +72,20 @@ export class ChatResolver {
     @Args('role') role: string,
   ) {
     this.logger.log({ message: 'Sending message', chatId, role });
-    const agent = agents.get(chatId);
-    if (!agent) {
-      const mcpClient = await initializeMCPClient();
-      const agent = await createASTAgent(await getTools(mcpClient), mcpClient);
-      agents.set(chatId, agent);
-    }
 
     const userMessage = await this.chatService.addMessage(chatId, {
       content: [content],
       role,
     });
+    const chat = await this.chatService.findOne(chatId);
     this.logger.log({
       message: 'User message saved',
       messageId: userMessage.id,
     });
     pubSub.publish('messageCreated', { messageCreated: userMessage });
+    await this.agentService.sendPrompt(chatId.toString(), content.text);
 
-    await agent.sendMessage(content);
-    const agentMessages = agent.getMessages();
-    const lastMessage = agentMessages[agentMessages.length - 1];
-
-    if (lastMessage) {
-      const assistantMessage = await this.chatService.addMessage(chatId, {
-        content:
-          typeof lastMessage.content === 'string'
-            ? [{ type: 'text', text: lastMessage.content }]
-            : lastMessage.content,
-        role: 'assistant',
-      });
-      this.logger.log({
-        message: 'Assistant message saved',
-        messageId: assistantMessage.id,
-      });
-      pubSub.publish('messageCreated', {
-        messageCreated: assistantMessage,
-      });
-      return assistantMessage;
-    }
-
-    return userMessage;
+    return true;
   }
 
   @Subscription(() => Chat)
@@ -117,56 +94,31 @@ export class ChatResolver {
     return pubSub.asyncIterableIterator('chatCreated');
   }
 
-  //@Subscription(() => Message, {
-  //  filter(this: ChatResolver, payload: { messageCreated: Message }, variables: { chatId: number }) {
-  //    this.logger.log({
-  //      message: 'Filtering message subscription',
-  //      messageId: payload.messageCreated.id,
-  //      targetChatId: variables.chatId,
-  //      actualChatId: payload.messageCreated.chatId
-  //    });
-  //    return payload.messageCreated.chatId === variables.chatId;
-  //  },
-  //  resolve: (payload: { messageCreated: Message }) => payload.messageCreated,
-  //})
-  //messageCreated(@Args('chatId', { type: () => Int }) chatId: number) {
-  //  this.logger.log({ message: 'Message subscription initiated', chatId });
-  //  return pubSub.asyncIterableIterator('messageCreated');
-  //}
   @Subscription(() => Message, {
-    filter: (payload, variables) => {
-      if (!payload?.messageCreated) return false;
-      return payload.chatId === variables.chatId;
+    filter(
+      this: ChatResolver,
+      payload: { messageCreated: Message },
+      variables: { chatId: number },
+    ) {
+      this.logger.log({
+        message: 'Filtering message subscription',
+        messageId: payload.messageCreated.id,
+        targetChatId: variables.chatId,
+        actualChatId: payload.messageCreated.chatId,
+      });
+      return payload.messageCreated.chatId === variables.chatId;
     },
-    //resolve: (payload) => {
-    //  console.log(payload);
-    //
-    //  return payload?.messageCreated;
-    //
-    //
-    //},
-    resolve: (payload) => {
-      console.log('Payload type:', typeof payload);
-      console.log('Full payload:', payload);
-
-      // Only return if we have a real message
+    resolve: (payload): Message | undefined => {
       if (payload && 'messageCreated' in payload) {
         return payload.messageCreated;
       }
-
-      // Return a dummy message during initialization
-      return {
-        id: 0,
-        chatId: 0,
-        content: [],
-        role: '',
-        timestamp: new Date(),
-      };
     },
-
-    //resolve: (payload) => payload.messageCreated,
   })
   messageCreated(@Args('chatId', { type: () => Int }) chatId: number) {
+    this.logger.log({
+      message: 'Message subscription initiated',
+      chatId,
+    });
     return pubSub.asyncIterableIterator('messageCreated');
   }
 }

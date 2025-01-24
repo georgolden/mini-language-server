@@ -1,16 +1,38 @@
 import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
-import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
+import { ApolloClient, InMemoryCache, ApolloProvider, split, HttpLink } from '@apollo/client';
+import { getMainDefinition } from '@apollo/client/utilities';
 import { ThemeProvider, ThemeToggle } from '../components/theme';
 import { Heart } from 'lucide-react';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
+
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: import.meta.env.VITE_API_URL,
+  }),
+);
+
+const httpLink = new HttpLink({
+  uri: import.meta.env.VITE_API_URL,
+});
+
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return definition.kind === 'OperationDefinition' && definition.operation === 'subscription';
+  },
+  wsLink,
+  httpLink,
+);
+
+const client = new ApolloClient({
+  link: splitLink,
+  cache: new InMemoryCache(),
+});
 
 export const Route = createRootRoute({
   component: () => {
-    const client = new ApolloClient({
-      uri: import.meta.env.VITE_API_URL,
-      cache: new InMemoryCache(),
-    });
-
     return (
       <ApolloProvider client={client}>
         <ThemeProvider>

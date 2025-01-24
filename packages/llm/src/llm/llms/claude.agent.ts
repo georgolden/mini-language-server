@@ -8,10 +8,13 @@ import {
   type Tool,
 } from './base.agent.js';
 import { ANTHROPIC_API } from '../../config/app.config.js';
+import {
+  Model,
+  Tool as AnthropicTool,
+} from '@anthropic-ai/sdk/resources/index.mjs';
 
 export class AnthropicClient {
   private static instance: Anthropic;
-
   private constructor() {}
 
   public static getInstance(apiKey: string): Anthropic {
@@ -24,97 +27,88 @@ export class AnthropicClient {
 
 export class ClaudeEnhancedAgent extends Agent {
   private client: Anthropic;
-  private model: Anthropic.Model;
+  private model: Model;
 
   constructor({
     systemPrompt,
     tools = [],
-    memoryWindow = 100,
     simpleModel = false,
   }: {
     systemPrompt?: string;
     tools?: Tool[];
-    memoryWindow?: number;
     simpleModel?: boolean;
   }) {
-    super({ systemPrompt, tools, memoryWindow });
+    super({ systemPrompt, tools });
     this.model = simpleModel
       ? 'claude-3-5-haiku-latest'
       : 'claude-3-5-sonnet-latest';
     this.client = AnthropicClient.getInstance(ANTHROPIC_API);
   }
 
-  getMessages() {
-    return this.history;
-  }
-
-  formatMessages(
+  formatPayload(
     messages: Message[],
   ): Anthropic.MessageCreateParamsNonStreaming {
+    const tools: AnthropicTool[] = this.tools.map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      input_schema: { type: 'object', properties: tool.inputSchema },
+    }));
+
+    const formattedMessages: Anthropic.Messages.MessageParam[] = messages.map(
+      ({ role, content }) => ({
+        role,
+        content: content.map((item): Anthropic.Messages.ContentBlockParam => {
+          if (item.type === 'text') {
+            return { type: 'text', text: item.text || '' };
+          }
+          if (item.type === 'tool_result' && item.id) {
+            return {
+              type: 'tool_result',
+              tool_use_id: item.id,
+              content: item.content || '',
+            };
+          }
+          if (item.type === 'tool_use' && item.id) {
+            return {
+              type: 'tool_use',
+              id: item.id,
+              name: item.name || '',
+              input: JSON.parse(item.input || '{}'),
+            };
+          }
+          throw new Error(`Invalid content item type: ${item.type}`);
+        }),
+      }),
+    );
+
     return {
       model: this.model,
       max_tokens: 1024,
       system: this.systemPrompt,
-      //@ts-ignore
-      tools: this.tools.map((tool) => ({
-        name: tool.name,
-        description: tool.description,
-        input_schema: tool.inputSchema,
-      })),
-      //@ts-ignore
-      messages: messages.map(({ role, content }) => {
-        if (Array.isArray(content)) {
-          return {
-            role,
-            content: content.map((item) => {
-              if (item.type === 'text') {
-                return { type: 'text', text: item.text };
-              }
-              if (item.type === 'tool_result') {
-                return {
-                  type: 'tool_result',
-                  tool_use_id: item.id,
-                  content: item.content,
-                };
-              }
-              if (item.type === 'tool_use') {
-                return {
-                  type: 'tool_use',
-                  id: item.id,
-
-                }
-              } 
-              return item;
-            }),
-          };
-        }
-        return { role, content };
-      }),
+      tools,
+      messages: formattedMessages,
     };
   }
 
   protected override async sendToLLM(
-    formattedMessages: ReturnType<typeof this.formatMessages>,
+    messages: Message[],
   ): Promise<ModelResponse[]> {
-    const response = await this.client.messages.create(formattedMessages);
+    const response = await this.client.messages.create(
+      this.formatPayload(messages),
+    );
 
-    const output = response.content.flatMap((content) => {
+    return response.content.flatMap((content): ModelResponse => {
       if (content.type === 'tool_use') {
         return {
           type: 'tool',
           toolUseId: content.id,
           toolName: content.name,
-          args: content.input || {},
-        } satisfies ToolResponse;
+          args: content.input,
+        } as ToolResponse;
       }
       if (content.type === 'text') {
-        return { type: 'text', message: content.text } satisfies TextResponse;
+        return { type: 'text', message: content.text } as TextResponse;
       }
-      return [];
     });
-
-    console.log(output);
-
-    return output;
   }
 }

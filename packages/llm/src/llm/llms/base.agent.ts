@@ -1,5 +1,7 @@
 import type { zodToJsonSchema } from 'zod-to-json-schema';
 
+type MessageHandler = (message: Message) => void;
+
 export interface Message {
   role: 'user' | 'assistant';
   content: ContentItem[];
@@ -36,112 +38,162 @@ export interface TextResponse {
   message: string;
 }
 
-export abstract class Agent {
-  protected systemPrompt: string;
-  protected memoryWindow: number;
-  protected history: Message[];
-  protected tools: Tool[];
+interface IMessageComposer {
+  composeMessage(content: ContentItem[], role?: 'user' | 'assistant'): Message;
+}
 
-  constructor({
-    systemPrompt,
-    tools = [],
-    memoryWindow = 100,
-  }: { systemPrompt?: string; tools?: Tool[]; memoryWindow?: number }) {
-    this.systemPrompt = systemPrompt ?? '';
-    this.tools = tools;
-    this.history = [];
-    this.memoryWindow = memoryWindow;
-  }
+interface IMessageNotifier {
+  notifySubscribers(message: Message): void;
+  subscribe(handler: MessageHandler): () => void;
+}
 
-  addMessage(message: Message): void {
-    this.history.push(message);
-  }
+interface IToolHandler {
+  handleToolResponse(response: ToolResponse): Promise<string>;
+}
 
-  private composeMessage(
-    content: Message['content'],
+class MessageComposer implements IMessageComposer {
+  composeMessage(
+    content: ContentItem[],
     role: 'user' | 'assistant' = 'user',
   ): Message {
-    const message = {
+    return {
       role,
       content,
       timestamp: new Date(),
     };
+  }
+}
 
-    this.addMessage(message);
+class MessageNotifier implements IMessageNotifier {
+  private messageSubscribers: Set<MessageHandler>;
 
-    return message;
+  constructor() {
+    this.messageSubscribers = new Set();
   }
 
-  async sendMessage(prompt: ContentItem, withHistory = true): Promise<string> {
-    const context = this.history.slice(-this.memoryWindow);
+  notifySubscribers(message: Message): void {
+    for (const handler of this.messageSubscribers) {
+      handler(message);
+    }
+  }
 
-    const userMessage: Message = this.composeMessage([prompt]);
+  subscribe(handler: MessageHandler): () => void {
+    this.messageSubscribers.add(handler);
+    return () => this.messageSubscribers.delete(handler);
+  }
+}
 
-    const formattedMessages = this.formatMessages([
-      ...(withHistory ? context : []),
-      userMessage,
-    ]);
-    const response = await this.sendToLLM(formattedMessages);
+class ToolHandler implements IToolHandler {
+  constructor(private tools: Tool[]) {}
 
+  async handleToolResponse(response: ToolResponse): Promise<string> {
+    const tool = this.tools.find((t) => t.name === response.toolName);
+    if (!tool) throw new Error(`Unknown tool: ${response.toolName}`);
+
+    const result = await tool.call(response.args);
+    return result.content[0]?.text ?? '';
+  }
+}
+
+export abstract class Agent {
+  protected systemPrompt: string;
+  protected tools: Tool[];
+  private messageComposer: IMessageComposer;
+  private messageNotifier: IMessageNotifier;
+  private toolHandler: IToolHandler;
+
+  constructor({
+    systemPrompt,
+    tools = [],
+  }: { systemPrompt?: string; tools?: Tool[] }) {
+    this.systemPrompt = systemPrompt;
+    this.tools = tools;
+    this.messageComposer = new MessageComposer();
+    this.messageNotifier = new MessageNotifier();
+    this.toolHandler = new ToolHandler(tools);
+  }
+
+  subscribe(handler: MessageHandler): () => void {
+    return this.messageNotifier.subscribe(handler);
+  }
+
+  protected notifySubscribers(message: Message): void {
+    this.messageNotifier.notifySubscribers(message);
+  }
+
+  async sendMessage(
+    prompt: ContentItem,
+    providedHistory: Message[] = [],
+  ): Promise<string> {
+    const userMessage = this.messageComposer.composeMessage([prompt]);
+    this.notifySubscribers(userMessage);
+
+    const messages = [...providedHistory, userMessage];
+    const responses = await this.sendToLLM(messages);
+
+    return this.processResponses(responses);
+  }
+
+  private async processResponses(responses: ModelResponse[]): Promise<string> {
     const contentArray: ContentItem[] = [];
-    let hasToolCall = false;
 
-    for (const message of response) {
-      if (message.type === 'text') {
-        contentArray.push({
-          type: 'text',
-          text: message.message,
-        });
+    for (const response of responses) {
+      if (response.type === 'text') {
+        contentArray.push({ type: 'text', text: response.message });
+        continue;
       }
-      if (message.type === 'tool') {
-        hasToolCall = true;
-        contentArray.push({
-          type: 'tool_use',
-          id: message.toolUseId,
-          name: message.toolName,
-          input: JSON.stringify(message.args),
-        });
 
-        const tool = this.tools.find((tool) => tool.name === message.toolName);
-        if (!tool) throw new Error('Unknown tool!');
-
-        const toolResult = await tool.call(message.args);
-
-        this.composeMessage(contentArray, 'assistant');
-
-        return await this.sendMessage({
-          type: 'tool_result',
-          id: message.toolUseId,
-          content: toolResult.content[0]?.text,
-        });
+      if (response.type === 'tool') {
+        const toolResult = await this.handleToolResponse(response);
+        if (toolResult) return toolResult;
       }
     }
 
-    if (!hasToolCall && contentArray.length > 0) {
-      this.composeMessage(contentArray, 'assistant');
-      const lastText = contentArray
-        .filter((item) => item.type === 'text')
-        .pop();
-      return lastText?.text || '';
+    if (contentArray.length > 0) {
+      const assistantMessage = this.messageComposer.composeMessage(
+        contentArray,
+        'assistant',
+      );
+      this.notifySubscribers(assistantMessage);
+      return this.getLastTextContent(contentArray);
     }
 
     return '';
   }
 
-  clearMemory(): void {
-    this.history = [];
+  private async handleToolResponse(
+    response: ToolResponse,
+  ): Promise<string | undefined> {
+    const toolUseContent: ContentItem = {
+      type: 'tool_use',
+      id: response.toolUseId,
+      name: response.toolName,
+      input: JSON.stringify(response.args),
+    };
+
+    const assistantMessage = this.messageComposer.composeMessage(
+      [toolUseContent],
+      'assistant',
+    );
+    this.notifySubscribers(assistantMessage);
+
+    const toolResult = await this.toolHandler.handleToolResponse(response);
+
+    return this.sendMessage({
+      type: 'tool_result',
+      id: response.toolUseId,
+      content: toolResult,
+    });
+  }
+
+  private getLastTextContent(content: ContentItem[]): string {
+    const lastText = content.filter((item) => item.type === 'text').pop();
+    return lastText?.text ?? '';
   }
 
   updateSystemPrompt(newPrompt: string): void {
     this.systemPrompt = newPrompt;
   }
 
-  abstract formatMessages(
-    messages: Message[],
-    enhancedSystemPrompt?: string,
-  ): unknown;
-
-  protected abstract sendToLLM(
-    formattedMessages: unknown,
-  ): Promise<ModelResponse[]>;
+  protected abstract sendToLLM(messages: Message[]): Promise<ModelResponse[]>;
 }

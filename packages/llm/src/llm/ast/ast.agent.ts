@@ -1,8 +1,15 @@
+import { Agent } from 'src/agent/agent.decorator.js';
 import { ClaudeEnhancedAgent } from '../llms/claude.agent.js';
 import { registerSamplings } from '../mcp/client.js';
 
-export const createASTAgent = async (tools, mcpClient) => {
-  const agent = new ClaudeEnhancedAgent({
+@Agent({
+  type: 'ast-coder',
+  description: 'Specialized in software development assistance'
+})
+export class CodeAgent extends ClaudeEnhancedAgent {
+  constructor() {
+
+  super({
     systemPrompt:
       'You are a code-focused AI assistant. Follow this exact tool usage sequence: ' +
       '1. Start with get_project_files to map the project structure ' +
@@ -31,6 +38,7 @@ export const createASTAgent = async (tools, mcpClient) => {
   );
 
   return agent;
+  }
 };
 
 // i want to try this:
