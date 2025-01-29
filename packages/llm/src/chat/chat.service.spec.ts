@@ -1,8 +1,8 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ChatService } from './chat.service.js';
-import { Chat, Message } from './dto/chat.types.js';
-import { ClaudeEnhancedAgent } from '../llm/llms/claude.agent.js';
+import type { Chat, Message } from './dto/chat.types.js';
+import type { ClaudeChain } from '../llm/llms/claude.agent.js';
 
 describe('ChatService', () => {
   let service: ChatService;
@@ -51,7 +51,7 @@ describe('ChatService', () => {
 
   describe('Agent management', () => {
     it('should store and retrieve agent for chat', () => {
-      const mockAgent = {} as ClaudeEnhancedAgent;
+      const mockAgent = {} as ClaudeChain;
       service.setAgent(1, mockAgent);
       expect(service.getAgent(1)).toBe(mockAgent);
     });
@@ -67,9 +67,7 @@ describe('ChatService', () => {
         { ...mockChat, messages: [mockMessage] },
         { ...mockChat, id: 2, messages: [] },
       ];
-      jest
-        .spyOn(prisma.chat, 'findMany')
-        .mockResolvedValue(mockChatsWithMessages);
+      jest.spyOn(prisma.chat, 'findMany').mockResolvedValue(mockChatsWithMessages);
       const result = await service.findAll();
       expect(result).toEqual(mockChatsWithMessages);
     });

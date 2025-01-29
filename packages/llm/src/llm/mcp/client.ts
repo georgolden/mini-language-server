@@ -5,33 +5,28 @@ import {
   ListToolsResultSchema,
   CreateMessageRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import type { Tool, Agent } from '../llms/base.agent.js';
+import type { Tool, BaseLLMChain } from '../llms/base.agent.js';
 
-export const registerSamplings = (agent: Agent, client: Client) => {
-  client.setRequestHandler(
-    CreateMessageRequestSchema,
-    async ({ method, params }) => {
-      if (method === 'sampling/createMessage') {
-        const response = await agent.sendMessage(
-          {
-            type: 'text',
-            text: (params.messages[0].content.text as string) ?? '',
-          },
-          false,
-        );
-        return {
-          content: {
-            type: 'text',
-            text: response,
-          },
-          role: 'assistant',
-          model: 'claude',
-          _meta: {},
-        };
-      }
-      throw new Error('Unsupported method');
-    },
-  );
+export const registerSamplings = (agent: BaseLLMChain, client: Client) => {
+  // TODO: we may want to rewrite it to be able to support multi  
+  client.setRequestHandler(CreateMessageRequestSchema, async ({ method, params }) => {
+    if (method === 'sampling/createMessage') {
+      const response = await agent.sendMessage({
+        type: 'text',
+        text: (params.messages[0].content.text as string) ?? '',
+      });
+      return {
+        content: {
+          type: 'text',
+          text: response,
+        },
+        role: 'assistant',
+        model: 'claude',
+        _meta: {},
+      };
+    }
+    throw new Error('Unsupported method');
+  });
 };
 
 export const getTools = async (client: Client): Promise<Tool[]> => {

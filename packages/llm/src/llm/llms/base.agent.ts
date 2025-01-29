@@ -52,10 +52,7 @@ interface IToolHandler {
 }
 
 class MessageComposer implements IMessageComposer {
-  composeMessage(
-    content: ContentItem[],
-    role: 'user' | 'assistant' = 'user',
-  ): Message {
+  composeMessage(content: ContentItem[], role: 'user' | 'assistant' = 'user'): Message {
     return {
       role,
       content,
@@ -84,7 +81,7 @@ class MessageNotifier implements IMessageNotifier {
 }
 
 class ToolHandler implements IToolHandler {
-  constructor(private tools: Tool[]) {}
+  constructor(private tools: Tool[]) { }
 
   async handleToolResponse(response: ToolResponse): Promise<string> {
     const tool = this.tools.find((t) => t.name === response.toolName);
@@ -95,17 +92,14 @@ class ToolHandler implements IToolHandler {
   }
 }
 
-export abstract class Agent {
+export abstract class BaseLLMChain {
   protected systemPrompt: string;
   protected tools: Tool[];
   private messageComposer: IMessageComposer;
   private messageNotifier: IMessageNotifier;
   private toolHandler: IToolHandler;
 
-  constructor({
-    systemPrompt,
-    tools = [],
-  }: { systemPrompt?: string; tools?: Tool[] }) {
+  constructor({ systemPrompt, tools = [] }: { systemPrompt?: string; tools?: Tool[] }) {
     this.systemPrompt = systemPrompt;
     this.tools = tools;
     this.messageComposer = new MessageComposer();
@@ -121,10 +115,7 @@ export abstract class Agent {
     this.messageNotifier.notifySubscribers(message);
   }
 
-  async sendMessage(
-    prompt: ContentItem,
-    providedHistory: Message[] = [],
-  ): Promise<string> {
+  async sendMessage(prompt: ContentItem, providedHistory: Message[] = []): Promise<string> {
     const userMessage = this.messageComposer.composeMessage([prompt]);
     this.notifySubscribers(userMessage);
 
@@ -150,10 +141,7 @@ export abstract class Agent {
     }
 
     if (contentArray.length > 0) {
-      const assistantMessage = this.messageComposer.composeMessage(
-        contentArray,
-        'assistant',
-      );
+      const assistantMessage = this.messageComposer.composeMessage(contentArray, 'assistant');
       this.notifySubscribers(assistantMessage);
       return this.getLastTextContent(contentArray);
     }
@@ -161,9 +149,7 @@ export abstract class Agent {
     return '';
   }
 
-  private async handleToolResponse(
-    response: ToolResponse,
-  ): Promise<string | undefined> {
+  private async handleToolResponse(response: ToolResponse): Promise<string | undefined> {
     const toolUseContent: ContentItem = {
       type: 'tool_use',
       id: response.toolUseId,
@@ -171,10 +157,7 @@ export abstract class Agent {
       input: JSON.stringify(response.args),
     };
 
-    const assistantMessage = this.messageComposer.composeMessage(
-      [toolUseContent],
-      'assistant',
-    );
+    const assistantMessage = this.messageComposer.composeMessage([toolUseContent], 'assistant');
     this.notifySubscribers(assistantMessage);
 
     const toolResult = await this.toolHandler.handleToolResponse(response);

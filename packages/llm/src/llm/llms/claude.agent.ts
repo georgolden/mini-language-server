@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import {
-  Agent,
+  BaseLLMChain,
   type ModelResponse,
   type ToolResponse,
   type TextResponse,
@@ -8,14 +8,11 @@ import {
   type Tool,
 } from './base.agent.js';
 import { ANTHROPIC_API } from '../../config/app.config.js';
-import {
-  Model,
-  Tool as AnthropicTool,
-} from '@anthropic-ai/sdk/resources/index.mjs';
+import type { Model, Tool as AnthropicTool } from '@anthropic-ai/sdk/resources/index.mjs';
 
 export class AnthropicClient {
   private static instance: Anthropic;
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(apiKey: string): Anthropic {
     if (!AnthropicClient.instance) {
@@ -25,7 +22,7 @@ export class AnthropicClient {
   }
 }
 
-export class ClaudeEnhancedAgent extends Agent {
+export class ClaudeChain extends BaseLLMChain {
   private client: Anthropic;
   private model: Model;
 
@@ -39,15 +36,11 @@ export class ClaudeEnhancedAgent extends Agent {
     simpleModel?: boolean;
   }) {
     super({ systemPrompt, tools });
-    this.model = simpleModel
-      ? 'claude-3-5-haiku-latest'
-      : 'claude-3-5-sonnet-latest';
+    this.model = simpleModel ? 'claude-3-5-haiku-latest' : 'claude-3-5-sonnet-latest';
     this.client = AnthropicClient.getInstance(ANTHROPIC_API);
   }
 
-  formatPayload(
-    messages: Message[],
-  ): Anthropic.MessageCreateParamsNonStreaming {
+  formatPayload(messages: Message[]): Anthropic.MessageCreateParamsNonStreaming {
     const tools: AnthropicTool[] = this.tools.map((tool) => ({
       name: tool.name,
       description: tool.description,
@@ -90,12 +83,8 @@ export class ClaudeEnhancedAgent extends Agent {
     };
   }
 
-  protected override async sendToLLM(
-    messages: Message[],
-  ): Promise<ModelResponse[]> {
-    const response = await this.client.messages.create(
-      this.formatPayload(messages),
-    );
+  protected override async sendToLLM(messages: Message[]): Promise<ModelResponse[]> {
+    const response = await this.client.messages.create(this.formatPayload(messages));
 
     return response.content.flatMap((content): ModelResponse => {
       if (content.type === 'tool_use') {

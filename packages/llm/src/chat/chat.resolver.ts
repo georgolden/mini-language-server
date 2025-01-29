@@ -15,14 +15,14 @@ import {
   ContentItem,
   ContentItemInput,
 } from './dto/chat.types.js';
-import { ClaudeEnhancedAgent } from '../llm/llms/claude.agent.js';
+import { ClaudeChain } from '../llm/llms/claude.agent.js';
 import { createASTAgent } from '../llm/ast/ast.agent.js';
 import { getTools, initializeMCPClient } from '../llm/mcp/client.js';
 import { CustomLogger } from '../logger/logger.service.js';
 import { AgentService } from '../agent/agent.service.js';
 
 const pubSub: PubSubEngine = new PubSub();
-const agents = new Map<number, ClaudeEnhancedAgent>();
+const agents = new Map<number, ClaudeChain>();
 
 @Resolver(() => Chat)
 export class ChatResolver {

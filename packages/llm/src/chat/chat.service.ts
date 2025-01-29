@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
-import { ClaudeEnhancedAgent } from '../llm/llms/claude.agent.js';
-import { CustomLogger } from '../logger/logger.service.js';
-import { ContentItem } from 'src/llm/llms/base.agent.js';
+import type { PrismaService } from '../prisma/prisma.service.js';
+import type { ClaudeChain } from '../llm/llms/claude.agent.js';
+import type { CustomLogger } from '../logger/logger.service.js';
+import type { ContentItem } from 'src/llm/llms/base.agent.js';
 
 @Injectable()
 export class ChatService {
-  private agents = new Map<number, ClaudeEnhancedAgent>();
+  private agents = new Map<number, ClaudeChain>();
 
   constructor(
     private prisma: PrismaService,
@@ -38,10 +38,7 @@ export class ChatService {
     });
   }
 
-  async addMessage(
-    chatId: number,
-    data: { content: ContentItem[]; role: string },
-  ) {
+  async addMessage(chatId: number, data: { content: ContentItem[]; role: string }) {
     this.logger.log({ message: 'Adding message to chat', chatId, data });
     return this.prisma.message.create({
       data: {
@@ -60,7 +57,7 @@ export class ChatService {
     });
   }
 
-  setAgent(chatId: number, agent: ClaudeEnhancedAgent) {
+  setAgent(chatId: number, agent: ClaudeChain) {
     this.agents.set(chatId, agent);
   }
 
