@@ -1,18 +1,21 @@
 import Anthropic from '@anthropic-ai/sdk';
-import {
-  BaseLLMChain,
-  type ModelResponse,
-  type ToolResponse,
-  type TextResponse,
-  type Message,
-  type Tool,
-} from './base.agent.js';
+import type {
+  ModelResponse,
+  ToolResponse,
+  TextResponse,
+  Message,
+  Tool,
+} from './types.js';
 import { ANTHROPIC_API } from '../../config/app.config.js';
-import type { Model, Tool as AnthropicTool } from '@anthropic-ai/sdk/resources/index.mjs';
+import type {
+  Model,
+  Tool as AnthropicTool,
+} from '@anthropic-ai/sdk/resources/index.mjs';
+import { BaseLLMChain } from './base.agent.js';
 
 export class AnthropicClient {
   private static instance: Anthropic;
-  private constructor() { }
+  private constructor() {}
 
   public static getInstance(apiKey: string): Anthropic {
     if (!AnthropicClient.instance) {
@@ -36,15 +39,19 @@ export class ClaudeChain extends BaseLLMChain {
     simpleModel?: boolean;
   }) {
     super({ systemPrompt, tools });
-    this.model = simpleModel ? 'claude-3-5-haiku-latest' : 'claude-3-5-sonnet-latest';
+    this.model = simpleModel
+      ? 'claude-3-5-haiku-latest'
+      : 'claude-3-5-sonnet-latest';
     this.client = AnthropicClient.getInstance(ANTHROPIC_API);
   }
 
-  formatPayload(messages: Message[]): Anthropic.MessageCreateParamsNonStreaming {
+  formatPayload(
+    messages: Message[],
+  ): Anthropic.MessageCreateParamsNonStreaming {
     const tools: AnthropicTool[] = this.tools.map((tool) => ({
       name: tool.name,
       description: tool.description,
-      input_schema: { type: 'object', properties: tool.inputSchema },
+      input_schema: tool.inputSchema,
     }));
 
     const formattedMessages: Anthropic.Messages.MessageParam[] = messages.map(
@@ -83,8 +90,16 @@ export class ClaudeChain extends BaseLLMChain {
     };
   }
 
-  protected override async sendToLLM(messages: Message[]): Promise<ModelResponse[]> {
-    const response = await this.client.messages.create(this.formatPayload(messages));
+  protected override async sendToLLM(
+    messages: Message[],
+  ): Promise<ModelResponse[]> {
+    console.log(JSON.stringify(this.formatPayload(messages)));
+
+    const response = await this.client.messages.create(
+      this.formatPayload(messages),
+    );
+
+    console.log(JSON.stringify(response));
 
     return response.content.flatMap((content): ModelResponse => {
       if (content.type === 'tool_use') {

@@ -1,58 +1,20 @@
-import type { zodToJsonSchema } from 'zod-to-json-schema';
-
-type MessageHandler = (message: Message) => void;
-
-export interface Message {
-  role: 'user' | 'assistant';
-  content: ContentItem[];
-  timestamp: Date;
-}
-
-export interface ContentItem {
-  type: 'text' | 'tool_use' | 'tool_result';
-  text?: string;
-  id?: string;
-  name?: string;
-  input?: string;
-  content?: string;
-}
-
-export interface Tool {
-  name: string;
-  description?: string;
-  inputSchema: ReturnType<typeof zodToJsonSchema>;
-  call: (params: any) => Promise<any>;
-}
-
-export type ModelResponse = ToolResponse | TextResponse;
-
-export interface ToolResponse {
-  type: 'tool';
-  toolUseId: string;
-  toolName: string;
-  args: Record<any, any>;
-}
-
-export interface TextResponse {
-  type: 'text';
-  message: string;
-}
-
-interface IMessageComposer {
-  composeMessage(content: ContentItem[], role?: 'user' | 'assistant'): Message;
-}
-
-interface IMessageNotifier {
-  notifySubscribers(message: Message): void;
-  subscribe(handler: MessageHandler): () => void;
-}
-
-interface IToolHandler {
-  handleToolResponse(response: ToolResponse): Promise<string>;
-}
+import {
+  Message,
+  Tool,
+  ContentItem,
+  ModelResponse,
+  ToolResponse,
+  IMessageComposer,
+  IToolHandler,
+  MessageHandler,
+  IMessageNotifier,
+} from './types.js';
 
 class MessageComposer implements IMessageComposer {
-  composeMessage(content: ContentItem[], role: 'user' | 'assistant' = 'user'): Message {
+  composeMessage(
+    content: ContentItem[],
+    role: 'user' | 'assistant' = 'user',
+  ): Message {
     return {
       role,
       content,
@@ -81,13 +43,13 @@ class MessageNotifier implements IMessageNotifier {
 }
 
 class ToolHandler implements IToolHandler {
-  constructor(private tools: Tool[]) { }
+  constructor(private tools: Tool[]) {}
 
   async handleToolResponse(response: ToolResponse): Promise<string> {
     const tool = this.tools.find((t) => t.name === response.toolName);
     if (!tool) throw new Error(`Unknown tool: ${response.toolName}`);
 
-    const result = await tool.call(response.args);
+    const result = await tool.call(response?.args);
     return result.content[0]?.text ?? '';
   }
 }
@@ -98,13 +60,23 @@ export abstract class BaseLLMChain {
   private messageComposer: IMessageComposer;
   private messageNotifier: IMessageNotifier;
   private toolHandler: IToolHandler;
+  private history: Message[];
+  private historyLimit: number;
 
-  constructor({ systemPrompt, tools = [] }: { systemPrompt?: string; tools?: Tool[] }) {
+  // number of user prompts untill history is purged
+  private historyLimitNatural?: number;
+
+  constructor({
+    systemPrompt,
+    tools = [],
+  }: { systemPrompt?: string; tools?: Tool[] }) {
     this.systemPrompt = systemPrompt;
     this.tools = tools;
     this.messageComposer = new MessageComposer();
     this.messageNotifier = new MessageNotifier();
     this.toolHandler = new ToolHandler(tools);
+    this.history = [];
+    this.historyLimit = 30;
   }
 
   subscribe(handler: MessageHandler): () => void {
@@ -112,17 +84,50 @@ export abstract class BaseLLMChain {
   }
 
   protected notifySubscribers(message: Message): void {
+    this.history.push(message);
     this.messageNotifier.notifySubscribers(message);
   }
 
-  async sendMessage(prompt: ContentItem, providedHistory: Message[] = []): Promise<string> {
+  private getMessagesUntilNthUserText(): Message[] {
+    let userTextCount = 0;
+
+    for (let i = this.history.length - 1; i >= 0; i--) {
+      const message = this.history[i];
+
+      if (
+        message.role === 'user' &&
+        message.content.some((item) => item.type === 'text')
+      ) {
+        userTextCount++;
+
+        if (userTextCount === this.historyLimitNatural) {
+          return this.history.slice(i);
+        }
+      }
+    }
+
+    return this.history;
+  }
+
+  async sendMessage(prompt: ContentItem): Promise<string> {
     const userMessage = this.messageComposer.composeMessage([prompt]);
     this.notifySubscribers(userMessage);
 
-    const messages = [...providedHistory, userMessage];
+    const history: Message[] = this.historyLimitNatural
+      ? this.getMessagesUntilNthUserText()
+      : this.history.slice(
+          this.history.length - this.historyLimit,
+          this.history.length,
+        );
+
+    const messages = history;
     const responses = await this.sendToLLM(messages);
 
     return this.processResponses(responses);
+  }
+
+  public setHistory(history: Message[]) {
+    this.history = history;
   }
 
   private async processResponses(responses: ModelResponse[]): Promise<string> {
@@ -141,7 +146,10 @@ export abstract class BaseLLMChain {
     }
 
     if (contentArray.length > 0) {
-      const assistantMessage = this.messageComposer.composeMessage(contentArray, 'assistant');
+      const assistantMessage = this.messageComposer.composeMessage(
+        contentArray,
+        'assistant',
+      );
       this.notifySubscribers(assistantMessage);
       return this.getLastTextContent(contentArray);
     }
@@ -149,7 +157,9 @@ export abstract class BaseLLMChain {
     return '';
   }
 
-  private async handleToolResponse(response: ToolResponse): Promise<string | undefined> {
+  private async handleToolResponse(
+    response: ToolResponse,
+  ): Promise<string | undefined> {
     const toolUseContent: ContentItem = {
       type: 'tool_use',
       id: response.toolUseId,
@@ -157,7 +167,10 @@ export abstract class BaseLLMChain {
       input: JSON.stringify(response.args),
     };
 
-    const assistantMessage = this.messageComposer.composeMessage([toolUseContent], 'assistant');
+    const assistantMessage = this.messageComposer.composeMessage(
+      [toolUseContent],
+      'assistant',
+    );
     this.notifySubscribers(assistantMessage);
 
     const toolResult = await this.toolHandler.handleToolResponse(response);
