@@ -93,13 +93,9 @@ export class ClaudeChain extends BaseLLMChain {
   protected override async sendToLLM(
     messages: Message[],
   ): Promise<ModelResponse[]> {
-    console.log(JSON.stringify(this.formatPayload(messages)));
-
     const response = await this.client.messages.create(
       this.formatPayload(messages),
     );
-
-    console.log(JSON.stringify(response));
 
     return response.content.flatMap((content): ModelResponse => {
       if (content.type === 'tool_use') {
