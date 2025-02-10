@@ -5,28 +5,33 @@ import {
   ListToolsResultSchema,
   CreateMessageRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import type { Tool, BaseLLMChain } from '../llms/base.agent.js';
+import type { BaseLLMChain } from '../llms/base.agent.js';
+import type { Tool, Message } from '../llms/types.js';
+import { Record } from '@prisma/client/runtime/library';
 
 export const registerSamplings = (agent: BaseLLMChain, client: Client) => {
-  // TODO: we may want to rewrite it to be able to support multi  
-  client.setRequestHandler(CreateMessageRequestSchema, async ({ method, params }) => {
-    if (method === 'sampling/createMessage') {
-      const response = await agent.sendMessage({
-        type: 'text',
-        text: (params.messages[0].content.text as string) ?? '',
-      });
-      return {
-        content: {
+  // TODO: we may want to rewrite it to be able to support multi
+  client.setRequestHandler(
+    CreateMessageRequestSchema,
+    async ({ method, params }) => {
+      if (method === 'sampling/createMessage') {
+        const response = await agent.sendMessage({
           type: 'text',
-          text: response,
-        },
-        role: 'assistant',
-        model: 'claude',
-        _meta: {},
-      };
-    }
-    throw new Error('Unsupported method');
-  });
+          text: (params.messages[0].content.text as string) ?? '',
+        });
+        return {
+          content: {
+            type: 'text',
+            text: response,
+          },
+          role: 'assistant',
+          model: 'claude',
+          _meta: {},
+        };
+      }
+      throw new Error('Unsupported method');
+    },
+  );
 };
 
 export const getTools = async (client: Client): Promise<Tool[]> => {
@@ -38,31 +43,40 @@ export const getTools = async (client: Client): Promise<Tool[]> => {
     ListToolsResultSchema,
   );
 
-  return tools.map((tool) => ({
-    name: tool.name,
-    description: tool.description,
-    inputSchema: {
-      type: 'object',
-      properties: (tool.inputSchema as any).properties || {},
-      additionalProperties: false,
-      required: (tool.inputSchema as any).required || [],
-    },
-    call: async (args) => {
-      return client.request(
-        {
-          method: 'tools/call',
-          params: {
-            name: tool.name,
-            arguments: args,
-            _meta: {
-              progressToken: 0,
+  return tools.map((tool) => {
+    const inputSchema = tool.inputSchema as Record<string, unknown>;
+    return {
+      name: tool.name,
+      description: tool.description,
+      inputSchema: {
+        type: 'object',
+        properties: inputSchema?.properties || {},
+        additionalProperties: false,
+        required: inputSchema?.required || [],
+      },
+      call: async (args) => {
+        const response = await client.request(
+          {
+            method: 'tools/call',
+            params: {
+              name: tool.name,
+              arguments: args,
+              _meta: {
+                progressToken: 0,
+              },
             },
           },
-        },
-        CallToolResultSchema,
-      );
-    },
-  }));
+          CallToolResultSchema,
+        );
+        const content: Message['content'] = response.content.map((el) => ({
+          content: el.text as string,
+          type: 'tool_result',
+        }));
+
+        return { content, role: 'user', timestamp: new Date() };
+      },
+    };
+  });
 };
 
 export const initializeMCPClient = async () => {

@@ -9,7 +9,6 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { AppController } from './app.controller.js';
 import { LoggerModule } from './logger/logger.module.js';
 import { LoggerMiddleware } from './logger/logger.middleware.js';
-import { AgentModule } from './agent/agent.module';
 
 @Module({
   imports: [
@@ -21,14 +20,12 @@ import { AgentModule } from './agent/agent.module';
       playground: true,
       subscriptions: {
         'graphql-ws': true,
-        //'subscriptions-transport-ws': true
       },
       context: ({ req, res, connection }) => ({ req, res, connection }),
     }),
     PrismaModule,
     IdentityModule,
     ChatModule,
-    AgentModule,
   ],
   controllers: [AppController],
 })

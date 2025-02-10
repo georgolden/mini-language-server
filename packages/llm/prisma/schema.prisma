@@ -47,6 +47,9 @@ model Chat {
   title     String
   type      String
   metadata  String?
+  workspace String?
+  modelName String    @default("claude-3-5-sonnet-latest")
+  provider  String    @default("anthropic")
   createdAt DateTime  @default(now())
   messages  Message[]
 }

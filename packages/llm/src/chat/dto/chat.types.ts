@@ -91,6 +91,12 @@ export class Chat {
   metadata: string;
 
   @Field()
+  modelName: string;
+
+  @Field()
+  provider: string;
+
+  @Field()
   createdAt: Date;
 
   @Field(() => [Message])

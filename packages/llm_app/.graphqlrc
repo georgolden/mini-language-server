@@ -1,2 +1,15 @@
 schema: http://localhost:3002/graphql
-documents: ./src/**/*.graphql
+documents: 
+  - "./src/**/*.graphql"
+  - "./src/**/*.ts"
+  - "./src/**/*.tsx"
+extensions:
+  codegen:
+    generates:
+      ./src/gql/:
+        preset: client
+    pluckConfig:
+      modules:
+        - name: 'gql-tag'
+        - name: '@apollo/client'
+          identifier: 'gql'

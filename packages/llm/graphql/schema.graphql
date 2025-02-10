@@ -7,6 +7,8 @@ type Chat {
   id: Int!
   messages: [Message!]!
   metadata: String!
+  modelName: String!
+  provider: String!
   title: String!
   type: String!
 }
@@ -54,14 +56,17 @@ type Message {
 
 type Mutation {
   createChat(title: String!, type: String!): Chat!
+  getModels: [String!]!
   logout: Boolean!
-  sendMessage(chatId: Int!, content: ContentItemInput!, role: String!): Message!
+  removeChat(id: Int!): Boolean!
+  sendMessage(chatId: Int!, content: ContentItemInput!, role: String!): Boolean!
   signIn(email: String!, password: String!): User!
   signUp(email: String!, name: String!, password: String!): User!
   updateUser(input: UpdateUserInput!): User!
 }
 
 type Query {
+  availableAgents: String!
   chat(id: Int!): Chat!
   chats: [Chat!]!
   getGoogleAuthURL: String!
@@ -84,7 +89,7 @@ input SocialAuthInput {
 
 type Subscription {
   chatCreated: Chat!
-  messageCreated(chatId: Int!): Message!
+  messageCreated(chatId: Int!, limit: Int! = 20): Message!
 }
 
 input UpdateUserInput {

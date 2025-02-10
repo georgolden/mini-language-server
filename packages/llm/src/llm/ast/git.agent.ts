@@ -1,8 +1,11 @@
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import z from 'zod';
-
 import { Tool } from '../llms/types.js';
+import z from 'zod';
 import { GPTChain } from '../llms/providers/openai.agent.js';
+
+const getRandomInt = (min: number, max: number): number => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
 const cowSaySchema = z.object({
   word: z.string().describe('Word for cow to say'),
@@ -35,7 +38,7 @@ const codeAgent = async () => {
           timestamp: new Date(),
           content: [
             {
-              text: Math.random().toString(),
+              text: getRandomInt(0, 1000).toString(),
               type: 'text',
             },
           ],
@@ -50,8 +53,8 @@ const codeAgent = async () => {
       call: async ({ word }) => {
         return {
           role: 'user',
-          name: 'cowSay',
           timestamp: new Date(),
+          name: 'cowSay',
           content: [
             {
               text: `Moo~${word}`,
@@ -70,19 +73,19 @@ const codeAgent = async () => {
   const chat = new GPTChain({
     systemPrompt: ASTSystemPrompt,
     tools,
-    //simpleModel: true,
+    simpleModel: true,
   });
 
   return chat;
 };
 
 // uncomment for testing
-//(async () => {
-//  const instance = await codeAgent();
-//
-//  instance.subscribe(console.log);
-//  instance.sendMessage({
-//    type: 'text',
-//    text: 'Get sum of 2 random numbers',
-//  });
-//})();
+(async () => {
+  const instance = await codeAgent();
+
+  instance.subscribe(console.log);
+  instance.sendMessage({
+    type: 'text',
+    text: 'Get sum of 2 random numbers',
+  });
+})();

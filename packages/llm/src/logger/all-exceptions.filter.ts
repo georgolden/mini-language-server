@@ -18,27 +18,49 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
   }
 
   catch(exception: unknown, host: ArgumentsHost) {
-    const { httpAdapter } = this.httpAdapterHost;
-    const ctx = host.switchToHttp();
-    const request = ctx.getRequest();
+    if (host.getType() === 'http') {
+      const { httpAdapter } = this.httpAdapterHost;
+      const ctx = host.switchToHttp();
+      const request = ctx.getRequest();
 
-    const httpStatus =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+      if (!request) {
+        this.logger.error(
+          'API Error',
+          exception instanceof Error ? exception.stack : '',
+          'ExceptionFilter',
+        );
+        throw exception;
+      }
 
-    this.logger.error(
-      `${request.method} ${request.url}`,
-      exception instanceof Error ? exception.stack : '',
-      'ExceptionFilter',
-    );
+      const httpStatus =
+        exception instanceof HttpException
+          ? exception.getStatus()
+          : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const responseBody = {
-      statusCode: httpStatus,
-      timestamp: new Date().toISOString(),
-      path: httpAdapter.getRequestUrl(request),
-    };
+      this.logger.error(
+        `${request.method} ${request.url}`,
+        exception instanceof Error ? exception.stack : '',
+        'ExceptionFilter',
+      );
 
-    httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
+      const responseBody = {
+        statusCode: httpStatus,
+        timestamp: new Date().toISOString(),
+        path: httpAdapter.getRequestUrl(request),
+      };
+
+      httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
+    } else {
+      // GraphQL handling
+      this.logger.error(
+        'GraphQL Error',
+        exception instanceof Error ? exception.stack : '',
+        'ExceptionFilter',
+      );
+      // Let GraphQL handle the error response
+      if (exception instanceof Error) {
+        throw exception;
+      }
+    }
   }
 }

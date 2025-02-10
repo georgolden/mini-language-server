@@ -5,25 +5,28 @@ import type {
   TextResponse,
   Message,
   Tool,
-} from './types.js';
-import { OPENAI_API_KEY } from '../../config/app.config.js';
-import { BaseLLMChain } from './base.agent.js';
+} from '../types.js';
+import { XAI_API_KEY } from '../../../config/app.config.js';
+import { BaseLLMChain } from '../base.agent.js';
 
-export class OpenAIClient {
+export class XAICLient {
   private static instance: OpenAI;
   private constructor() {}
 
   public static getInstance(apiKey: string): OpenAI {
-    if (!OpenAIClient.instance) {
-      OpenAIClient.instance = new OpenAI({ apiKey });
+    if (!XAICLient.instance) {
+      XAICLient.instance = new OpenAI({
+        apiKey,
+        baseURL: 'https://api.x.ai/v1',
+      });
     }
-    return OpenAIClient.instance;
+    return XAICLient.instance;
   }
 }
 
-export class GPTChain extends BaseLLMChain {
+export class XChain extends BaseLLMChain {
   private client: OpenAI;
-  private model: OpenAI.Chat.ChatModel;
+  private model: string;
 
   constructor({
     systemPrompt,
@@ -36,8 +39,8 @@ export class GPTChain extends BaseLLMChain {
   }) {
     super({ systemPrompt, tools });
     // Choose model based on the simpleModel flag.
-    this.model = simpleModel ? 'gpt-4o-mini' : 'o3-mini';
-    this.client = OpenAIClient.getInstance(OPENAI_API_KEY);
+    this.model = simpleModel ? 'grok-2-latest' : 'grok-2-latest';
+    this.client = XAICLient.getInstance(XAI_API_KEY);
   }
 
   formatPayload(messages: Message[]): OpenAI.Chat.ChatCompletionCreateParams {
@@ -101,7 +104,8 @@ export class GPTChain extends BaseLLMChain {
   ): Promise<ModelResponse[]> {
     const payload = this.formatPayload(messages);
     const response = await this.client.chat.completions.create(payload);
-    const openaiMessage = response?.choices?.[0];
+    // any cause openai has shit types :/
+    const openaiMessage = (response as any)?.choices?.[0];
     const content = openaiMessage?.message?.content || '';
 
     if (openaiMessage.finish_reason === 'tool_calls') {

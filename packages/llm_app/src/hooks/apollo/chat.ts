@@ -1,16 +1,24 @@
 import { useLoadableQuery, useMutation, useSubscription, useSuspenseQuery } from '@apollo/client';
+import { useEffect, useState } from 'react';
 
-import { gql } from '../../__generated__/gql';
-import { useState } from 'react';
+import type {
+  GetAllChatsQuery,
+  GetChatWithMessagesQuery,
+  CreateChatMutation,
+  OnMessageCreatedSubscription,
+  SendMessageMutation,
+  Message,
+} from '../../gql/graphql';
+import { graphql } from '../../gql';
 
-const READ_CHATS = gql(/* GraphQL */ `query GetAllChats { 
+const READ_CHATS = graphql(`query GetAllChats { 
   chats {
     id
     title
   }
 }`);
 
-export const SELECT_CHAT = gql(/* GraphQL */ `
+export const SELECT_CHAT = graphql(/* GraphQL */ `
   query GetChatWithMessages($chatId: Int!) {
     chat(id: $chatId) {
       id
@@ -34,7 +42,7 @@ export const SELECT_CHAT = gql(/* GraphQL */ `
   }
 `);
 
-const CREATE_CHAT = gql(/* GraphQL */ `
+const CREATE_CHAT = graphql(/* GraphQL */ `
 mutation CreateChat($title: String!, $type: String!) {
   createChat(title: $title, type: $type) {
     id
@@ -46,7 +54,7 @@ mutation CreateChat($title: String!, $type: String!) {
 }
 `);
 
-const MESSAGE_SUBSCRIPTION = gql(/* GraphQL */ `
+const MESSAGE_SUBSCRIPTION = graphql(/* GraphQL */ `
   subscription OnMessageCreated($chatId: Int!) {
     messageCreated(chatId: $chatId) {
       id
@@ -65,54 +73,55 @@ const MESSAGE_SUBSCRIPTION = gql(/* GraphQL */ `
   }
 `);
 
-const SEND_MESSAGE_MUTATION = gql(/* GraphQL */ `
+const SEND_MESSAGE_MUTATION = graphql(/* GraphQL */ `
   mutation SendMessage($chatId: Int!, $content: ContentItemInput!, $role: String!) {
-    sendMessage(chatId: $chatId, content: $content, role: $role) {
-      id
-      content {
-        type
-        text
-        content
-        input
-        name
-        id
-      }
-      role
-      timestamp
-      chatId
-    }
+    sendMessage(chatId: $chatId, content: $content, role: $role)
+  }
+`);
+
+const DELETE_CHAT = graphql(/* GraphQL */ `
+  mutation RemoveChat($id: Int!) {
+    removeChat(id: $id)
   }
 `);
 
 export const useReadChats = () => {
-  const { data } = useSuspenseQuery(READ_CHATS);
-
+  const { data } = useSuspenseQuery<GetAllChatsQuery>(READ_CHATS);
   return { chats: data?.chats ?? [] };
 };
 
 export const useSelectChat = () => {
-  const [loadData, queryRef] = useLoadableQuery(SELECT_CHAT);
+  const [loadData, queryRef] = useLoadableQuery<GetChatWithMessagesQuery>(SELECT_CHAT);
   const selectChat = (id: number) => {
     loadData({ chatId: id });
   };
-
   return { queryRef, selectChat };
 };
 
-export const useSubscribeChat = ({ chatId, onCompleted, defaultMessages }) => {
-  const [messages, setMessages] = useState<any[]>(defaultMessages);
+interface SubscribeChatProps {
+  chatId: number;
+  onCompleted: () => void;
+}
 
-  const { error: subError } = useSubscription(MESSAGE_SUBSCRIPTION, {
-    variables: { chatId },
+export const useSubscribeChat = ({ chatId, onCompleted }: SubscribeChatProps) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  useEffect(() => {
+    setMessages([]);
+  }, [chatId]);
+
+  useSubscription<OnMessageCreatedSubscription>(MESSAGE_SUBSCRIPTION, {
+    variables: { chatId, limit: 20 },
     onError: (error) => console.error('Subscription failed:', error),
     onData: ({ data }) => {
+      console.log(data);
       if (data?.data?.messageCreated) {
-        setMessages((prev) => [...prev, data?.data?.messageCreated]);
+        setMessages((prev) => [...prev, data.data.messageCreated]);
       }
     },
   });
 
-  const [sendMessage, { error: mutationError }] = useMutation(SEND_MESSAGE_MUTATION, {
+  const [sendMessage] = useMutation<SendMessageMutation>(SEND_MESSAGE_MUTATION, {
     onError: (error) => console.error('Message send failed:', error),
     onCompleted,
   });
@@ -121,7 +130,17 @@ export const useSubscribeChat = ({ chatId, onCompleted, defaultMessages }) => {
 };
 
 export const useCreateChat = () => {
-  const [createChat] = useMutation(CREATE_CHAT, { onError: console.error });
-
+  const [createChat] = useMutation<CreateChatMutation>(CREATE_CHAT);
   return { createChat };
+};
+
+export const useDeleteChat = () => {
+  const [deleteChat] = useMutation(DELETE_CHAT);
+  return {
+    deleteChat: (id: number) =>
+      deleteChat({
+        variables: { id },
+        refetchQueries: [READ_CHATS],
+      }),
+  };
 };

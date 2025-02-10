@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import type { PrismaService } from '../prisma/prisma.service.js';
-import type { ClaudeChain } from '../llm/llms/claude.agent.js';
-import type { CustomLogger } from '../logger/logger.service.js';
-import type { ContentItem } from 'src/llm/llms/base.agent.js';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { ClaudeChain } from '../llm/llms/providers/claude.agent.js';
+import { CustomLogger } from '../logger/logger.service.js';
+import type { ContentItem } from 'src/llm/llms/types.js';
 
 @Injectable()
 export class ChatService {
@@ -18,15 +18,31 @@ export class ChatService {
   async findAll() {
     this.logger.log({ message: 'Finding all chats' });
     return this.prisma.chat.findMany({
-      include: { messages: true },
+      include: {
+        messages: {
+          include: {
+            content: true,
+          },
+        },
+      },
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, options?: { take?: number }) {
     this.logger.log({ message: 'Finding chat by id', id });
     return this.prisma.chat.findUnique({
       where: { id },
-      include: { messages: true },
+      include: {
+        messages: {
+          take: options?.take || undefined,
+          orderBy: {
+            timestamp: 'desc',
+          },
+          include: {
+            content: true,
+          },
+        },
+      },
     });
   }
 
@@ -38,7 +54,41 @@ export class ChatService {
     });
   }
 
-  async addMessage(chatId: number, data: { content: ContentItem[]; role: string }) {
+  async removeChat(id: number) {
+    this.logger.log({ message: 'Removing chat', id });
+
+    await this.prisma.contentItem.deleteMany({
+      where: {
+        message: {
+          chatId: id,
+        },
+      },
+    });
+
+    await this.prisma.message.deleteMany({
+      where: {
+        chatId: id,
+      },
+    });
+
+    await this.prisma.chat.delete({
+      where: { id },
+    });
+
+    // Clean up any associated agent
+    this.agents.delete(id);
+
+    return true;
+  }
+
+  async getAvailableModels() {
+    return ['claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest'];
+  }
+
+  async addMessage(
+    chatId: number,
+    data: { content: ContentItem[]; role: string },
+  ) {
     this.logger.log({ message: 'Adding message to chat', chatId, data });
     return this.prisma.message.create({
       data: {

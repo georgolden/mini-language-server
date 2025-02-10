@@ -1,32 +1,31 @@
-import OpenAI from 'openai';
+import { Mistral } from '@mistralai/mistralai';
 import type {
   ModelResponse,
   ToolResponse,
   TextResponse,
   Message,
   Tool,
-} from './types.js';
-import { DEEPSEEK_API_KEY } from '../../config/app.config.js';
-import { BaseLLMChain } from './base.agent.js';
+} from '../types.js';
+import { XAI_API_KEY } from '../../../config/app.config.js';
+import { BaseLLMChain } from '../base.agent.js';
 
-export class DeepseekClient {
-  private static instance: OpenAI;
+export class MistralAIClient {
+  private static instance: Mistral;
   private constructor() {}
 
-  public static getInstance(apiKey: string): OpenAI {
-    if (!DeepseekClient.instance) {
-      DeepseekClient.instance = new OpenAI({
+  public static getInstance(apiKey: string): Mistral {
+    if (!MistralAIClient.instance) {
+      MistralAIClient.instance = new Mistral({
         apiKey,
-        baseURL: 'https://api.deepseek.com',
       });
     }
-    return DeepseekClient.instance;
+    return MistralAIClient.instance;
   }
 }
 
-export class DeepseekChain extends BaseLLMChain {
-  private client: OpenAI;
-  private model: OpenAI.Chat.ChatModel;
+export class MistralChain extends BaseLLMChain {
+  private client: Mistral;
+  private model: string;
 
   constructor({
     systemPrompt,
@@ -39,14 +38,18 @@ export class DeepseekChain extends BaseLLMChain {
   }) {
     super({ systemPrompt, tools });
     // Choose model based on the simpleModel flag.
-    this.model = simpleModel ? 'deepseek-chat' : 'deepseek-reasoner';
-    this.client = DeepseekClient.getInstance(DEEPSEEK_API_KEY);
+    // a lot of models by mistral with function capabilities
+    // worth exploring
+    this.model = simpleModel ? 'mistral-large-latest' : 'ministral-3b-latest';
+    this.client = MistralAIClient.getInstance(XAI_API_KEY);
   }
 
-  formatPayload(messages: Message[]): OpenAI.Chat.ChatCompletionCreateParams {
+  formatPayload(
+    messages: Message[],
+  ): Parameters<Mistral['chat']['complete']>[0] {
     // Map custom messages into OpenAI ChatCompletion messages.
-    const chatMessages: OpenAI.Chat.ChatCompletionMessageParam[] = messages.map(
-      ({ role, content }) => {
+    const chatMessages: Parameters<Mistral['chat']['complete']>[0]['messages'] =
+      messages.map(({ role, content }) => {
         // Concatenate the various content items into a single string.
         const combinedContent = content
           .map((item) => {
@@ -72,8 +75,7 @@ export class DeepseekChain extends BaseLLMChain {
           role: openaiRole,
           content: combinedContent,
         };
-      },
-    );
+      });
 
     // Prepend a system message if provided.
     if (this.systemPrompt) {
@@ -85,6 +87,7 @@ export class DeepseekChain extends BaseLLMChain {
 
     return {
       model: this.model,
+      maxTokens: 1024,
       tools: this.tools.map((tool) => ({
         function: {
           name: tool.name,
@@ -94,7 +97,6 @@ export class DeepseekChain extends BaseLLMChain {
         type: 'function',
       })),
       messages: chatMessages,
-      max_tokens: 1024,
     };
   }
 
@@ -102,22 +104,25 @@ export class DeepseekChain extends BaseLLMChain {
     messages: Message[],
   ): Promise<ModelResponse[]> {
     const payload = this.formatPayload(messages);
-    const response = await this.client.chat.completions.create(payload);
-    const openaiMessage = response?.choices?.[0];
-    console.log('OPENAI MESSAGE', response);
-    const content = openaiMessage?.message?.content || '';
+    const response = await this.client.chat.complete(payload);
+    const mistralMessage = response?.choices?.[0];
+    const content = mistralMessage?.message?.content || '';
 
-    if (openaiMessage.finish_reason === 'tool_calls') {
-      const toolUseId = openaiMessage?.message?.tool_calls?.[0]?.id;
+    if (mistralMessage.finishReason === 'tool_calls') {
+      const toolUseId = mistralMessage?.message?.toolCalls?.[0]?.id;
 
       return [
         {
           type: 'tool',
           toolUseId,
-          toolName: openaiMessage?.message?.tool_calls?.[0]?.function?.name,
-          args: JSON.parse(
-            openaiMessage?.message?.tool_calls?.[0]?.function?.arguments,
-          ),
+          toolName: mistralMessage?.message?.toolCalls?.[0]?.function?.name,
+          args:
+            typeof mistralMessage?.message?.toolCalls?.[0]?.function
+              ?.arguments === 'string'
+              ? JSON.parse(
+                  mistralMessage?.message?.toolCalls?.[0]?.function?.arguments,
+                )
+              : mistralMessage?.message?.toolCalls?.[0]?.function?.arguments,
         } as ToolResponse,
       ];
     }

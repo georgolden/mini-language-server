@@ -1,24 +1,21 @@
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { ClaudeChain } from '../llms/claude.agent.js';
-import type { Tool, Message, ContentItem } from '../llms/types.js';
+import type { Tool } from '../llms/types.js';
 import z from 'zod';
-import { GPTChain } from '../llms/openai.agent.js';
-import { GroqChain } from '../llms/groq.agent.js';
-import { DeepseekChain } from '../llms/deepseek.agent.js';
+import { GPTChain } from '../llms/providers/openai.agent.js';
 
 const messageSchema = z.object({
   conversation: z.string().describe('Raw conversation text to analyze'),
 });
 
 const summaryAgent = async () => {
-  const topicAnalyzer = new DeepseekChain({
+  const topicAnalyzer = new GPTChain({
     systemPrompt: `You are a topic analysis specialist. Extract the main topic from conversations. Use tools to generate comprehansive summary.
 Return only the primary topic as a brief phrase without explanation.`,
     tools: [],
     simpleModel: true,
   });
 
-  const summaryGenerator = new DeepseekChain({
+  const summaryGenerator = new GPTChain({
     systemPrompt: `You are a conversation summarizer. Generate a brief 2-3 sentence summary.
 Return only the summary without commentary.`,
     tools: [],
@@ -36,6 +33,7 @@ Return only the summary without commentary.`,
         return {
           role: 'assistant',
           name: 'get_topic',
+          timestamp: new Date(),
           content: [
             {
               type: 'text',
@@ -61,6 +59,7 @@ Return only the summary without commentary.`,
         return {
           role: 'assistant',
           name: 'get_summary',
+          timestamp: new Date(),
           content: [
             {
               type: 'text',
@@ -79,7 +78,7 @@ Return only the summary without commentary.`,
     },
   ];
 
-  const chat = new DeepseekChain({
+  const chat = new GPTChain({
     systemPrompt: `You are a conversation analysis assistant that summarizes discussions.
 Follow this sequence:
 1. Use get_topic to identify the main topic

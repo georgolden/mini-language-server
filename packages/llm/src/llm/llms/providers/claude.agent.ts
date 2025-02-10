@@ -5,13 +5,13 @@ import type {
   TextResponse,
   Message,
   Tool,
-} from './types.js';
-import { ANTHROPIC_API } from '../../config/app.config.js';
+} from '../types.js';
+import { ANTHROPIC_API } from '../../../config/app.config.js';
 import type {
   Model,
   Tool as AnthropicTool,
 } from '@anthropic-ai/sdk/resources/index.mjs';
-import { BaseLLMChain } from './base.agent.js';
+import { BaseLLMChain } from '../base.agent.js';
 
 export class AnthropicClient {
   private static instance: Anthropic;
@@ -51,7 +51,7 @@ export class ClaudeChain extends BaseLLMChain {
     const tools: AnthropicTool[] = this.tools.map((tool) => ({
       name: tool.name,
       description: tool.description,
-      input_schema: tool.inputSchema,
+      input_schema: tool.inputSchema as any,
     }));
 
     const formattedMessages: Anthropic.Messages.MessageParam[] = messages.map(
