@@ -11,6 +11,7 @@ type Chat {
   provider: String!
   title: String!
   type: String!
+  userId: Int!
 }
 
 type ContentItem {

@@ -21,6 +21,8 @@ import { CustomLogger } from '../logger/logger.service.js';
 import { timestamp } from 'rxjs';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../identity/guards/auth.guard.js';
+import { User } from '../identity/dto/user.types.js';
+import { CurrentUser } from '../identity/decorators/current-user.decorator.js';
 
 const pubSub: PubSubEngine = new PubSub();
 const agents = new Map<number, ClaudeChain>();
@@ -36,16 +38,19 @@ export class ChatResolver {
 
   @Query(() => [Chat])
   @UseGuards(AuthGuard)
-  async chats() {
+  async chats(@CurrentUser() user: User) {
     this.logger.log({ message: 'Fetching all chats' });
-    return this.chatService.findAll();
+    return this.chatService.findAll(user.id);
   }
 
   @Query(() => Chat)
   @UseGuards(AuthGuard)
-  async chat(@Args('id', { type: () => Int }) id: number) {
+  async chat(
+    @Args('id', { type: () => Int }) id: number,
+    @CurrentUser() user: User,
+  ) {
     this.logger.log({ message: 'Fetching single chat', id });
-    return this.chatService.findOne(id);
+    return this.chatService.findOne(id, user.id);
   }
 
   @Query(() => String)
@@ -54,9 +59,17 @@ export class ChatResolver {
 
   @Mutation(() => Chat)
   @UseGuards(AuthGuard)
-  async createChat(@Args('title') title: string, @Args('type') type: string) {
+  async createChat(
+    @Args('title') title: string,
+    @Args('type') type: string,
+    @CurrentUser() user: User,
+  ) {
     this.logger.log({ message: 'Creating new chat', title, type });
-    const chat = await this.chatService.create({ title, type });
+    const chat = await this.chatService.create({ 
+      title,
+      type,
+      userId: user.id,
+    });
 
     this.logger.log({
       message: 'Publishing chatCreated event',
@@ -73,6 +86,7 @@ export class ChatResolver {
     @Args('content', { type: () => ContentItemInput })
     content: ContentItemInput,
     @Args('role') role: string,
+    @CurrentUser() user: User,
   ) {
     this.logger.log({ message: 'Sending message', chatId, role });
 
@@ -80,7 +94,7 @@ export class ChatResolver {
       content: [content],
       role,
     });
-    const chat = await this.chatService.findOne(chatId);
+    const chat = await this.chatService.findOne(chatId, user.id);
     this.logger.log({
       message: 'User message saved',
       messageId: userMessage.id,
@@ -112,6 +126,7 @@ export class ChatResolver {
   async messageCreated(
     @Args('chatId', { type: () => Int }) chatId: number,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @CurrentUser() user: User,
   ) {
     this.logger.log({
       message: 'Message subscription initiated',
@@ -121,7 +136,7 @@ export class ChatResolver {
     const iterator = pubSub.asyncIterableIterator('messageCreated');
 
     setTimeout(async () => {
-      const chat = await this.chatService.findOne(chatId, {
+      const chat = await this.chatService.findOne(chatId, user.id, {
         take: limit,
       });
       for (const msg of chat.messages) {

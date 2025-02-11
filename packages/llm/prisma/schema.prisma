@@ -24,6 +24,7 @@ model User {
   permalink     String    @unique
   githubId      String?   @unique
   googleId      String?   @unique
+  chats         Chat[]
   avatar        String?
   sessions      Session[]
   emailVerificationToken String?
@@ -46,6 +47,8 @@ model Chat {
   id        Int       @id @default(autoincrement())
   title     String
   type      String
+  userId    Int       
+  user      User      @relation(fields: [userId], references: [id]) 
   metadata  String?
   workspace String?
   modelName String    @default("claude-3-5-sonnet-latest")

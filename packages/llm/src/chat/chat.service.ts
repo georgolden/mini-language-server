@@ -15,9 +15,12 @@ export class ChatService {
     this.logger.setContext('ChatService');
   }
 
-  async findAll() {
-    this.logger.log({ message: 'Finding all chats' });
+  async findAll(userId: number) {
+    this.logger.log({ message: `Finding all chats`, userId });
     return this.prisma.chat.findMany({
+      where: {
+        userId,
+      },
       include: {
         messages: {
           include: {
@@ -28,10 +31,10 @@ export class ChatService {
     });
   }
 
-  async findOne(id: number, options?: { take?: number }) {
-    this.logger.log({ message: 'Finding chat by id', id });
+  async findOne(id: number, userId: number, options?: { take?: number }) {
+    this.logger.log({ message: 'Finding chat by id', id, userId });
     return this.prisma.chat.findUnique({
-      where: { id },
+      where: { id, userId },
       include: {
         messages: {
           take: options?.take || undefined,
@@ -46,10 +49,10 @@ export class ChatService {
     });
   }
 
-  async create(data: { title: string; type: string }) {
+  async create(data: { title: string; type: string, userId: number }) {
     this.logger.log({ message: 'Creating new chat', data });
     return this.prisma.chat.create({
-      data: { title: data.title, type: data.type },
+      data: { userId: data.userId, title: data.title, type: data.type },
       include: { messages: true },
     });
   }

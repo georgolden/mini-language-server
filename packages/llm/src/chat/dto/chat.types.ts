@@ -87,6 +87,9 @@ export class Chat {
   @Field()
   type: string;
 
+  @Field(() => Int)
+  userId: number;
+
   @Field()
   metadata: string;
 
