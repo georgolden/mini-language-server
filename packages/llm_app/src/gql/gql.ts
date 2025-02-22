@@ -22,10 +22,13 @@ const documents = {
     "\n  query GithubAuth($input: SocialAuthInput!) {\n    githubAuth(input: $input) {\n      id\n      email\n      name\n    }\n  }\n": types.GithubAuthDocument,
     "query GetAllChats { \n  chats {\n    id\n    title\n  }\n}": types.GetAllChatsDocument,
     "\n  query GetChatWithMessages($chatId: Int!) {\n    chat(id: $chatId) {\n      id\n      title\n      type\n      createdAt\n      messages {\n        id\n        content {\n          type\n          text\n          content\n          input\n          name\n          id\n        }\n        role\n        timestamp\n      }\n    }\n  }\n": types.GetChatWithMessagesDocument,
-    "\nmutation CreateChat($title: String!, $type: String!) {\n  createChat(title: $title, type: $type) {\n    id\n    title\n    type\n    createdAt\n    metadata\n  }\n}\n": types.CreateChatDocument,
-    "\n  subscription OnMessageCreated($chatId: Int!) {\n    messageCreated(chatId: $chatId) {\n      id\n      content {\n        type\n        text\n        content\n        input\n        name\n        id\n      }\n      role\n      timestamp\n      chatId\n    }\n  }\n": types.OnMessageCreatedDocument,
+    "\nmutation CreateChat($prompt: String!) {\n  createChat(prompt: $prompt) {\n    id\n    title\n    type\n    createdAt\n    metadata\n  }\n}\n": types.CreateChatDocument,
+    "\n  subscription OnMessageCreated($chatId: Int!, $limit: Int!) {\n    messageCreated(chatId: $chatId, limit: $limit) {\n      id\n      content {\n        type\n        text\n        content\n        input\n        name\n        id\n      }\n      role\n      timestamp\n      chatId\n    }\n  }\n": types.OnMessageCreatedDocument,
     "\n  mutation SendMessage($chatId: Int!, $content: ContentItemInput!, $role: String!) {\n    sendMessage(chatId: $chatId, content: $content, role: $role)\n  }\n": types.SendMessageDocument,
     "\n  mutation RemoveChat($id: Int!) {\n    removeChat(id: $id)\n  }\n": types.RemoveChatDocument,
+    "\n  query GetModels {\n    getModels {\n      provider\n      modelId\n      modelName\n    }\n  }\n": types.GetModelsDocument,
+    "\n  mutation GetUploadSignature {\n    getUploadSignature {\n      signature\n      timestamp\n      cloudName\n      apiKey\n    }\n  }\n": types.GetUploadSignatureDocument,
+    "\n  query GetAvatarUrl($id: String!) {\n    getAvatarUrl(id: $id)\n  }\n": types.GetAvatarUrlDocument,
 };
 
 /**
@@ -77,11 +80,11 @@ export function graphql(source: "\n  query GetChatWithMessages($chatId: Int!) {\
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\nmutation CreateChat($title: String!, $type: String!) {\n  createChat(title: $title, type: $type) {\n    id\n    title\n    type\n    createdAt\n    metadata\n  }\n}\n"): (typeof documents)["\nmutation CreateChat($title: String!, $type: String!) {\n  createChat(title: $title, type: $type) {\n    id\n    title\n    type\n    createdAt\n    metadata\n  }\n}\n"];
+export function graphql(source: "\nmutation CreateChat($prompt: String!) {\n  createChat(prompt: $prompt) {\n    id\n    title\n    type\n    createdAt\n    metadata\n  }\n}\n"): (typeof documents)["\nmutation CreateChat($prompt: String!) {\n  createChat(prompt: $prompt) {\n    id\n    title\n    type\n    createdAt\n    metadata\n  }\n}\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  subscription OnMessageCreated($chatId: Int!) {\n    messageCreated(chatId: $chatId) {\n      id\n      content {\n        type\n        text\n        content\n        input\n        name\n        id\n      }\n      role\n      timestamp\n      chatId\n    }\n  }\n"): (typeof documents)["\n  subscription OnMessageCreated($chatId: Int!) {\n    messageCreated(chatId: $chatId) {\n      id\n      content {\n        type\n        text\n        content\n        input\n        name\n        id\n      }\n      role\n      timestamp\n      chatId\n    }\n  }\n"];
+export function graphql(source: "\n  subscription OnMessageCreated($chatId: Int!, $limit: Int!) {\n    messageCreated(chatId: $chatId, limit: $limit) {\n      id\n      content {\n        type\n        text\n        content\n        input\n        name\n        id\n      }\n      role\n      timestamp\n      chatId\n    }\n  }\n"): (typeof documents)["\n  subscription OnMessageCreated($chatId: Int!, $limit: Int!) {\n    messageCreated(chatId: $chatId, limit: $limit) {\n      id\n      content {\n        type\n        text\n        content\n        input\n        name\n        id\n      }\n      role\n      timestamp\n      chatId\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -90,6 +93,18 @@ export function graphql(source: "\n  mutation SendMessage($chatId: Int!, $conten
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RemoveChat($id: Int!) {\n    removeChat(id: $id)\n  }\n"): (typeof documents)["\n  mutation RemoveChat($id: Int!) {\n    removeChat(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetModels {\n    getModels {\n      provider\n      modelId\n      modelName\n    }\n  }\n"): (typeof documents)["\n  query GetModels {\n    getModels {\n      provider\n      modelId\n      modelName\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation GetUploadSignature {\n    getUploadSignature {\n      signature\n      timestamp\n      cloudName\n      apiKey\n    }\n  }\n"): (typeof documents)["\n  mutation GetUploadSignature {\n    getUploadSignature {\n      signature\n      timestamp\n      cloudName\n      apiKey\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetAvatarUrl($id: String!) {\n    getAvatarUrl(id: $id)\n  }\n"): (typeof documents)["\n  query GetAvatarUrl($id: String!) {\n    getAvatarUrl(id: $id)\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

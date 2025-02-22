@@ -1,7 +1,7 @@
 import { Suspense, useState } from 'react';
 import KawaiiChat from './chat';
 import { ChatSidebar } from './sidebar';
-import { ChatCreation } from './modal';
+import { ChatCreation } from './create';
 import { useSelectChat } from '@hooks/apollo/chat';
 import { Loader2, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 

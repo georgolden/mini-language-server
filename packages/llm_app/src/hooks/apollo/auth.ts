@@ -6,6 +6,7 @@ import {
   useMutation,
   useQuery,
 } from '@apollo/client';
+import { useNavigate } from '@tanstack/react-router';
 import { useCallback } from 'react';
 
 export const ME = gql`
@@ -71,8 +72,13 @@ export const useAuth = () => {
   const [signUpMutation] = useMutation(SIGN_UP);
   const [logoutMutation] = useMutation(LOGOUT);
   const apolloClient = useApolloClient();
+  const navigate = useNavigate();
 
-  const { data: userData, loading: isLoading } = useQuery(ME, {
+  const {
+    data: userData,
+    loading: isLoading,
+    refetch,
+  } = useQuery(ME, {
     fetchPolicy: 'network-only',
   });
 
@@ -113,7 +119,10 @@ export const useAuth = () => {
   const logout = useCallback(async () => {
     await logoutMutation();
     await apolloClient.clearStore();
-  }, [logoutMutation, apolloClient]);
+    await apolloClient.cache.reset();
+    await refetch();
+    navigate({ to: '/' });
+  }, [logoutMutation, apolloClient, refetch, navigate]);
 
   return {
     isAuthenticated: !!userData?.me,

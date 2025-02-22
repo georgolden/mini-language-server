@@ -7,7 +7,7 @@ type Chat {
   id: Int!
   messages: [Message!]!
   metadata: String!
-  modelName: String!
+  modelId: String!
   provider: String!
   title: String!
   type: String!
@@ -38,6 +38,13 @@ enum ContentItemType {
   TOOL_USE
 }
 
+input CreateMemberInput {
+  hasHistoryEnabled: Boolean! = true
+  name: String!
+  systemPrompt: String!
+  tools: [String!]!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -45,6 +52,15 @@ scalar DateTime
 
 input GetUserInput {
   userPermalink: String!
+}
+
+type Member {
+  createdAt: DateTime!
+  hasHistoryEnabled: Boolean!
+  id: ID!
+  name: String!
+  systemPrompt: String!
+  tools: [String!]!
 }
 
 type Message {
@@ -55,14 +71,24 @@ type Message {
   timestamp: DateTime!
 }
 
+type Model {
+  modelId: String!
+  modelName: String!
+  provider: String!
+}
+
 type Mutation {
-  createChat(title: String!, type: String!): Chat!
-  getModels: [String!]!
+  createChat(prompt: String!): Chat!
+  createMember(input: CreateMemberInput!): Member!
+  getUploadSignature: UploadSignatureType!
   logout: Boolean!
   removeChat(id: Int!): Boolean!
   sendMessage(chatId: Int!, content: ContentItemInput!, role: String!): Boolean!
   signIn(email: String!, password: String!): User!
   signUp(email: String!, name: String!, password: String!): User!
+  toggleMemberHistory(enabled: Boolean!, id: String!): Member!
+  updateMemberSystemPrompt(id: String!, systemPrompt: String!): Member!
+  updateMemberTools(id: String!, tools: [String!]!): Member!
   updateUser(input: UpdateUserInput!): User!
 }
 
@@ -70,10 +96,14 @@ type Query {
   availableAgents: String!
   chat(id: Int!): Chat!
   chats: [Chat!]!
+  getAvatarUrl(id: String!): String!
   getGoogleAuthURL: String!
+  getModels: [Model!]!
   githubAuth(input: SocialAuthInput!): User!
   googleAuth(input: SocialAuthInput!): User!
   me: User
+  member(id: String!): Member!
+  members: [Member!]!
   user(input: GetUserInput!): User
   users: [User!]!
 }
@@ -90,13 +120,20 @@ input SocialAuthInput {
 
 type Subscription {
   chatCreated: Chat!
-  messageCreated(chatId: Int!, limit: Int! = 20): Message!
+  messageCreated(chatId: Int!, limit: Int!): Message!
 }
 
 input UpdateUserInput {
   bio: String
   email: String
   name: String
+}
+
+type UploadSignatureType {
+  apiKey: String!
+  cloudName: String!
+  signature: String!
+  timestamp: Int!
 }
 
 type User {

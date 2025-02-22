@@ -3,6 +3,7 @@ import { Plus, Loader2 } from 'lucide-react';
 
 import Modal from '@components/modal';
 import { useCreateChat } from '@hooks/apollo/chat';
+import { ModelSelect } from './model.select';
 
 export const ChatCreation = ({ isCollapsed }) => {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -52,6 +53,7 @@ export const ChatCreation = ({ isCollapsed }) => {
                        dark:border-pink-700 dark:bg-gray-900 dark:text-white 
                        focus:outline-none focus:border-pink-400 dark:focus:border-pink-500"
           />
+          <ModelSelect value={undefined} onChange={console.log} />
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}

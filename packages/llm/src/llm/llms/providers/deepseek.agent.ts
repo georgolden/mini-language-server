@@ -8,15 +8,30 @@ import type {
 } from '../types.js';
 import { DEEPSEEK_API_KEY } from '../../../config/app.config.js';
 import { BaseLLMChain } from '../base.agent.js';
+import { Model } from '../types.js';
 
 export class DeepseekClient {
   private static instance: OpenAI;
   private constructor() {}
 
-  public static getInstance(apiKey: string): OpenAI {
+  public static async getModels(): Promise<Model[]> {
+    const models = [
+      {
+        id: 'deepseek-chat',
+        name: 'Deepseek V3',
+      },
+      {
+        id: 'deepseek-reasoner',
+        name: 'Deepseek Reasoner',
+      },
+    ];
+    return models;
+  }
+
+  public static getInstance(): OpenAI {
     if (!DeepseekClient.instance) {
       DeepseekClient.instance = new OpenAI({
-        apiKey,
+        apiKey: DEEPSEEK_API_KEY,
         baseURL: 'https://api.deepseek.com',
       });
     }
@@ -40,7 +55,7 @@ export class DeepseekChain extends BaseLLMChain {
     super({ systemPrompt, tools });
     // Choose model based on the simpleModel flag.
     this.model = simpleModel ? 'deepseek-chat' : 'deepseek-reasoner';
-    this.client = DeepseekClient.getInstance(DEEPSEEK_API_KEY);
+    this.client = DeepseekClient.getInstance();
   }
 
   formatPayload(messages: Message[]): OpenAI.Chat.ChatCompletionCreateParams {

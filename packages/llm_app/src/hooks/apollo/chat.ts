@@ -8,6 +8,7 @@ import type {
   OnMessageCreatedSubscription,
   SendMessageMutation,
   Message,
+  GetModelsQuery,
 } from '../../gql/graphql';
 import { graphql } from '../../gql';
 
@@ -43,8 +44,8 @@ export const SELECT_CHAT = graphql(/* GraphQL */ `
 `);
 
 const CREATE_CHAT = graphql(/* GraphQL */ `
-mutation CreateChat($title: String!, $type: String!) {
-  createChat(title: $title, type: $type) {
+mutation CreateChat($prompt: String!) {
+  createChat(prompt: $prompt) {
     id
     title
     type
@@ -55,8 +56,8 @@ mutation CreateChat($title: String!, $type: String!) {
 `);
 
 const MESSAGE_SUBSCRIPTION = graphql(/* GraphQL */ `
-  subscription OnMessageCreated($chatId: Int!) {
-    messageCreated(chatId: $chatId) {
+  subscription OnMessageCreated($chatId: Int!, $limit: Int!) {
+    messageCreated(chatId: $chatId, limit: $limit) {
       id
       content {
         type
@@ -85,6 +86,21 @@ const DELETE_CHAT = graphql(/* GraphQL */ `
   }
 `);
 
+const GET_MODELS = graphql(`
+  query GetModels {
+    getModels {
+      provider
+      modelId
+      modelName
+    }
+  }
+`);
+
+export const useModels = () => {
+  const { data } = useSuspenseQuery<GetModelsQuery>(GET_MODELS);
+  return { models: data?.getModels ?? [] };
+};
+
 export const useReadChats = () => {
   const { data } = useSuspenseQuery<GetAllChatsQuery>(READ_CHATS);
   return { chats: data?.chats ?? [] };
@@ -111,12 +127,13 @@ export const useSubscribeChat = ({ chatId, onCompleted }: SubscribeChatProps) =>
   }, [chatId]);
 
   useSubscription<OnMessageCreatedSubscription>(MESSAGE_SUBSCRIPTION, {
-    variables: { chatId, limit: 20 },
+    variables: { chatId, limit: 100 },
     onError: (error) => console.error('Subscription failed:', error),
     onData: ({ data }) => {
-      console.log(data);
       if (data?.data?.messageCreated) {
-        setMessages((prev) => [...prev, data.data.messageCreated]);
+        setMessages((prev) =>
+          [data.data.messageCreated, ...prev].sort((a, b) => b.timestamp - a.timestamp),
+        );
       }
     },
   });
@@ -131,7 +148,13 @@ export const useSubscribeChat = ({ chatId, onCompleted }: SubscribeChatProps) =>
 
 export const useCreateChat = () => {
   const [createChat] = useMutation<CreateChatMutation>(CREATE_CHAT);
-  return { createChat };
+  return {
+    createChat: (prompt: string) =>
+      createChat({
+        variables: { prompt },
+        refetchQueries: [READ_CHATS],
+      }),
+  };
 };
 
 export const useDeleteChat = () => {

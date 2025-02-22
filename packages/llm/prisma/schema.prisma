@@ -14,22 +14,22 @@ enum Role {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  email         String?   @unique
-  name          String
-  password      String?
-  active        Boolean   @default(false)
-  bio           String?
-  role          Role      @default(USER)
-  permalink     String    @unique
-  githubId      String?   @unique
-  googleId      String?   @unique
-  chats         Chat[]
-  avatar        String?
-  sessions      Session[]
+  id                     Int       @id @default(autoincrement())
+  email                  String?   @unique
+  name                   String
+  password               String?
+  active                 Boolean   @default(false)
+  bio                    String?
+  role                   Role      @default(USER)
+  permalink              String    @unique
+  githubId               String?   @unique
+  googleId               String?   @unique
+  chats                  Chat[]
+  avatar                 String?
+  sessions               Session[]
   emailVerificationToken String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 }
 
 model Session {
@@ -43,27 +43,34 @@ model Session {
   updatedAt DateTime @updatedAt
 }
 
+enum ModelProvider {
+  anthropic
+  groq
+  openai
+  mistral
+  deepseek
+}
+
 model Chat {
-  id        Int       @id @default(autoincrement())
-  title     String
-  type      String
-  userId    Int       
-  user      User      @relation(fields: [userId], references: [id]) 
-  metadata  String?
-  workspace String?
-  modelName String    @default("claude-3-5-sonnet-latest")
-  provider  String    @default("anthropic")
-  createdAt DateTime  @default(now())
-  messages  Message[]
+  id         Int           @id @default(autoincrement())
+  userId     Int
+  user       User          @relation(fields: [userId], references: [id])
+  storeLocal Boolean?      @default(false)
+  agents     String[]
+  workspace  String?
+  modelId    String        @default("claude-3-5-sonnet-latest")
+  provider   ModelProvider @default(anthropic)
+  createdAt  DateTime      @default(now())
+  messages   Message[]
 }
 
 model Message {
-  id        Int      @id @default(autoincrement())
-  chat      Chat     @relation(fields: [chatId], references: [id])
+  id        Int           @id @default(autoincrement())
+  chat      Chat          @relation(fields: [chatId], references: [id])
   chatId    Int
   content   ContentItem[] @relation("MessageToContent")
   role      String
-  timestamp DateTime @default(now())
+  timestamp DateTime      @default(now())
 }
 
 enum ContentType {
@@ -85,4 +92,13 @@ model ContentItem {
   messageId Int
 
   @@map("content_items")
+}
+
+model Member {
+  id                String   @id @default(uuid())
+  name              String
+  systemPrompt      String
+  tools             String[]
+  hasHistoryEnabled Boolean  @default(true)
+  createdAt         DateTime @default(now())
 }

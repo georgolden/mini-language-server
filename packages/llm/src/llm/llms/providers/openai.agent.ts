@@ -8,14 +8,23 @@ import type {
 } from '../types.js';
 import { OPENAI_API_KEY } from '../../../config/app.config.js';
 import { BaseLLMChain } from '../base.agent.js';
+import { Model } from '../types.js';
 
 export class OpenAIClient {
   private static instance: OpenAI;
   private constructor() {}
 
-  public static getInstance(apiKey: string): OpenAI {
+  public static async getModels(): Promise<Model[]> {
+    const models: { id: OpenAI.Chat.ChatModel; name: string }[] = [
+      { id: 'gpt-4o-mini', name: 'GPT 4o mini' },
+      { id: 'o1-mini', name: 'GPT o1 mini' },
+    ];
+    return models;
+  }
+
+  public static getInstance(): OpenAI {
     if (!OpenAIClient.instance) {
-      OpenAIClient.instance = new OpenAI({ apiKey });
+      OpenAIClient.instance = new OpenAI({ apiKey: OPENAI_API_KEY });
     }
     return OpenAIClient.instance;
   }
@@ -37,7 +46,7 @@ export class GPTChain extends BaseLLMChain {
     super({ systemPrompt, tools });
     // Choose model based on the simpleModel flag.
     this.model = simpleModel ? 'gpt-4o-mini' : 'o3-mini';
-    this.client = OpenAIClient.getInstance(OPENAI_API_KEY);
+    this.client = OpenAIClient.getInstance();
   }
 
   formatPayload(messages: Message[]): OpenAI.Chat.ChatCompletionCreateParams {

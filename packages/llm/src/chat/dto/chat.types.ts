@@ -94,7 +94,7 @@ export class Chat {
   metadata: string;
 
   @Field()
-  modelName: string;
+  modelId: string;
 
   @Field()
   provider: string;
@@ -104,4 +104,16 @@ export class Chat {
 
   @Field(() => [Message])
   messages: Message[];
+}
+
+@ObjectType()
+export class Model {
+  @Field(() => String)
+  provider: string;
+
+  @Field(() => String)
+  modelId: string;
+
+  @Field(() => String)
+  modelName: string;
 }

@@ -50,3 +50,8 @@ export interface IMessageNotifier {
 export interface IToolHandler {
   handleToolResponse(response: ToolResponse): Promise<string>;
 }
+
+export interface Model {
+  id: string;
+  name?: string;
+}

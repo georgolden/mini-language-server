@@ -12,6 +12,8 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as SignupImport } from './routes/signup'
+import { Route as SettingsImport } from './routes/settings'
+import { Route as MembersImport } from './routes/members'
 import { Route as LoginImport } from './routes/login'
 import { Route as IndexImport } from './routes/index'
 import { Route as AuthGithubCallbackImport } from './routes/auth/github/callback'
@@ -21,6 +23,18 @@ import { Route as AuthGithubCallbackImport } from './routes/auth/github/callback
 const SignupRoute = SignupImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SettingsRoute = SettingsImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const MembersRoute = MembersImport.update({
+  id: '/members',
+  path: '/members',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -60,6 +74,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
+    '/members': {
+      id: '/members'
+      path: '/members'
+      fullPath: '/members'
+      preLoaderRoute: typeof MembersImport
+      parentRoute: typeof rootRoute
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsImport
+      parentRoute: typeof rootRoute
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -82,6 +110,8 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/members': typeof MembersRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/auth/github/callback': typeof AuthGithubCallbackRoute
 }
@@ -89,6 +119,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/members': typeof MembersRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/auth/github/callback': typeof AuthGithubCallbackRoute
 }
@@ -97,22 +129,45 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/members': typeof MembersRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/auth/github/callback': typeof AuthGithubCallbackRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/auth/github/callback'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/members'
+    | '/settings'
+    | '/signup'
+    | '/auth/github/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/auth/github/callback'
-  id: '__root__' | '/' | '/login' | '/signup' | '/auth/github/callback'
+  to:
+    | '/'
+    | '/login'
+    | '/members'
+    | '/settings'
+    | '/signup'
+    | '/auth/github/callback'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/members'
+    | '/settings'
+    | '/signup'
+    | '/auth/github/callback'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  MembersRoute: typeof MembersRoute
+  SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   AuthGithubCallbackRoute: typeof AuthGithubCallbackRoute
 }
@@ -120,6 +175,8 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  MembersRoute: MembersRoute,
+  SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   AuthGithubCallbackRoute: AuthGithubCallbackRoute,
 }
@@ -136,6 +193,8 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/login",
+        "/members",
+        "/settings",
         "/signup",
         "/auth/github/callback"
       ]
@@ -145,6 +204,12 @@ export const routeTree = rootRoute
     },
     "/login": {
       "filePath": "login.tsx"
+    },
+    "/members": {
+      "filePath": "members.tsx"
+    },
+    "/settings": {
+      "filePath": "settings.tsx"
     },
     "/signup": {
       "filePath": "signup.tsx"

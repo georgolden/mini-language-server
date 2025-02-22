@@ -1,6 +1,7 @@
 import type React from 'react';
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import { PORTAL_ROOT_ID } from '@utils/portal';
 
 interface ModalProps {
   isOpen: boolean;
@@ -27,7 +28,6 @@ const Modal = ({ isOpen, onClose, children, title, size }: ModalProps) => {
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-
     if (isOpen) {
       dialog.showModal();
       document.body.style.overflow = 'hidden';
@@ -35,7 +35,6 @@ const Modal = ({ isOpen, onClose, children, title, size }: ModalProps) => {
       dialog.close();
       document.body.style.overflow = 'unset';
     }
-
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -64,10 +63,12 @@ const Modal = ({ isOpen, onClose, children, title, size }: ModalProps) => {
       className="bg-transparent p-0 m-auto border-none backdrop:bg-black/50 backdrop:backdrop-blur-sm"
       aria-labelledby={title ? 'modal-title' : undefined}
     >
-      <div className={`${getSizeClassName(size)}  rounded-lg bg-white dark:bg-gray-800 shadow-xl`}>
-        <div className="flex items-center justify-between border-b p-4 dark:border-gray-700">
+      <div
+        className={`${getSizeClassName(size)} rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl`}
+      >
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 p-4">
           {title && (
-            <h2 id="modal-title" className="text-lg font-semibold dark:text-white">
+            <h2 id="modal-title" className="text-lg font-semibold text-pink-600 dark:text-pink-300">
               {title}
             </h2>
           )}
@@ -79,13 +80,16 @@ const Modal = ({ isOpen, onClose, children, title, size }: ModalProps) => {
                 onClose();
               }
             }}
-            className="ml-auto rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="ml-auto rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
             aria-label="Close modal"
           >
-            <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            <X className="h-5 w-5 text-pink-500 dark:text-pink-400" />
           </button>
         </div>
-        <div className="p-4">{children}</div>
+        <div className="p-4 relative text-gray-700 dark:text-gray-300">
+          {children}
+          <div id={PORTAL_ROOT_ID} />
+        </div>
       </div>
     </dialog>
   );

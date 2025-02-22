@@ -6,17 +6,29 @@ import type {
   Message,
   Tool,
 } from '../types.js';
-import { XAI_API_KEY } from '../../../config/app.config.js';
+import { MISTRAL_API_KEY } from '../../../config/app.config.js';
 import { BaseLLMChain } from '../base.agent.js';
+import { Model } from '../types.js';
 
 export class MistralAIClient {
   private static instance: Mistral;
   private constructor() {}
 
-  public static getInstance(apiKey: string): Mistral {
+  public static async getModels(): Promise<Model[]> {
+    const models = [
+      { id: 'mistral-large-latest', name: 'Mistral Large' },
+      { id: 'mistral-smal-latest', name: 'Mistral Small' },
+      { id: 'ministral-8b-latest', name: 'Mistral 8B' },
+      { id: 'ministral-3b-latest', name: 'Mistral 3B' },
+      { id: 'codestral-latest', name: 'Codestral' },
+    ];
+    return models;
+  }
+
+  public static getInstance(): Mistral {
     if (!MistralAIClient.instance) {
       MistralAIClient.instance = new Mistral({
-        apiKey,
+        apiKey: MISTRAL_API_KEY,
       });
     }
     return MistralAIClient.instance;
@@ -41,7 +53,7 @@ export class MistralChain extends BaseLLMChain {
     // a lot of models by mistral with function capabilities
     // worth exploring
     this.model = simpleModel ? 'mistral-large-latest' : 'ministral-3b-latest';
-    this.client = MistralAIClient.getInstance(XAI_API_KEY);
+    this.client = MistralAIClient.getInstance();
   }
 
   formatPayload(

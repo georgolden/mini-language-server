@@ -9,6 +9,8 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { AppController } from './app.controller.js';
 import { LoggerModule } from './logger/logger.module.js';
 import { LoggerMiddleware } from './logger/logger.middleware.js';
+import { ImageModule } from './images/images.module.js';
+import { MembersModule } from './members/members.module.js';
 
 @Module({
   imports: [
@@ -26,8 +28,11 @@ import { LoggerMiddleware } from './logger/logger.middleware.js';
     PrismaModule,
     IdentityModule,
     ChatModule,
+    MembersModule,
+    ImageModule,
   ],
   controllers: [AppController],
+  providers: [],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

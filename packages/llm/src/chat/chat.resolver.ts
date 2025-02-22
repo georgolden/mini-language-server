@@ -1,5 +1,6 @@
 import {
   Args,
+  Context,
   Int,
   Mutation,
   Query,
@@ -14,6 +15,7 @@ import {
   Message,
   ContentItem,
   ContentItemInput,
+  Model,
 } from './dto/chat.types.js';
 import { ClaudeChain } from '../llm/llms/providers/claude.agent.js';
 import { getTools, initializeMCPClient } from '../llm/mcp/client.js';
@@ -59,15 +61,10 @@ export class ChatResolver {
 
   @Mutation(() => Chat)
   @UseGuards(AuthGuard)
-  async createChat(
-    @Args('title') title: string,
-    @Args('type') type: string,
-    @CurrentUser() user: User,
-  ) {
-    this.logger.log({ message: 'Creating new chat', title, type });
-    const chat = await this.chatService.create({ 
-      title,
-      type,
+  async createChat(@Args('prompt') prompt: string, @CurrentUser() user: User) {
+    this.logger.log({ message: 'Creating new chat', prompt });
+    const chat = await this.chatService.create({
+      prompt,
       userId: user.id,
     });
 
@@ -99,6 +96,11 @@ export class ChatResolver {
       message: 'User message saved',
       messageId: userMessage.id,
     });
+    this.logger.log({
+      message: 'Agent',
+      agent: chat.modelId,
+      provider: chat.provider,
+    });
     pubSub.publish('messageCreated', { messageCreated: userMessage });
     //await this.agentService.sendPrompt(chatId.toString(), content.text);
 
@@ -125,12 +127,15 @@ export class ChatResolver {
   @UseGuards(AuthGuard)
   async messageCreated(
     @Args('chatId', { type: () => Int }) chatId: number,
-    @Args('limit', { type: () => Int, defaultValue: 20 }) limit: number,
+    @Args('limit', { type: () => Int }) limit: number,
     @CurrentUser() user: User,
+    @Context() context: any,
   ) {
+    const connectionParams = context.req.connectionParams;
     this.logger.log({
       message: 'Message subscription initiated',
       chatId,
+      connectionParams,
     });
 
     const iterator = pubSub.asyncIterableIterator('messageCreated');
@@ -154,9 +159,10 @@ export class ChatResolver {
     return this.chatService.removeChat(id);
   }
 
-  @Mutation(() => [String])
+  @Query(() => [Model])
   @UseGuards(AuthGuard)
   async getModels() {
-    return this.chatService.getAvailableModels();
+    const models = await this.chatService.getAvailableModels();
+    return models.flat();
   }
 }

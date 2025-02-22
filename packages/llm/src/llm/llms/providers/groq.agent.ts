@@ -9,14 +9,29 @@ import type {
 import { GROQ_API_KEY } from '../../../config/app.config.js';
 import { BaseLLMChain } from '../base.agent.js';
 import { ChatCompletionCreateParamsNonStreaming } from 'groq-sdk/resources/chat/completions.mjs';
+import { Model } from '../types.js';
 
 export class GroqClient {
   private static instance: Groq;
   private constructor() {}
 
-  public static getInstance(apiKey: string): Groq {
+  public static async getModels(): Promise<Model[]> {
+    const models: {
+      id: ChatCompletionCreateParamsNonStreaming['model'];
+      name: string;
+    }[] = [
+      { id: 'deepseek-r1-distill-llama-70b', name: 'Llama 3 70b + R1' },
+      { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70b' },
+      { id: 'deepseek-r1-distill-qwen-32b	', name: 'Qwen 32B + R1' },
+      { id: 'qwen-2.5-32b	', name: 'Qwen 32B' },
+      { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B' },
+    ];
+    return models;
+  }
+
+  public static getInstance(): Groq {
     if (!GroqClient.instance) {
-      GroqClient.instance = new Groq({ apiKey });
+      GroqClient.instance = new Groq({ apiKey: GROQ_API_KEY });
     }
     return GroqClient.instance;
   }
@@ -40,7 +55,7 @@ export class GroqChain extends BaseLLMChain {
     this.model = simpleModel
       ? 'llama-3.3-70b-versatile'
       : 'deepseek-r1-distill-llama-70b';
-    this.client = GroqClient.getInstance(GROQ_API_KEY);
+    this.client = GroqClient.getInstance();
   }
 
   formatPayload(messages: Message[]): ChatCompletionCreateParamsNonStreaming {

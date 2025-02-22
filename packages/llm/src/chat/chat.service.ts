@@ -1,8 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { ClaudeChain } from '../llm/llms/providers/claude.agent.js';
+import {
+  AnthropicClient,
+  ClaudeChain,
+} from '../llm/llms/providers/claude.agent.js';
 import { CustomLogger } from '../logger/logger.service.js';
-import type { ContentItem } from 'src/llm/llms/types.js';
+import type { ContentItem } from '../llm/llms/types.js';
+import { GroqClient } from '../llm/llms/providers/groq.agent.js';
+import { OpenAIClient } from '../llm/llms/providers/openai.agent.js';
+import { MistralAIClient } from '../llm/llms/providers/mistral.agent.js';
+import { DeepseekClient } from '../llm/llms/providers/deepseek.agent.js';
+import { Model } from './dto/chat.types.js';
 
 @Injectable()
 export class ChatService {
@@ -16,7 +24,7 @@ export class ChatService {
   }
 
   async findAll(userId: number) {
-    this.logger.log({ message: `Finding all chats`, userId });
+    this.logger.log({ message: 'Finding all chats', userId });
     return this.prisma.chat.findMany({
       where: {
         userId,
@@ -49,10 +57,13 @@ export class ChatService {
     });
   }
 
-  async create(data: { title: string; type: string, userId: number }) {
+  async create(data: { userId: number; prompt: string }) {
     this.logger.log({ message: 'Creating new chat', data });
+
+    console.log('Initial prompt', data.prompt);
+
     return this.prisma.chat.create({
-      data: { userId: data.userId, title: data.title, type: data.type },
+      data: { userId: data.userId },
       include: { messages: true },
     });
   }
@@ -83,9 +94,27 @@ export class ChatService {
 
     return true;
   }
-
-  async getAvailableModels() {
-    return ['claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest'];
+  async getAvailableModels(): Promise<Model[]> {
+    const models: Model[] = (
+      await Promise.all(
+        Object.entries({
+          anthropic: AnthropicClient.getModels(),
+          groq: GroqClient.getModels(),
+          openai: OpenAIClient.getModels(),
+          mistral: MistralAIClient.getModels(),
+          deepseek: DeepseekClient.getModels(),
+        }).flatMap(async ([provider, valPromise]) =>
+          (
+            await valPromise
+          ).map(({ name, id }) => ({
+            provider,
+            modelName: name,
+            modelId: id,
+          })),
+        ),
+      )
+    ).flat();
+    return models;
   }
 
   async addMessage(

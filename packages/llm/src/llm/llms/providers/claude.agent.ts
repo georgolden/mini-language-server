@@ -12,14 +12,29 @@ import type {
   Tool as AnthropicTool,
 } from '@anthropic-ai/sdk/resources/index.mjs';
 import { BaseLLMChain } from '../base.agent.js';
+import { Model as ChatModel } from '../types.js';
 
 export class AnthropicClient {
   private static instance: Anthropic;
   private constructor() {}
 
-  public static getInstance(apiKey: string): Anthropic {
+  public static async getModels(): Promise<ChatModel[]> {
+    const models: { id: Model; name: string }[] = [
+      {
+        id: 'claude-3-5-haiku-latest',
+        name: 'Claude Haiku',
+      },
+      {
+        id: 'claude-3-5-sonnet-latest',
+        name: 'Claude Sonnet',
+      },
+    ];
+    return models;
+  }
+
+  public static getInstance(): Anthropic {
     if (!AnthropicClient.instance) {
-      AnthropicClient.instance = new Anthropic({ apiKey });
+      AnthropicClient.instance = new Anthropic({ apiKey: ANTHROPIC_API });
     }
     return AnthropicClient.instance;
   }
@@ -42,7 +57,7 @@ export class ClaudeChain extends BaseLLMChain {
     this.model = simpleModel
       ? 'claude-3-5-haiku-latest'
       : 'claude-3-5-sonnet-latest';
-    this.client = AnthropicClient.getInstance(ANTHROPIC_API);
+    this.client = AnthropicClient.getInstance();
   }
 
   formatPayload(
