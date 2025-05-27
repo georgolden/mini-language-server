@@ -4,12 +4,8 @@
   "private": true,
   "packageManager": "npm@10.8.2",
   "workspaces": [
-    "packages/ast",
-    "packages/core_server",
     "packages/lang_server",
-    "packages/vscode_extension",
-    "packages/llm_app",
-    "packages/llm"
+    "packages/vscode_extension"
   ],
   "version": "0.0.1",
   "scripts": {

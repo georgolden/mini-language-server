@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { window, WebviewPanel, ExtensionContext } from 'vscode';
 import { IService, ServiceDependencies, ServiceState } from './types';
 import { ChatView } from './chat/components/ChatView';
@@ -15,6 +16,7 @@ export class ChatService implements IService {
   };
   private chatPanel?: WebviewPanel;
   private readonly logger: ILogger;
+  private chatHistory: Array<{id: string, content: string, role: string, timestamp: Date}> = [];
   
   constructor(private readonly deps: ChatServiceDeps) {
     this.logger = deps.logger;
@@ -45,10 +47,15 @@ export class ChatService implements IService {
         'miniLanguageServerChat',
         'Chat',
         window.activeTextEditor?.viewColumn || vscode.ViewColumn.One,
-        { enableScripts: true }
+        { 
+          enableScripts: true,
+          localResourceRoots: [
+            vscode.Uri.file(path.join(this.deps.context.extensionPath, 'src', 'webview'))
+          ]
+        }
       );
 
-      this.chatPanel.webview.html = ChatView.render();
+      this.chatPanel.webview.html = ChatView.render(this.deps.context, this.chatPanel.webview);
       this.setupMessageHandling();
     }
     this.chatPanel.reveal();
@@ -61,6 +68,15 @@ export class ChatService implements IService {
           case 'message':
             this.handleChatMessage(message.text);
             break;
+          case 'clearChat':
+            this.chatHistory = [];
+            break;
+          case 'requestHistory':
+            this.sendChatHistory();
+            break;
+          case 'exportChat':
+            this.exportChat(message.data);
+            break;
         }
       },
       undefined,
@@ -68,15 +84,66 @@ export class ChatService implements IService {
     );
   }
 
-  async handleChatMessage(text: string): Promise<void> {
-    const response = "Your message is processing";
-    
+  private async sendChatHistory(): Promise<void> {
     await this.chatPanel?.webview.postMessage({
-      type: 'update',
-      html: `
-        <div>User: ${text}</div>
-        <div>System: ${response}</div>
-      `
+      type: 'loadHistory',
+      messages: this.chatHistory
+    });
+  }
+
+  private async exportChat(chatData: string): Promise<void> {
+    const uri = await vscode.window.showSaveDialog({
+      defaultUri: vscode.Uri.file('chat-export.txt'),
+      filters: { 'Text files': ['txt'] }
+    });
+    
+    if (uri) {
+      await vscode.workspace.fs.writeFile(uri, Buffer.from(chatData));
+      vscode.window.showInformationMessage('Chat exported successfully!');
+    }
+  }
+
+  async handleChatMessage(text: string): Promise<void> {
+    // Add user message to history
+    const userMessage = {
+      id: Date.now() + '-user',
+      content: text,
+      role: 'user',
+      timestamp: new Date()
+    };
+    this.chatHistory.push(userMessage);
+
+    // Set typing indicator
+    await this.chatPanel?.webview.postMessage({
+      type: 'setTyping',
+      typing: true
+    });
+
+    // Simulate processing
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const response = `Processed: ${text}`;
+    
+    // Add system message to history
+    const systemMessage = {
+      id: Date.now() + '-system',
+      content: response,
+      role: 'system',
+      timestamp: new Date()
+    };
+    this.chatHistory.push(systemMessage);
+
+    // Send system message
+    await this.chatPanel?.webview.postMessage({
+      type: 'addMessage',
+      content: response,
+      role: 'system'
+    });
+
+    // Clear typing indicator
+    await this.chatPanel?.webview.postMessage({
+      type: 'setTyping',
+      typing: false
     });
   }
 

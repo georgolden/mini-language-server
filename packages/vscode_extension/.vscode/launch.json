@@ -7,7 +7,7 @@
       "request": "launch",
       "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
-      "preLaunchTask": "npm: compile",
+      "preLaunchTask": "compile-extension",
       "sourceMaps": true
     },
     {
@@ -19,7 +19,7 @@
         "--extensionTestsPath=${workspaceFolder}/dist/test/suite/index"
       ],
       "outFiles": ["${workspaceFolder}/dist/test/**/*.js"],
-      "preLaunchTask": "npm: compile"
+      "preLaunchTask": "compile-extension"
     }
   ]
 }

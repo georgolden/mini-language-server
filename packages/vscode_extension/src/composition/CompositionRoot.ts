@@ -1,7 +1,7 @@
 import { ExtensionContext, workspace } from 'vscode';
 import { ILogger } from '../logger/Logger';
 import { FileWatcherService } from '../services/FileWatcherService';
-import { LanguageClientService } from '../services/LanguageClientService';
+import { LanguageFeatureService } from '../services/LanguageClientService';
 import { CommandService } from '../services/CommandService';
 import { InputBoxService } from '../services/InputBoxService';
 import { createFileCommands } from '../commands/fileCommands';
@@ -46,7 +46,7 @@ export class CompositionRoot {
         workspacePath,
       });
 
-      const languageClientService = new LanguageClientService({
+      const languageClientService = new LanguageFeatureService({
         logger: this.logger,
         context: this.context,
         workspacePath,

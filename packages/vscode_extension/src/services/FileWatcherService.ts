@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { EventEmitter } from 'events';
 import { IService, ServiceDependencies, ServiceState } from './types';
 import { ILogger } from '../logger/Logger';
+import * as fs from 'fs';
 
 export interface FileInfo {
   fileName: string;
@@ -60,11 +61,52 @@ export class FileWatcherService extends EventEmitter implements IService {
     this.assertState('initialize');
     this.logger.debug('FileWatcherService: Initializing...');
 
-    // Initial file load
-    const pattern = path.join(this.workspacePath, '**/*.{js,jsx,ts,tsx}');
+    // Initial file load - now loading all files
+    const pattern = path.join(this.workspacePath, '**/*');
+
+    // Standard ignore patterns plus .gitignore patterns
+    const ignorePatterns = [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/out/**',
+      '**/.git/**',
+      '**/.*/**', // Ignore hidden files and directories
+    ];
+
+    // Try to read .gitignore if it exists
+    try {
+      const gitignorePath = path.join(this.workspacePath, '.gitignore');
+      if (fs.existsSync(gitignorePath)) {
+        const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+        const gitignorePatterns = gitignoreContent
+          .split('\n')
+          .filter((line) => line.trim() && !line.startsWith('#'))
+          .map((pattern) => {
+            // Convert .gitignore patterns to glob patterns
+            pattern = pattern.trim();
+            if (pattern.startsWith('/')) {
+              // Pattern starting with / matches from the root
+              return `**${pattern}`;
+            } else if (pattern.endsWith('/')) {
+              // Pattern ending with / matches directories
+              return `**/${pattern}**`;
+            } else {
+              // Regular pattern
+              return `**/${pattern}`;
+            }
+          });
+
+        ignorePatterns.push(...gitignorePatterns);
+      }
+    } catch (error) {
+      this.logger.error(`FileWatcherService: Error reading .gitignore: ${error}`);
+    }
+
     const files = await glob(pattern, {
-      ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/out/**'],
+      ignore: ignorePatterns,
       absolute: true,
+      nodir: true, // Only match files, not directories
     });
 
     this.logger.debug(`FileWatcherService: Found ${files.length} files to load`);
@@ -73,50 +115,77 @@ export class FileWatcherService extends EventEmitter implements IService {
       await this.loadFile(filePath);
     }
 
-    // Set up file system watchers for different extensions
-    const patterns = ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'];
+    // Set up file system watchers for all files
+    const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(this.workspacePath, '**/*'));
 
-    for (const pattern of patterns) {
-      const watcher = vscode.workspace.createFileSystemWatcher(
-        new vscode.RelativePattern(this.workspacePath, pattern),
-      );
+    watcher.onDidCreate(async (uri) => {
+      // Skip ignored files
+      if (this.shouldIgnoreFile(uri.fsPath)) {
+        return;
+      }
 
-      watcher.onDidCreate(async (uri) => {
-        this.logger.debug(`FileWatcherService: File created: ${uri.fsPath}`);
-        await this.loadFile(uri.fsPath);
-        const fileInfo = this.files.get(uri.fsPath);
-        if (fileInfo) {
-          this.emit('add', { type: 'add', file: fileInfo });
-        }
-      });
+      this.logger.debug(`FileWatcherService: File created: ${uri.fsPath}`);
+      await this.loadFile(uri.fsPath);
+      const fileInfo = this.files.get(uri.fsPath);
+      if (fileInfo) {
+        this.emit('add', { type: 'add', file: fileInfo });
+      }
+    });
 
-      watcher.onDidChange(async (uri) => {
-        this.logger.debug(`FileWatcherService: File changed: ${uri.fsPath}`);
-        await this.loadFile(uri.fsPath);
-        const fileInfo = this.files.get(uri.fsPath);
-        if (fileInfo) {
-          this.emit('change', { type: 'change', file: fileInfo });
-        }
-      });
+    watcher.onDidChange(async (uri) => {
+      // Skip ignored files
+      if (this.shouldIgnoreFile(uri.fsPath)) {
+        return;
+      }
 
-      watcher.onDidDelete((uri) => {
-        this.logger.debug(`FileWatcherService: File deleted: ${uri.fsPath}`);
-        const fileInfo = this.files.get(uri.fsPath);
-        if (fileInfo) {
-          this.files.delete(uri.fsPath);
-          this.emit('unlink', { type: 'unlink', file: fileInfo });
-        }
-      });
+      this.logger.debug(`FileWatcherService: File changed: ${uri.fsPath}`);
+      await this.loadFile(uri.fsPath);
+      const fileInfo = this.files.get(uri.fsPath);
+      if (fileInfo) {
+        this.emit('change', { type: 'change', file: fileInfo });
+      }
+    });
 
-      this.watchers.push(watcher);
-    }
+    watcher.onDidDelete((uri) => {
+      this.logger.debug(`FileWatcherService: File deleted: ${uri.fsPath}`);
+      const fileInfo = this.files.get(uri.fsPath);
+      if (fileInfo) {
+        this.files.delete(uri.fsPath);
+        this.emit('unlink', { type: 'unlink', file: fileInfo });
+      }
+    });
+
+    this.watchers.push(watcher);
 
     this.state.isInitialized = true;
     this.logger.debug('FileWatcherService: Initialization complete');
   }
 
+  private shouldIgnoreFile(filePath: string): boolean {
+    // Basic ignore patterns
+    const ignoredPatterns = [
+      /node_modules/,
+      /[\/\\]\.git[\/\\]/,
+      /[\/\\]dist[\/\\]/,
+      /[\/\\]build[\/\\]/,
+      /[\/\\]out[\/\\]/,
+      /^\.[^\/\\]+$/, // Hidden files
+    ];
+
+    const relativePath = path.relative(this.workspacePath, filePath);
+
+    // Check if the file matches any of the ignore patterns
+    return ignoredPatterns.some((pattern) => pattern.test(relativePath));
+  }
+
   private async loadFile(filePath: string): Promise<void> {
     try {
+      // Skip directories
+      const stats = await fs.promises.stat(filePath);
+      if (stats.isDirectory()) {
+        return;
+      }
+
       const content = await readFile(filePath, 'utf-8');
       const parsedPath = path.parse(filePath);
 

@@ -2,41 +2,17 @@
   "name": "@almighty/vscode_extension",
   "displayName": "Mini Language Server",
   "version": "0.0.1",
+  "packageManager": "npm@10.0.0",
   "engines": {
     "vscode": ">=1.75.0"
   },
   "activationEvents": [
-    "workspaceContains:**/*.{js,jsx,ts,tsx}",
-    "onLanguage:typescript",
-    "onLanguage:typescriptreact",
-    "onLanguage:javascript",
-    "onLanguage:javascriptreact"
+    "workspaceContains:**/*",
+    "onLanguage"
   ],
   "main": "./dist/src/extension.js",
   "type": "commonjs",
   "contributes": {
-    "languages": [
-      {
-        "id": "typescript",
-        "aliases": ["TypeScript", "ts"],
-        "extensions": [".ts"]
-      },
-      {
-        "id": "typescriptreact",
-        "aliases": ["TypeScript React", "tsx"],
-        "extensions": [".tsx"]
-      },
-      {
-        "id": "javascript",
-        "aliases": ["JavaScript", "js"],
-        "extensions": [".js"]
-      },
-      {
-        "id": "javascriptreact",
-        "aliases": ["JavaScript React", "jsx"],
-        "extensions": [".jsx"]
-      }
-    ],
     "commands": [
       {
         "command": "miniLanguageServer.showFileCount",

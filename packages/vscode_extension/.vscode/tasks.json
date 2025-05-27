@@ -2,8 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "npm",
-      "script": "build",
+      "label": "compile-extension",
+      "type": "shell",
+      "command": "npm run build",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -15,8 +16,9 @@
       "problemMatcher": ["$tsc"]
     },
     {
-      "type": "npm",
-      "script": "watch",
+      "label": "watch-extension",
+      "type": "shell",
+      "command": "npm run watch",
       "isBackground": true,
       "group": {
         "kind": "build",

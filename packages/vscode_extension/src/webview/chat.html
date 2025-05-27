@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div x-data="chatApp()" x-init="init()">
+    <!-- Chat History -->
+    <div class="chat-history" x-ref="history">
+      <template x-for="message in messages" :key="message.id">
+        <div 
+          class="message" 
+          :class="{
+            'user-message': message.role === 'user',
+            'system-message': message.role === 'system',
+            'error': message.type === 'error',
+            'warning': message.type === 'warning',
+            'info': message.type === 'info'
+          }"
+        >
+          <div x-html="message.content"></div>
+          <small x-text="formatTime(message.timestamp)"></small>
+        </div>
+      </template>
+      
+      <div x-show="isTyping" class="message system-message typing">
+        <div>AI is thinking...</div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-container">
+      <input 
+        type="text" 
+        x-model="currentMessage" 
+        @keyup.enter="sendMessage()"
+        :disabled="isTyping"
+        placeholder="Type your message..."
+        x-ref="input"
+        :aria-label="'Message input' + (isTyping ? ' (disabled while processing)' : '')"
+      >
+      <button 
+        @click="sendMessage()" 
+        :disabled="isTyping || !currentMessage.trim()"
+        x-text="isTyping ? 'Sending...' : 'Send'"
+        :aria-label="isTyping ? 'Sending message' : 'Send message'"
+      ></button>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="action-buttons" x-show="messages.length > 0">
+      <button @click="clearChat()" class="secondary">Clear Chat</button>
+      <button @click="exportChat()" class="secondary">Export</button>
+    </div>
+  </div>
+
+  <script src="./chat.js"></script>
+</body>
+</html>
